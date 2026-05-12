@@ -12,7 +12,7 @@ const Investment = () => {
   const getBDDate = () => {
     const now = new Date();
     const bd = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
+      now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" })
     );
     return bd.toISOString().split("T")[0];
   };
@@ -93,12 +93,14 @@ const Investment = () => {
     setShowReport(false);
   };
 
-  //Excel Export
+  // =========================
+  // EXCEL EXPORT (CENTER FIXED)
+  // =========================
   const handleExport = async () => {
     const data = filteredList.length ? filteredList : list;
 
     const sorted = [...data].sort(
-      (a, b) => new Date(a.date) - new Date(b.date),
+      (a, b) => new Date(a.date) - new Date(b.date)
     );
 
     let totalDeposit = 0;
@@ -107,17 +109,28 @@ const Investment = () => {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Investment Report");
 
-    // HEADER
-    sheet.addRow(["Date", "Deposit", "Withdraw", "Balance", "Remarks"]);
+    const centerStyle = {
+      vertical: "middle",
+      horizontal: "center",
+    };
 
-    sheet.getRow(1).eachCell((cell) => {
+    // HEADER
+    const headerRow = sheet.addRow([
+      "Date",
+      "Deposit",
+      "Withdraw",
+      "Balance",
+      "Remarks",
+    ]);
+
+    headerRow.eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
       cell.fill = {
         type: "pattern",
         pattern: "solid",
         fgColor: { argb: "FF2F5597" },
       };
-      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.alignment = centerStyle;
       cell.border = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -152,6 +165,7 @@ const Investment = () => {
       ]);
 
       row.eachCell((cell) => {
+        cell.alignment = centerStyle;
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -163,6 +177,7 @@ const Investment = () => {
 
     // TOTAL ROW
     const totalBalance = totalDeposit - totalWithdraw;
+
     const totalRow = sheet.addRow([
       "TOTAL",
       totalDeposit,
@@ -178,6 +193,7 @@ const Investment = () => {
         pattern: "solid",
         fgColor: { argb: "FFFFE599" },
       };
+      cell.alignment = centerStyle;
       cell.border = {
         top: { style: "thick" },
         left: { style: "thick" },
@@ -204,7 +220,7 @@ const Investment = () => {
   };
 
   // =========================
-  // REPORT DATA + TOTALS
+  // REPORT TOTALS
   // =========================
   const reportData = filteredList.length ? filteredList : list;
 
@@ -227,6 +243,7 @@ const Investment = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
+
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold">💼 Investment</h1>
@@ -326,61 +343,60 @@ const Investment = () => {
           </div>
         </div>
 
-        {/* REPORT */}
+        {/* REPORT TABLE */}
         {showReport && (
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-sm border border-gray-700">
-              <thead className="bg-gray-800 font-bold">
+            <table className="w-full text-sm border border-gray-700 text-center">
+              <thead className="bg-gray-800 font-bold text-center">
                 <tr>
-                  <th className="p-2 border">Date</th>
-                  <th className="p-2 border">Deposit</th>
-                  <th className="p-2 border">Withdraw</th>
-                  <th className="p-2 border">Balance</th>
-                  <th className="p-2 border">Remarks</th>
+                  <th className="p-2 border text-center">Date</th>
+                  <th className="p-2 border text-center">Deposit</th>
+                  <th className="p-2 border text-center">Withdraw</th>
+                  <th className="p-2 border text-center">Balance</th>
+                  <th className="p-2 border text-center">Remarks</th>
                 </tr>
               </thead>
 
               <tbody>
                 {reportData.map((item, i) => (
                   <tr key={i} className="border border-gray-700">
-                    <td className="p-2 border">
+                    <td className="p-2 border text-center">
                       {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
 
-                    <td className="p-2 border text-green-400">
+                    <td className="p-2 border text-center text-green-400">
                       {item.type === "deposit" ? item.amount : ""}
                     </td>
 
-                    <td className="p-2 border text-red-400">
+                    <td className="p-2 border text-center text-red-400">
                       {item.type === "withdraw" ? item.amount : ""}
                     </td>
 
-                    <td className="p-2 border text-yellow-300">
+                    <td className="p-2 border text-center text-yellow-300">
                       {item.type === "deposit"
                         ? `+${item.amount}`
                         : `-${item.amount}`}
                     </td>
 
-                    <td className="p-2 border text-gray-300">{item.note}</td>
+                    <td className="p-2 border text-center text-gray-300">
+                      {item.note}
+                    </td>
                   </tr>
                 ))}
 
-                {/* TOTAL ROW */}
-                <tr className="bg-yellow-900 font-bold">
+                {/* TOTAL */}
+                <tr className="bg-yellow-900 font-bold text-center">
                   <td className="p-2 border">TOTAL</td>
-
                   <td className="p-2 border text-green-400">{totalDeposit}</td>
-
                   <td className="p-2 border text-red-400">{totalWithdraw}</td>
-
                   <td className="p-2 border text-yellow-300">{balance}</td>
-
                   <td className="p-2 border">-</td>
                 </tr>
               </tbody>
             </table>
           </div>
         )}
+
       </div>
     </div>
   );
