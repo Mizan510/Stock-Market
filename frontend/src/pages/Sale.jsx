@@ -47,19 +47,18 @@ const Sale = () => {
 
       const userId = "demo-user";
 
-      await api.post("/sale/add", {
+      const res = await api.post("/sale/add", {
         userId,
         stockName,
         quantity,
         price,
       });
 
-      alert("Sale saved successfully!");
+      alert(res.data.message);
 
       setStockName("");
       setQuantity("");
       setPrice("");
-
     } catch (err) {
       alert(err.response?.data?.message || "Error saving sale");
     } finally {
@@ -69,15 +68,13 @@ const Sale = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
-
       <div className="w-full max-w-md">
-
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">🔴 Sale Stocks</h1>
 
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/dashboard", { replace: true })}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back
@@ -86,10 +83,8 @@ const Sale = () => {
 
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-3">
-
           {/* STOCK DROPDOWN */}
           <div className="relative">
-
             <input
               placeholder="Stock Name"
               className="w-full p-3 bg-gray-800 rounded"
@@ -103,10 +98,9 @@ const Sale = () => {
 
             {showList && stockList.length > 0 && (
               <div className="absolute z-10 w-full bg-gray-900 border border-gray-700 rounded max-h-40 overflow-y-auto mt-1">
-
                 {stockList
                   .filter((item) =>
-                    item.toLowerCase().includes(stockName.toLowerCase())
+                    item.toLowerCase().includes(stockName.toLowerCase()),
                   )
                   .map((item, index) => (
                     <div
@@ -146,11 +140,10 @@ const Sale = () => {
           <button
             onClick={handleSave}
             disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-700 p-3 rounded font-bold"
+            className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-60 p-3 rounded font-bold"
           >
             {loading ? "Saving..." : "Save Sale"}
           </button>
-
         </div>
       </div>
     </div>

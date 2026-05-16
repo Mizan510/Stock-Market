@@ -7,6 +7,8 @@ const Login = () => {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [backLoading, setBackLoading] = useState(false);
+
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
@@ -33,14 +35,11 @@ const Login = () => {
 
       localStorage.setItem("token", response.data.token);
 
-      // SUCCESS UI MESSAGE
       setSuccess("Login successful! Redirecting...");
 
-      // AUTO REDIRECT
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }, 1200);
-
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -50,16 +49,12 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-950 to-black flex items-center justify-center p-4">
-
       <form
         onSubmit={handleLogin}
         className="w-full max-w-md bg-gray-900 border border-gray-800 p-8 rounded-2xl text-white shadow-2xl"
       >
-
         {/* TITLE */}
-        <h2 className="text-3xl font-bold mb-6 text-center">
-          🔐 Login
-        </h2>
+        <h2 className="text-3xl font-bold mb-6 text-center">🔐 Login</h2>
 
         {/* ERROR */}
         {error && (
@@ -93,7 +88,7 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* BUTTON */}
+        {/* LOGIN BUTTON */}
         <button
           type="submit"
           disabled={loading}
@@ -105,24 +100,23 @@ const Login = () => {
         {/* REGISTER LINK */}
         <p className="text-sm text-gray-400 mt-5 text-center">
           Don’t have an account?{" "}
-          <Link
-            to="/register"
-            className="text-blue-400 hover:underline"
-          >
+          <Link to="/register" className="text-blue-400 hover:underline">
             Register
           </Link>
         </p>
 
-        {/* BACK HOME */}
-        <Link to="/">
-          <button
-            type="button"
-            className="w-full mt-4 border border-gray-600 hover:bg-gray-800 py-3 rounded-lg font-semibold transition"
-          >
-            Back to Home
-          </button>
-        </Link>
-
+        {/* BACK HOME BUTTON */}
+        <button
+          type="button"
+          onClick={() => {
+            setBackLoading(true);
+            setTimeout(() => navigate("/"), 300);
+          }}
+          disabled={backLoading}
+          className="w-full mt-4 border border-gray-600 hover:bg-gray-800 py-3 rounded-lg font-semibold transition disabled:opacity-60"
+        >
+          {backLoading ? "Loading..." : "Back to Home"}
+        </button>
       </form>
     </div>
   );

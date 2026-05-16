@@ -12,7 +12,7 @@ const Investment = () => {
   const getBDDate = () => {
     const now = new Date();
     const bd = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" })
+      now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
     );
     return bd.toISOString().split("T")[0];
   };
@@ -29,6 +29,11 @@ const Investment = () => {
   const [toDate, setToDate] = useState(getBDDate());
 
   const [loading, setLoading] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [backLoading, setBackLoading] = useState(false);
+
   const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
@@ -45,8 +50,19 @@ const Investment = () => {
     }
   };
 
+  // =====================
+  // SAVE
+  // =====================
   const handleSave = async () => {
-    if (!amount) return alert("Enter amount");
+    if (!amount || !date || !type) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    if (isNaN(Number(amount))) {
+      alert("Amount must be a number");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -74,155 +90,174 @@ const Investment = () => {
     }
   };
 
+  // =====================
+  // VIEW
+  // =====================
   const handleView = () => {
-    const filtered = list.filter((item) => {
-      const d = new Date(item.date).setHours(0, 0, 0, 0);
-      const f = new Date(fromDate).setHours(0, 0, 0, 0);
-      const t = new Date(toDate).setHours(0, 0, 0, 0);
-      return d >= f && d <= t;
-    });
+    setViewLoading(true);
 
-    setFilteredList(filtered);
-    setShowReport(true);
+    setTimeout(() => {
+      const filtered = list.filter((item) => {
+        const itemDate = new Date(item.date).toISOString().split("T")[0];
+        return itemDate >= fromDate && itemDate <= toDate;
+      });
+
+      setFilteredList(filtered);
+      setShowReport(true);
+      setViewLoading(false);
+    }, 300);
   };
 
+  // =====================
+  // RESET
+  // =====================
   const handleReset = () => {
-    setFromDate(getBDDate());
-    setToDate(getBDDate());
-    setFilteredList(list);
-    setShowReport(false);
+    setResetLoading(true);
+
+    setTimeout(() => {
+      setFromDate(getBDDate());
+      setToDate(getBDDate());
+      setFilteredList(list);
+      setShowReport(false);
+      setResetLoading(false);
+    }, 300);
   };
 
-  // =========================
-  // EXCEL EXPORT (CENTER FIXED)
-  // =========================
+  // =====================
+  // EXPORT
+  // =====================
   const handleExport = async () => {
-    const data = filteredList.length ? filteredList : list;
+    setExportLoading(true);
 
-    const sorted = [...data].sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    );
+    try {
+      const data = filteredList.length ? filteredList : list;
 
-    let totalDeposit = 0;
-    let totalWithdraw = 0;
+      const sorted = [...data].sort(
+        (a, b) => new Date(a.date) - new Date(b.date),
+      );
 
-    const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet("Investment Report");
+      let totalDeposit = 0;
+      let totalWithdraw = 0;
 
-    const centerStyle = {
-      vertical: "middle",
-      horizontal: "center",
-    };
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Investment Report");
 
-    // HEADER
-    const headerRow = sheet.addRow([
-      "Date",
-      "Deposit",
-      "Withdraw",
-      "Balance",
-      "Remarks",
-    ]);
-
-    headerRow.eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF2F5597" },
+      const centerStyle = {
+        vertical: "middle",
+        horizontal: "center",
       };
-      cell.alignment = centerStyle;
-      cell.border = {
+
+      const borderStyle = {
         top: { style: "thin" },
         left: { style: "thin" },
         bottom: { style: "thin" },
         right: { style: "thin" },
       };
-    });
 
-    // DATA ROWS
-    sorted.forEach((item) => {
-      const amt = Number(item.amount);
-      let depositCell = "";
-      let withdrawCell = "";
-      let balanceCell = "";
-
-      if (item.type === "deposit") {
-        totalDeposit += amt;
-        depositCell = amt;
-        balanceCell = `+${amt}`;
-      } else {
-        totalWithdraw += amt;
-        withdrawCell = amt;
-        balanceCell = `-${amt}`;
-      }
-
-      const row = sheet.addRow([
-        new Date(item.date).toLocaleDateString("en-GB"),
-        depositCell,
-        withdrawCell,
-        balanceCell,
-        item.note || "",
+      // ================= HEADER =================
+      const headerRow = sheet.addRow([
+        "Date",
+        "Deposit",
+        "Withdraw",
+        "Balance",
+        "Remarks",
       ]);
 
-      row.eachCell((cell) => {
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF1F4E79" },
+        };
+        cell.alignment = centerStyle;
+        cell.border = borderStyle;
+      });
+
+      // ================= DATA =================
+      sorted.forEach((item) => {
+        const amt = Number(item.amount);
+
+        let depositCell = "";
+        let withdrawCell = "";
+        let balanceCell = "";
+
+        if (item.type === "deposit") {
+          totalDeposit += amt;
+          depositCell = amt;
+          balanceCell = `+${amt}`;
+        } else {
+          totalWithdraw += amt;
+          withdrawCell = amt;
+          balanceCell = `-${amt}`;
+        }
+
+        const row = sheet.addRow([
+          new Date(item.date).toLocaleDateString("en-GB"),
+          depositCell,
+          withdrawCell,
+          balanceCell,
+          item.note || "",
+        ]);
+
+        row.eachCell((cell) => {
+          cell.alignment = centerStyle;
+          cell.border = borderStyle;
+        });
+      });
+
+      // ================= TOTAL ROW =================
+      const totalBalance = totalDeposit - totalWithdraw;
+
+      const totalRow = sheet.addRow([
+        "TOTAL",
+        totalDeposit,
+        totalWithdraw,
+        totalBalance,
+        "-",
+      ]);
+
+      totalRow.eachCell((cell) => {
+        cell.font = { bold: true };
         cell.alignment = centerStyle;
         cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
+          top: { style: "medium" },
+          left: { style: "medium" },
+          bottom: { style: "medium" },
+          right: { style: "medium" },
+        };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFD966" }, // highlight yellow
         };
       });
-    });
 
-    // TOTAL ROW
-    const totalBalance = totalDeposit - totalWithdraw;
+      // ================= COLUMN WIDTH (TABLE STYLE) =================
+      sheet.columns = [
+        { width: 14 }, // Date
+        { width: 12 }, // Deposit
+        { width: 12 }, // Withdraw
+        { width: 14 }, // Balance
+        { width: 25 }, // Remarks
+      ];
 
-    const totalRow = sheet.addRow([
-      "TOTAL",
-      totalDeposit,
-      totalWithdraw,
-      totalBalance,
-      "",
-    ]);
+      const buffer = await workbook.xlsx.writeBuffer();
 
-    totalRow.eachCell((cell) => {
-      cell.font = { bold: true };
-      cell.fill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFFE599" },
-      };
-      cell.alignment = centerStyle;
-      cell.border = {
-        top: { style: "thick" },
-        left: { style: "thick" },
-        bottom: { style: "thick" },
-        right: { style: "thick" },
-      };
-    });
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
 
-    sheet.columns = [
-      { width: 15 },
-      { width: 12 },
-      { width: 12 },
-      { width: 15 },
-      { width: 25 },
-    ];
-
-    const buffer = await workbook.xlsx.writeBuffer();
-
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    saveAs(blob, "investment_report.xlsx");
+      saveAs(blob, "investment_report.xlsx");
+    } finally {
+      setExportLoading(false);
+    }
   };
 
-  // =========================
-  // REPORT TOTALS
-  // =========================
-  const reportData = filteredList.length ? filteredList : list;
+  // =====================
+  // TOTALS
+  // =====================
+  const reportData = showReport ? filteredList : list;
 
   let totalDeposit = 0;
   let totalWithdraw = 0;
@@ -239,25 +274,96 @@ const Investment = () => {
       balance -= amt;
     }
   });
+  // =====================
+  // DELETE ROW
+  // =====================
+  const handleDelete = async (index, item) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this transaction?",
+    );
+
+    if (!confirmDelete) return; // stop if user clicks Cancel
+
+    try {
+      setLoading(true);
+
+      await api.delete(`/investment/delete/${item._id}`);
+
+      // remove from UI after DB delete
+      const updated = reportData.filter((_, i) => i !== index);
+      setFilteredList(updated);
+
+      const mainUpdated = list.filter((x) => x._id !== item._id);
+      setList(mainUpdated);
+    } catch (err) {
+      alert("Delete failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =====================
+  // EDIT ROW (simple inline edit using prompt)
+  // =====================
+  const handleEdit = async (index, item) => {
+    const newAmount = prompt("Enter new amount", item.amount);
+    const newNote = prompt("Enter new note", item.note || "");
+
+    if (newAmount === null) return;
+
+    if (isNaN(Number(newAmount))) {
+      alert("Amount must be a number");
+      return;
+    }
+
+    try {
+      const res = await api.put(`/investment/update/${item._id}`, {
+        amount: Number(newAmount),
+        note: newNote,
+      });
+
+      const updatedItem = res.data.data;
+
+      // update UI
+      const updatedList = list.map((x) =>
+        x._id === item._id ? updatedItem : x,
+      );
+
+      setList(updatedList);
+      setFilteredList(updatedList);
+    } catch (err) {
+      alert("Update failed");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold">💼 Investment</h1>
 
           <button
-            onClick={() => navigate("/dashboard")}
-            className="bg-gray-700 px-4 py-2 rounded-lg"
+            onClick={() => {
+              setBackLoading(true);
+              setTimeout(() => navigate("/dashboard", { replace: true }), 300);
+            }}
+            disabled={backLoading}
+            className="bg-gray-700 px-4 py-2 rounded-lg disabled:opacity-60"
           >
-            Back
+            {backLoading ? "Loading..." : "Back"}
           </button>
         </div>
 
         {/* FORM */}
         <div className="bg-gray-900 p-4 rounded-xl space-y-3">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full p-3 bg-gray-800 rounded"
+          />
+
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
@@ -268,6 +374,7 @@ const Investment = () => {
           </select>
 
           <input
+            type="number"
             placeholder="Amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -275,16 +382,10 @@ const Investment = () => {
           />
 
           <input
+            type="text"
             placeholder="Note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="w-full p-3 bg-gray-800 rounded"
-          />
-
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
             className="w-full p-3 bg-gray-800 rounded"
           />
 
@@ -295,7 +396,7 @@ const Investment = () => {
               type === "deposit"
                 ? "bg-green-600 hover:bg-green-700"
                 : "bg-red-600 hover:bg-red-700"
-            }`}
+            } ${loading ? "opacity-60" : ""}`}
           >
             {loading ? "Saving..." : "Save Transaction"}
           </button>
@@ -322,23 +423,26 @@ const Investment = () => {
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={handleView}
-              className="bg-blue-600 hover:bg-blue-700 p-2 rounded"
+              disabled={viewLoading}
+              className="bg-blue-600 hover:bg-blue-700 p-2 rounded disabled:opacity-60"
             >
-              View
+              {viewLoading ? "Loading..." : "View"}
             </button>
 
             <button
               onClick={handleExport}
-              className="bg-green-600 hover:bg-green-700 p-2 rounded"
+              disabled={exportLoading}
+              className="bg-green-600 hover:bg-green-700 p-2 rounded disabled:opacity-60"
             >
-              Report
+              {exportLoading ? "Exporting..." : "Report"}
             </button>
 
             <button
               onClick={handleReset}
-              className="bg-gray-600 hover:bg-gray-700 p-2 rounded"
+              disabled={resetLoading}
+              className="bg-gray-600 hover:bg-gray-700 p-2 rounded disabled:opacity-60"
             >
-              Reset
+              {resetLoading ? "Resetting..." : "Reset"}
             </button>
           </div>
         </div>
@@ -349,54 +453,70 @@ const Investment = () => {
             <table className="w-full text-sm border border-gray-700 text-center">
               <thead className="bg-gray-800 font-bold text-center">
                 <tr>
-                  <th className="p-2 border text-center">Date</th>
-                  <th className="p-2 border text-center">Deposit</th>
-                  <th className="p-2 border text-center">Withdraw</th>
-                  <th className="p-2 border text-center">Balance</th>
-                  <th className="p-2 border text-center">Remarks</th>
+                  <th className="p-2 border">Date</th>
+                  <th className="p-2 border">Deposit</th>
+                  <th className="p-2 border">Withdraw</th>
+                  <th className="p-2 border">Balance</th>
+                  <th className="p-2 border">Remarks</th>
                 </tr>
               </thead>
 
               <tbody>
                 {reportData.map((item, i) => (
                   <tr key={i} className="border border-gray-700">
-                    <td className="p-2 border text-center">
+                    <td className="p-2 border">
                       {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
 
-                    <td className="p-2 border text-center text-green-400">
+                    <td className="p-2 border text-green-400">
                       {item.type === "deposit" ? item.amount : ""}
                     </td>
 
-                    <td className="p-2 border text-center text-red-400">
+                    <td className="p-2 border text-red-400">
                       {item.type === "withdraw" ? item.amount : ""}
                     </td>
 
-                    <td className="p-2 border text-center text-yellow-300">
+                    <td className="p-2 border text-yellow-300">
                       {item.type === "deposit"
                         ? `+${item.amount}`
                         : `-${item.amount}`}
                     </td>
 
-                    <td className="p-2 border text-center text-gray-300">
-                      {item.note}
+                    <td className="p-2 border text-gray-300">{item.note}</td>
+
+                    {/* ACTION BUTTONS */}
+                    <td className="p-2 border">
+                      <div className="flex gap-2 justify-center">
+                        <button
+                          onClick={() => handleEdit(i, item)}
+                          className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(i, item)}
+                          className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
 
-                {/* TOTAL */}
-                <tr className="bg-yellow-900 font-bold text-center">
+                <tr className="bg-yellow-900 font-bold">
                   <td className="p-2 border">TOTAL</td>
                   <td className="p-2 border text-green-400">{totalDeposit}</td>
                   <td className="p-2 border text-red-400">{totalWithdraw}</td>
                   <td className="p-2 border text-yellow-300">{balance}</td>
+                  <td className="p-2 border">-</td>
                   <td className="p-2 border">-</td>
                 </tr>
               </tbody>
             </table>
           </div>
         )}
-
       </div>
     </div>
   );

@@ -27,7 +27,6 @@ const Buy = () => {
       setStockName("");
       setQuantity("");
       setPrice("");
-
     } catch (err) {
       alert("Error saving buy");
     } finally {
@@ -37,15 +36,13 @@ const Buy = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
-
       <div className="w-full max-w-md">
-
         {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">🟢 Buy Stocks</h1>
 
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/dashboard", { replace: true })}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back
@@ -54,7 +51,6 @@ const Buy = () => {
 
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
-
           <input
             placeholder="Stock Name"
             className="w-full p-3 mb-3 bg-gray-800 rounded"
@@ -78,14 +74,18 @@ const Buy = () => {
             onChange={(e) => setPrice(e.target.value)}
           />
 
+          {/* ✅ LOADING BUTTON UPDATED */}
           <button
             onClick={handleSave}
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 p-3 rounded font-bold"
+            className={`w-full p-3 rounded font-bold transition ${
+              loading
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
           >
             {loading ? "Saving..." : "Save Buy"}
           </button>
-
         </div>
       </div>
     </div>

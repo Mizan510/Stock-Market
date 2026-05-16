@@ -6,7 +6,9 @@ const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [backLoading, setBackLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -20,7 +22,7 @@ const Register = () => {
     try {
       setLoading(true);
 
-      const response = await api.post("/auth/register", {
+      await api.post("/auth/register", {
         name,
         email,
         password,
@@ -28,12 +30,9 @@ const Register = () => {
 
       alert("Account created successfully!");
 
-      navigate("/login");
-
+      navigate("/login", { replace: true });
     } catch (error) {
-      alert(
-        error.response?.data?.message || "Registration failed"
-      );
+      alert(error.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -41,15 +40,11 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-
       <form
         onSubmit={handleRegister}
         className="w-full max-w-md bg-gray-900 border border-gray-800 p-8 rounded-2xl text-white shadow-xl"
       >
-
-        <h2 className="text-3xl font-bold mb-6 text-center">
-          🚀 Register
-        </h2>
+        <h2 className="text-3xl font-bold mb-6 text-center">🚀 Register</h2>
 
         <input
           type="text"
@@ -75,10 +70,11 @@ const Register = () => {
           onChange={(e) => setPassword(e.target.value)}
         />
 
+        {/* CREATE ACCOUNT BUTTON */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-semibold transition"
+          className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-60 py-3 rounded-lg font-semibold transition"
         >
           {loading ? "Creating..." : "Create Account"}
         </button>
@@ -86,24 +82,23 @@ const Register = () => {
         {/* LOGIN LINK */}
         <p className="text-sm text-gray-400 mt-5 text-center">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-blue-400 hover:underline"
-          >
+          <Link to="/login" className="text-blue-400 hover:underline">
             Login
           </Link>
         </p>
 
-        {/* BACK HOME */}
-        <Link to="/">
-          <button
-            type="button"
-            className="w-full mt-4 border border-gray-600 hover:bg-gray-800 py-3 rounded-lg font-semibold transition"
-          >
-            Back to Home
-          </button>
-        </Link>
-
+        {/* BACK HOME BUTTON */}
+        <button
+          type="button"
+          onClick={() => {
+            setBackLoading(true);
+            setTimeout(() => navigate("/"), 300);
+          }}
+          disabled={backLoading}
+          className="w-full mt-4 border border-gray-600 hover:bg-gray-800 py-3 rounded-lg font-semibold transition disabled:opacity-60"
+        >
+          {backLoading ? "Loading..." : "Back to Home"}
+        </button>
       </form>
     </div>
   );
