@@ -34,10 +34,21 @@ router.get("/names/:userId", async (req, res) => {
   try {
     const buys = await Buy.find({ userId: req.params.userId });
 
-    const uniqueNames = [...new Set(buys.map(b => b.stockName))];
+    const uniqueNames = [...new Set(buys.map((b) => b.stockName))];
 
     res.json(uniqueNames);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
+// GET ALL BUYS FOR USER
+router.get("/:userId", async (req, res) => {
+  try {
+    const buys = await Buy.find({ userId: req.params.userId }).sort({
+      createdAt: -1,
+    });
+    res.json(buys);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -7,22 +7,26 @@ const buyRoutes = require("./routes/buyRoutes");
 const saleRoutes = require("./routes/saleRoutes");
 const authRoutes = require("./routes/auth");
 const investmentRoutes = require("./routes/investmentRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // MongoDB
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch(err => console.log(err));
+  .catch((err) => console.log(err));
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/buy", buyRoutes);
 app.use("/api/sale", saleRoutes);
 app.use("/api/investment", investmentRoutes);
+app.use("/api/expense", expenseRoutes);
 
 // Server
 app.listen(5000, () => {
