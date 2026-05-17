@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../api";
+import SummaryPanel from "../components/SummaryPanel";
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
   const [loadingRoute, setLoadingRoute] = useState("");
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [deposit, setDeposit] = useState(0);
+  const [withdraw, setWithdraw] = useState(0);
+  const [balance, setBalance] = useState(0);
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
   useEffect(() => {
     // Force the browser back button to trigger logout confirmation on Dashboard.
@@ -24,8 +30,32 @@ const Dashboard = () => {
     };
 
     window.addEventListener("popstate", handlePopState);
+    fetchInvestmentSummary();
     return () => window.removeEventListener("popstate", handlePopState);
   }, [navigate]);
+
+  const fetchInvestmentSummary = async () => {
+    try {
+      const res = await api.get(`/investment/demo-user`);
+      const investmentData = res.data?.data || res.data || [];
+
+      const depositAmount = investmentData.reduce((sum, item) => {
+        return item.type === "deposit" ? sum + Number(item.amount || 0) : sum;
+      }, 0);
+
+      const withdrawAmount = investmentData.reduce((sum, item) => {
+        return item.type === "withdraw" ? sum + Number(item.amount || 0) : sum;
+      }, 0);
+
+      setDeposit(depositAmount);
+      setWithdraw(withdrawAmount);
+      setBalance(depositAmount - withdrawAmount);
+    } catch (err) {
+      console.log("Summary fetch failed:", err);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   const logout = async () => {
     const confirmed = window.confirm("Are you sure you want to log out?");
@@ -103,24 +133,12 @@ const Dashboard = () => {
 
       {/* RIGHT SUMMARY AREA */}
       <div className="flex-1 p-6">
-        <h2 className="text-2xl font-bold mb-4">📌 Summary</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gray-900 p-4 rounded-xl border border-gray-800">
-            <h3 className="text-sm text-gray-400">Total Investment</h3>
-            <p className="text-xl font-bold">--</p>
-          </div>
-
-          <div className="bg-gray-900 p-4 rounded-xl border border-gray-800">
-            <h3 className="text-sm text-gray-400">Total Profit</h3>
-            <p className="text-xl font-bold text-green-400">--</p>
-          </div>
-
-          <div className="bg-gray-900 p-4 rounded-xl border border-gray-800">
-            <h3 className="text-sm text-gray-400">Total Expense</h3>
-            <p className="text-xl font-bold text-red-400">--</p>
-          </div>
-        </div>
+        <SummaryPanel
+          loading={summaryLoading}
+          deposit={deposit}
+          withdraw={withdraw}
+          balance={balance}
+        />
       </div>
     </div>
   );

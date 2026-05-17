@@ -5,6 +5,20 @@ import api from "../api";
 const Sale = () => {
   const navigate = useNavigate();
 
+  // ✅ Bangladesh Local Date (Safe & Clean)
+  const getBDDate = () => {
+    const options = {
+      timeZone: "Asia/Dhaka",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    };
+
+    return new Intl.DateTimeFormat("en-GB", options)
+      .format(new Date())
+      .replace(/ /g, "-");
+  };
+
   const [stockName, setStockName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -52,6 +66,7 @@ const Sale = () => {
         stockName,
         quantity,
         price,
+        date: getBDDate(), // optional but useful for backend/report
       });
 
       alert(res.data.message);
@@ -81,6 +96,12 @@ const Sale = () => {
           </button>
         </div>
 
+        {/* CURRENT DATE */}
+        <div className="bg-gray-800 p-3 rounded-lg mb-4 text-center">
+          <p className="text-gray-400 text-sm">Today's Date</p>
+          <p className="text-xl font-semibold text-white">{getBDDate()}</p>
+        </div>
+
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-3">
           {/* STOCK DROPDOWN */}
@@ -100,7 +121,7 @@ const Sale = () => {
               <div className="absolute z-10 w-full bg-gray-900 border border-gray-700 rounded max-h-40 overflow-y-auto mt-1">
                 {stockList
                   .filter((item) =>
-                    item.toLowerCase().includes(stockName.toLowerCase()),
+                    item.toLowerCase().includes(stockName.toLowerCase())
                   )
                   .map((item, index) => (
                     <div

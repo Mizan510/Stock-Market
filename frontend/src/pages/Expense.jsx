@@ -2,10 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 
+import ExpenseFilter from "../components/ExpenseFilter";
+import ExpenseHistory from "../components/ExpenseHistory";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+
 const Expense = () => {
   const navigate = useNavigate();
   const userId = "demo-user";
 
+  // =========================
+  // DATE (Bangladesh Time)
+  // =========================
   const getBDDate = () => {
     const now = new Date();
     const bd = new Date(
@@ -16,24 +24,40 @@ const Expense = () => {
     return bd.toISOString().split("T")[0];
   };
 
+  // =========================
+  // FORM STATE
+  // =========================
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Food");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [date, setDate] = useState(getBDDate());
+  const [editingId, setEditingId] = useState(null);
 
+  // =========================
+  // DATA STATE
+  // =========================
   const [list, setList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
   const [showReport, setShowReport] = useState(false);
-  const [editingId, setEditingId] = useState(null);
 
+  // =========================
+  // FILTER STATE
+  // =========================
   const [fromDate, setFromDate] = useState(getBDDate());
   const [toDate, setToDate] = useState(getBDDate());
 
+  // =========================
+  // LOADING
+  // =========================
   const [loading, setLoading] = useState(false);
   const [viewLoading, setViewLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
+  // =========================
+  // INIT LOAD
+  // =========================
   useEffect(() => {
     fetchExpenses();
   }, []);
@@ -48,6 +72,9 @@ const Expense = () => {
     }
   };
 
+  // =========================
+  // CLEAR FORM
+  // =========================
   const clearForm = () => {
     setTitle("");
     setCategory("Food");
@@ -57,6 +84,9 @@ const Expense = () => {
     setEditingId(null);
   };
 
+  // =========================
+  // SAVE / UPDATE
+  // =========================
   const handleSave = async () => {
     if (!title.trim() || !amount || !date) {
       alert("Please fill all required fields");
@@ -71,36 +101,36 @@ const Expense = () => {
     try {
       setLoading(true);
 
+      const payload = {
+        title,
+        category,
+        amount: Number(amount),
+        note,
+        date,
+        userId,
+      };
+
       if (editingId) {
-        const res = await api.put(`/expense/update/${editingId}`, {
-          title,
-          category,
-          amount: Number(amount),
-          note,
-          date,
-        });
+        const res = await api.put(`/expense/update/${editingId}`, payload);
 
         const updated = res.data.data;
+
         setList((prev) =>
-          prev.map((item) => (item._id === updated._id ? updated : item)),
+          prev.map((i) => (i._id === updated._id ? updated : i)),
         );
         setFilteredList((prev) =>
-          prev.map((item) => (item._id === updated._id ? updated : item)),
+          prev.map((i) => (i._id === updated._id ? updated : i)),
         );
+
         alert("Expense updated successfully");
       } else {
-        const res = await api.post("/expense/add", {
-          userId,
-          title,
-          category,
-          amount: Number(amount),
-          note,
-          date,
-        });
+        const res = await api.post("/expense/add", payload);
 
         const newExpense = res.data.data;
+
         setList((prev) => [newExpense, ...prev]);
         setFilteredList((prev) => [newExpense, ...prev]);
+
         alert("Expense saved successfully");
       }
 
@@ -113,6 +143,9 @@ const Expense = () => {
     }
   };
 
+  // =========================
+  // EDIT
+  // =========================
   const handleEdit = (item) => {
     setEditingId(item._id);
     setTitle(item.title);
@@ -122,16 +155,18 @@ const Expense = () => {
     setDate(new Date(item.date).toISOString().split("T")[0]);
   };
 
+  // =========================
+  // DELETE
+  // =========================
   const handleDelete = async (id) => {
-    const confirmed = window.confirm(
-      "Delete this expense? This cannot be undone.",
-    );
-    if (!confirmed) return;
+    if (!window.confirm("Delete this expense?")) return;
 
     try {
       await api.delete(`/expense/delete/${id}`);
-      setList((prev) => prev.filter((item) => item._id !== id));
-      setFilteredList((prev) => prev.filter((item) => item._id !== id));
+
+      setList((prev) => prev.filter((i) => i._id !== id));
+      setFilteredList((prev) => prev.filter((i) => i._id !== id));
+
       alert("Expense deleted");
     } catch (err) {
       console.log(err);
@@ -139,12 +174,16 @@ const Expense = () => {
     }
   };
 
-  const handleView = () => {
+  // =========================
+  // FILTER REPORT
+  // =========================
+  const handleReport = () => {
     setViewLoading(true);
 
     setTimeout(() => {
       const filtered = list.filter((item) => {
         const itemDate = new Date(item.date).toISOString().split("T")[0];
+
         return itemDate >= fromDate && itemDate <= toDate;
       });
 
@@ -154,6 +193,115 @@ const Expense = () => {
     }, 300);
   };
 
+  // =========================
+  // EXPORT TO EXCEL
+  // =========================
+  const handleExport = async () => {
+    setExportLoading(true);
+
+    try {
+      const data = filteredList.length ? filteredList : list;
+
+      const sorted = [...data].sort(
+        (a, b) => new Date(a.date) - new Date(b.date),
+      );
+
+      let totalAmount = 0;
+
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Expense Report");
+
+      const centerStyle = { vertical: "middle", horizontal: "center" };
+      const borderStyle = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+
+      // header
+      const headerRow = sheet.addRow([
+        "Date",
+        "Title",
+        "Category",
+        "Amount",
+        "Note",
+      ]);
+
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF1F4E79" },
+        };
+        cell.alignment = centerStyle;
+        cell.border = borderStyle;
+      });
+
+      // data rows
+      sorted.forEach((item) => {
+        const amt = Number(item.amount || 0);
+        totalAmount += amt;
+
+        const row = sheet.addRow([
+          new Date(item.date).toLocaleDateString("en-GB"),
+          item.title || "",
+          item.category || "",
+          amt,
+          item.note || "",
+        ]);
+
+        row.eachCell((cell) => {
+          cell.alignment = centerStyle;
+          cell.border = borderStyle;
+        });
+      });
+
+      // total row
+      const totalRow = sheet.addRow(["TOTAL", "-", "-", totalAmount, "-"]);
+      totalRow.eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.alignment = centerStyle;
+        cell.border = {
+          top: { style: "medium" },
+          left: { style: "medium" },
+          bottom: { style: "medium" },
+          right: { style: "medium" },
+        };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFD966" },
+        };
+      });
+
+      sheet.columns = [
+        { width: 14 },
+        { width: 24 },
+        { width: 18 },
+        { width: 12 },
+        { width: 30 },
+      ];
+
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      saveAs(blob, "expense_report.xlsx");
+    } catch (err) {
+      console.log(err);
+      alert("Failed to generate report");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // =========================
+  // RESET FILTER
+  // =========================
   const handleReset = () => {
     setResetLoading(true);
 
@@ -166,19 +314,23 @@ const Expense = () => {
     }, 300);
   };
 
+  // =========================
+  // TOTAL
+  // =========================
   const totalExpense = filteredList.reduce(
-    (sum, item) => sum + Number(item.amount),
+    (sum, item) => sum + Number(item.amount || 0),
     0,
   );
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
       <div className="w-full max-w-5xl space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        {/* HEADER */}
+        <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">💰 Expense Tracker</h1>
-            <p className="text-sm text-gray-400 mt-1">
-              Save expenses, filter by date, and review totals.
+            <p className="text-sm text-gray-400">
+              Save expenses and track reports
             </p>
           </div>
 
@@ -190,188 +342,96 @@ const Expense = () => {
           </button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-4">
-            <h2 className="text-xl font-semibold">
-              {editingId ? "Edit Expense" : "New Expense"}
-            </h2>
+        {/* FORM */}
+        <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-4">
+          <h2 className="text-xl font-semibold">
+            {editingId ? "Edit Expense" : "New Expense"}
+          </h2>
 
-            <input
-              placeholder="Title"
-              className="w-full p-3 bg-gray-800 rounded"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+          <input
+            type="date"
+            className="w-full p-3 bg-gray-800 rounded"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
 
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full p-3 bg-gray-800 rounded"
+          <input
+            placeholder="Title"
+            className="w-full p-3 bg-gray-800 rounded"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full p-3 bg-gray-800 rounded"
+          >
+            <option>Food</option>
+            <option>Travel</option>
+            <option>Utilities</option>
+            <option>Shopping</option>
+            <option>Health</option>
+            <option>Other</option>
+          </select>
+
+          <input
+            type="number"
+            placeholder="Amount"
+            className="w-full p-3 bg-gray-800 rounded"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+
+          <textarea
+            placeholder="Note (optional)"
+            className="w-full p-3 bg-gray-800 rounded h-24"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="flex-1 bg-green-600 hover:bg-green-700 p-3 rounded font-bold"
             >
-              <option value="Food">Food</option>
-              <option value="Travel">Travel</option>
-              <option value="Utilities">Utilities</option>
-              <option value="Shopping">Shopping</option>
-              <option value="Health">Health</option>
-              <option value="Other">Other</option>
-            </select>
+              {loading ? "Saving..." : editingId ? "Update" : "Save"}
+            </button>
 
-            <input
-              placeholder="Amount"
-              type="number"
-              className="w-full p-3 bg-gray-800 rounded"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-
-            <input
-              type="date"
-              className="w-full p-3 bg-gray-800 rounded"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-            />
-
-            <textarea
-              placeholder="Note (optional)"
-              className="w-full p-3 bg-gray-800 rounded h-24 resize-none"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-
-            <div className="flex flex-col gap-3 sm:flex-row">
+            {editingId && (
               <button
-                onClick={handleSave}
-                disabled={loading}
-                className={`flex-1 p-3 rounded font-bold transition ${
-                  loading
-                    ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
+                onClick={clearForm}
+                className="flex-1 bg-gray-700 p-3 rounded font-bold"
               >
-                {loading
-                  ? "Saving..."
-                  : editingId
-                    ? "Update Expense"
-                    : "Save Expense"}
+                Cancel
               </button>
-
-              {editingId && (
-                <button
-                  onClick={clearForm}
-                  className="flex-1 p-3 rounded font-bold bg-gray-700 hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* FILTER SECTION */}
-          <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800 space-y-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <h2 className="text-xl font-bold text-white">Filter Expenses</h2>
-              <p className="text-sm text-gray-400 hidden sm:block">
-                Select a date range and press View.
-              </p>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-[1fr_1fr_120px_120px] items-end">
-              <div>
-                <label className="text-sm text-gray-400 block mb-2">From</label>
-                <input
-                  type="date"
-                  className="w-full bg-gray-800 border border-gray-700 p-3 rounded-xl"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-400 block mb-2">To</label>
-                <input
-                  type="date"
-                  className="w-full bg-gray-800 border border-gray-700 p-3 rounded-xl"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
-
-              <button
-                onClick={handleView}
-                disabled={viewLoading}
-                className="h-12 w-full bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold"
-              >
-                {viewLoading ? "Loading..." : "View"}
-              </button>
-
-              <button
-                onClick={handleReset}
-                disabled={resetLoading}
-                className="h-12 w-full bg-gray-700 hover:bg-gray-600 rounded-xl font-semibold"
-              >
-                {resetLoading ? "Resetting..." : "Reset"}
-              </button>
-            </div>
-
-            <div className="bg-gray-950 border border-gray-800 rounded-xl p-4">
-              <p className="text-sm text-gray-400">Total Expenses</p>
-              <p className="text-3xl font-bold text-red-400 mt-1">
-                ৳ {totalExpense.toFixed(2)}
-              </p>
-            </div>
+            )}
           </div>
         </div>
 
-        <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
-          <h2 className="text-xl font-semibold mb-4">Expense History</h2>
+        {/* FILTER */}
+        <ExpenseFilter
+          fromDate={fromDate}
+          toDate={toDate}
+          setFromDate={setFromDate}
+          setToDate={setToDate}
+          handleView={handleReport}
+          handleReset={handleReset}
+          viewLoading={viewLoading}
+          resetLoading={resetLoading}
+          handleExport={handleExport}
+          exportLoading={exportLoading}
+          totalExpense={totalExpense}
+        />
 
-          {!showReport ? (
-            <div className="text-center text-gray-400 py-16">
-              Press View to load expense history for the selected date range.
-            </div>
-          ) : filteredList.length === 0 ? (
-            <div className="text-center text-gray-400 py-16">
-              No expenses found for the selected date range.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredList.map((item) => (
-                <div
-                  key={item._id}
-                  className="grid grid-cols-1 gap-3 bg-gray-950 p-4 rounded-lg border border-gray-800 md:grid-cols-[1.7fr_0.8fr_0.8fr_0.6fr_1fr]"
-                >
-                  <div>
-                    <div className="font-semibold">{item.title}</div>
-                    <div className="text-xs text-gray-400">
-                      {item.note || "No note"}
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-400">{item.category}</div>
-                  <div className="text-right font-semibold text-red-400">
-                    {Number(item.amount).toFixed(2)}
-                  </div>
-                  <div className="text-right text-sm text-gray-400">
-                    {new Date(item.date).toLocaleDateString("en-GB")}
-                  </div>
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => handleEdit(item)}
-                      className="px-3 py-2 rounded bg-yellow-600 hover:bg-yellow-500 text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item._id)}
-                      className="px-3 py-2 rounded bg-red-600 hover:bg-red-500 text-sm"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* HISTORY */}
+        <ExpenseHistory
+          showReport={showReport}
+          filteredList={filteredList}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+        />
       </div>
     </div>
   );

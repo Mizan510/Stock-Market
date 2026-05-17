@@ -5,6 +5,20 @@ import api from "../api";
 const Buy = () => {
   const navigate = useNavigate();
 
+  // ✅ Bangladesh Local Date (Safe & Clean)
+  const getBDDate = () => {
+    const options = {
+      timeZone: "Asia/Dhaka",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    };
+
+    return new Intl.DateTimeFormat("en-GB", options)
+      .format(new Date())
+      .replace(/ /g, "-");
+  };
+
   const [stockName, setStockName] = useState("");
   const [quantity, setQuantity] = useState("");
   const [price, setPrice] = useState("");
@@ -21,14 +35,16 @@ const Buy = () => {
         stockName,
         quantity,
         price,
+        date: getBDDate(), // optional but useful for reports
       });
 
       alert("Buy saved successfully!");
+
       setStockName("");
       setQuantity("");
       setPrice("");
     } catch (err) {
-      alert("Error saving buy");
+      alert(err.response?.data?.message || "Error saving buy");
     } finally {
       setLoading(false);
     }
@@ -47,6 +63,12 @@ const Buy = () => {
           >
             Back
           </button>
+        </div>
+
+        {/* CURRENT DATE */}
+        <div className="bg-gray-800 p-3 rounded-lg mb-4 text-center">
+          <p className="text-gray-400 text-sm">Today's Date</p>
+          <p className="text-xl font-semibold text-white">{getBDDate()}</p>
         </div>
 
         {/* FORM */}
@@ -74,7 +96,7 @@ const Buy = () => {
             onChange={(e) => setPrice(e.target.value)}
           />
 
-          {/* ✅ LOADING BUTTON UPDATED */}
+          {/* BUTTON */}
           <button
             onClick={handleSave}
             disabled={loading}

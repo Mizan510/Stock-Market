@@ -40,6 +40,17 @@ const Investment = () => {
     fetchData();
   }, []);
 
+  // Set fromDate to first data entry date
+  useEffect(() => {
+    if (list.length > 0) {
+      const sortedByDate = [...list].sort(
+        (a, b) => new Date(a.date) - new Date(b.date),
+      );
+      const firstDate = sortedByDate[0].date.split("T")[0];
+      setFromDate(firstDate);
+    }
+  }, [list]);
+
   const fetchData = async () => {
     try {
       const res = await api.get(`/investment/${userId}`);
