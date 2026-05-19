@@ -29,8 +29,8 @@ const SummaryPanel = ({
     <div>
       {/* HEADER */}
       <div className="mb-6">
-        <h2 className="text-3xl font-bold text-white">
-          📊 Investment Summary
+        <h2 className="text-2xl font-bold text-white">
+          🏦 Investment Summary
         </h2>
 
         <p className="text-gray-400 text-sm mt-1">

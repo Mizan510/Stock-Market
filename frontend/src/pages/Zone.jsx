@@ -78,7 +78,7 @@ const Zone = () => {
         <div className="flex gap-2">
           <button
             onClick={addRow}
-            className="bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg"
+            className="bg-green-600 hover:bg-green-700 px-2 py-2 rounded-lg"
           >
             + Add Company
           </button>
