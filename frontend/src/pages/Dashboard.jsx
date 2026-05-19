@@ -6,19 +6,10 @@ import SummaryPanel from "../components/SummaryPanel";
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const [loadingRoute, setLoadingRoute] = useState("");
-  const [logoutLoading, setLogoutLoading] = useState(false);
-  const [deposit, setDeposit] = useState(0);
-  const [withdraw, setWithdraw] = useState(0);
-  const [balance, setBalance] = useState(0);
-  const [summaryLoading, setSummaryLoading] = useState(true);
-
   useEffect(() => {
-    // Force the browser back button to trigger logout confirmation on Dashboard.
-    window.history.pushState({ dashboard: true }, "", window.location.href);
     window.history.pushState({ dashboard: true }, "", window.location.href);
 
-    const handlePopState = (event) => {
+    const handlePopState = () => {
       const confirmed = window.confirm("Are you sure you want to log out?");
       if (confirmed) {
         localStorage.removeItem("auth");
@@ -30,9 +21,19 @@ const Dashboard = () => {
     };
 
     window.addEventListener("popstate", handlePopState);
-    fetchInvestmentSummary();
     return () => window.removeEventListener("popstate", handlePopState);
   }, [navigate]);
+
+  const [loadingRoute, setLoadingRoute] = useState("");
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [deposit, setDeposit] = useState(0);
+  const [withdraw, setWithdraw] = useState(0);
+  const [balance, setBalance] = useState(0);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+
+  useEffect(() => {
+    fetchInvestmentSummary();
+  }, []);
 
   const fetchInvestmentSummary = async () => {
     try {
@@ -119,6 +120,7 @@ const Dashboard = () => {
         <Card icon="💼" title="Investment" route="/investment" />
         <Card icon="🟢" title="Buy" route="/buy" />
         <Card icon="🔴" title="Sale" route="/sale" />
+        <Card icon="🔴" title="Dividend" route="/Dividend" />
         <Card icon="📈" title="Reports" route="/reports" />
         <Card icon="💰" title="Expense" route="/expense" />
 

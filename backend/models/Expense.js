@@ -14,6 +14,10 @@ const expenseSchema = new mongoose.Schema(
       type: String,
       default: "Food",
     },
+    importance: {
+      type: String,
+      default: "Essential",
+    },
     amount: {
       type: Number,
       required: true,

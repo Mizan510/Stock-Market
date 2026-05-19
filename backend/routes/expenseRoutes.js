@@ -5,12 +5,13 @@ const router = express.Router();
 // CREATE EXPENSE
 router.post("/add", async (req, res) => {
   try {
-    const { userId, title, category, amount, note, date } = req.body;
+    const { userId, title, category, importance, amount, note, date } = req.body;
 
     const expense = new Expense({
       userId,
       title,
       category,
+      importance,
       amount: Number(amount),
       note,
       date,
@@ -46,13 +47,14 @@ router.get("/:userId", async (req, res) => {
 router.put("/update/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, category, amount, note, date } = req.body;
+    const { title, category, importance, amount, note, date } = req.body;
 
     const updated = await Expense.findByIdAndUpdate(
       id,
       {
         title,
         category,
+        importance,
         amount: Number(amount),
         note,
         date,

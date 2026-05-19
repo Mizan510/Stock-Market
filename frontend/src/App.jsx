@@ -11,6 +11,7 @@ import Zone from "./pages/Zone";
 import Investment from "./pages/Investment";
 import Buy from "./pages/Buy";
 import Sale from "./pages/Sale";
+import Dividend from "./pages/Dividend";
 import Reports from "./pages/Reports";
 import Expense from "./pages/Expense";
 
@@ -64,6 +65,15 @@ const App = () => {
         element={
           <ProtectedRoute>
             <Sale />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dividend"
+        element={
+          <ProtectedRoute>
+            <Dividend />
           </ProtectedRoute>
         }
       />

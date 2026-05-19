@@ -357,7 +357,14 @@ const Investment = () => {
           <button
             onClick={() => {
               setBackLoading(true);
-              setTimeout(() => navigate("/dashboard", { replace: true }), 300);
+              setTimeout(() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate("/dashboard");
+                }
+                setBackLoading(false);
+              }, 300);
             }}
             disabled={backLoading}
             className="bg-gray-700 px-4 py-2 rounded-lg disabled:opacity-60"

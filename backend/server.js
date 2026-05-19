@@ -9,6 +9,9 @@ const authRoutes = require("./routes/auth");
 const investmentRoutes = require("./routes/investmentRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 
+// ✅ Dividend routes (FIXED NAME)
+const dividendRoutes = require("./routes/dividendRoutes");
+
 const app = express();
 
 app.use(cors());
@@ -27,6 +30,9 @@ app.use("/api/buy", buyRoutes);
 app.use("/api/sale", saleRoutes);
 app.use("/api/investment", investmentRoutes);
 app.use("/api/expense", expenseRoutes);
+
+// ✅ Dividend API
+app.use("/api/dividend", dividendRoutes);
 
 // Server
 app.listen(5000, () => {

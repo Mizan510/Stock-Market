@@ -89,7 +89,13 @@ const Sale = () => {
           <h1 className="text-3xl font-bold">🔴 Sale Stocks</h1>
 
           <button
-            onClick={() => navigate("/dashboard", { replace: true })}
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/dashboard");
+              }
+            }}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back
@@ -121,7 +127,7 @@ const Sale = () => {
               <div className="absolute z-10 w-full bg-gray-900 border border-gray-700 rounded max-h-40 overflow-y-auto mt-1">
                 {stockList
                   .filter((item) =>
-                    item.toLowerCase().includes(stockName.toLowerCase())
+                    item.toLowerCase().includes(stockName.toLowerCase()),
                   )
                   .map((item, index) => (
                     <div

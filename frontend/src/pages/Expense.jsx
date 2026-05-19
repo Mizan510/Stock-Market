@@ -29,6 +29,7 @@ const Expense = () => {
   // =========================
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("Food");
+  const [importance, setImportance] = useState("Essential");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [date, setDate] = useState(getBDDate());
@@ -78,6 +79,7 @@ const Expense = () => {
   const clearForm = () => {
     setTitle("");
     setCategory("Food");
+    setImportance("Essential");
     setAmount("");
     setNote("");
     setDate(getBDDate());
@@ -104,6 +106,7 @@ const Expense = () => {
       const payload = {
         title,
         category,
+        importance,
         amount: Number(amount),
         note,
         date,
@@ -150,9 +153,13 @@ const Expense = () => {
     setEditingId(item._id);
     setTitle(item.title);
     setCategory(item.category);
+    setImportance(item.importance || "Essential");
     setAmount(String(item.amount));
     setNote(item.note || "");
     setDate(new Date(item.date).toISOString().split("T")[0]);
+    
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // =========================
@@ -224,6 +231,7 @@ const Expense = () => {
         "Date",
         "Title",
         "Category",
+        "Importance",
         "Amount",
         "Note",
       ]);
@@ -248,6 +256,7 @@ const Expense = () => {
           new Date(item.date).toLocaleDateString("en-GB"),
           item.title || "",
           item.category || "",
+          item.importance || "",
           amt,
           item.note || "",
         ]);
@@ -259,7 +268,7 @@ const Expense = () => {
       });
 
       // total row
-      const totalRow = sheet.addRow(["TOTAL", "-", "-", totalAmount, "-"]);
+      const totalRow = sheet.addRow(["TOTAL", "-", "-", "-", totalAmount, "-"]);
       totalRow.eachCell((cell) => {
         cell.font = { bold: true };
         cell.alignment = centerStyle;
@@ -279,6 +288,7 @@ const Expense = () => {
       sheet.columns = [
         { width: 14 },
         { width: 24 },
+        { width: 18 },
         { width: 18 },
         { width: 12 },
         { width: 30 },
@@ -328,14 +338,20 @@ const Expense = () => {
         {/* HEADER */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">💰 Expense Tracker</h1>
+            <h1 className="text-2xl font-bold">💰 Expense Tracker</h1>
             <p className="text-sm text-gray-400">
               Save expenses and track reports
             </p>
           </div>
 
           <button
-            onClick={() => navigate("/dashboard", { replace: true })}
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/dashboard");
+              }
+            }}
             className="bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-600"
           >
             Back
@@ -373,6 +389,17 @@ const Expense = () => {
             <option>Shopping</option>
             <option>Health</option>
             <option>Other</option>
+          </select>
+
+          <select
+            value={importance}
+            onChange={(e) => setImportance(e.target.value)}
+            className="w-full p-3 bg-gray-800 rounded"
+          >
+            <option>Essential</option>
+            <option>Non-Essential</option>
+            <option>Entertainment</option>
+            <option>Just Want</option>
           </select>
 
           <input
