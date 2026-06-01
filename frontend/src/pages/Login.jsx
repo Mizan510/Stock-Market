@@ -92,8 +92,11 @@ const Login = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-3 rounded-lg font-semibold transition"
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
         >
+          {loading && (
+            <span className="w-4 h-4 border-2 border-white/80 border-r-transparent rounded-full animate-spin" />
+          )}
           {loading ? "Logging in..." : "Login"}
         </button>
 

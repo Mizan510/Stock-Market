@@ -157,7 +157,7 @@ const Expense = () => {
     setAmount(String(item.amount));
     setNote(item.note || "");
     setDate(new Date(item.date).toISOString().split("T")[0]);
-    
+
     // Scroll to form
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -218,7 +218,11 @@ const Expense = () => {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Expense Report");
 
-      const centerStyle = { vertical: "middle", horizontal: "center" };
+      const centerStyle = {
+        vertical: "middle",
+        horizontal: "center",
+        wrapText: true,
+      };
       const borderStyle = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -265,6 +269,7 @@ const Expense = () => {
           cell.alignment = centerStyle;
           cell.border = borderStyle;
         });
+        row.height = 40;
       });
 
       // total row

@@ -7,9 +7,17 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
   try {
     const data = filteredList.length ? filteredList : list;
 
-    const sorted = [...data].sort(
-      (a, b) => new Date(a.recordDate) - new Date(b.recordDate),
-    );
+    const sorted = [...data].sort((a, b) => {
+      const getPrimaryDate = (item) =>
+        item.documentationDate || item.declarationDate || item.recordDate;
+      const dateA = getPrimaryDate(a)
+        ? new Date(getPrimaryDate(a))
+        : new Date(0);
+      const dateB = getPrimaryDate(b)
+        ? new Date(getPrimaryDate(b))
+        : new Date(0);
+      return dateA - dateB;
+    });
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Dividend Report");
@@ -61,6 +69,7 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
     };
 
     const headerRow = sheet.addRow([
+      "Documentation Date",
       "Declaration Date",
       "Record Date",
       "Company Name",
@@ -84,9 +93,9 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
 
     headerRow.eachCell((cell, colNumber) => {
       let fillColor = "FF1F4E79";
-      if (colNumber === 11) {
+      if (colNumber === 12) {
         fillColor = "FF70AD47";
-      } else if (colNumber === 19) {
+      } else if (colNumber === 20) {
         fillColor = getNetAfterPurificationStyle(1).fill.fgColor.argb;
       }
 
@@ -123,6 +132,41 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       const parseNumber = (value) =>
         value === "" || value == null ? 0 : Number(value);
 
+      const parseDate = (dateValue) => {
+        if (!dateValue) return "";
+        try {
+          let date;
+          if (typeof dateValue === "string") {
+            // If it's just a date string (YYYY-MM-DD), add time
+            // If it's already an ISO string, use it as is
+            date = dateValue.includes("T")
+              ? new Date(dateValue)
+              : new Date(dateValue + "T00:00:00Z");
+          } else {
+            date = new Date(dateValue);
+          }
+
+          // Check if date is valid
+          if (isNaN(date.getTime())) {
+            return dateValue || "";
+          }
+
+          return date.toLocaleDateString("en-GB");
+        } catch (e) {
+          return dateValue || "";
+        }
+      };
+
+      // Get the primary date - use documentationDate if available, fallback to declarationDate or recordDate
+      const getPrimaryDate = () => {
+        return (
+          item.documentationDate ||
+          item.declarationDate ||
+          item.recordDate ||
+          ""
+        );
+      };
+
       const grossDividend = parseNumber(item.grossDividend);
       const taxAmount = parseNumber(item.taxAmount);
       const netDividend = parseNumber(item.netDividend);
@@ -155,12 +199,9 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
           : netDividend - rowPurificationAmount;
 
       const row = sheet.addRow([
-        item.declarationDate
-          ? new Date(item.declarationDate).toLocaleDateString("en-GB")
-          : "",
-        item.recordDate
-          ? new Date(item.recordDate).toLocaleDateString("en-GB")
-          : "",
+        parseDate(getPrimaryDate()),
+        parseDate(item.declarationDate),
+        parseDate(item.recordDate),
         item.companyName || "",
         item.shares || "",
         item.dividendPercent || "",
@@ -170,29 +211,27 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
         item.taxPercent || "",
         item.taxAmount || "",
         rowNetDividendSendInBank || "",
-        item.bankPaymentDate
-          ? new Date(item.bankPaymentDate).toLocaleDateString("en-GB")
-          : "",
+        parseDate(item.bankPaymentDate),
         item.costPerShare || "",
         item.dividendPer100tk || "",
-        rowPurificationRate || "",
-        rowPurificationAmount || "",
         item.nonShariahIncome || "",
         item.totalIncome || "",
+        rowPurificationRate || "",
+        rowPurificationAmount || "",
         rowNetDividendAfterPurification || "",
       ]);
 
       row.eachCell((cell, colNumber) => {
         cell.alignment = { ...centerStyle, wrapText: true };
         cell.border = borderStyle;
-        if (colNumber === 11) {
+        if (colNumber === 12) {
           cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
           cell.fill = {
             type: "pattern",
             pattern: "solid",
             fgColor: { argb: "FF70AD47" },
           };
-        } else if (colNumber === 19) {
+        } else if (colNumber === 20) {
           const style = getNetAfterPurificationStyle(
             rowNetDividendAfterPurification,
           );
@@ -220,8 +259,9 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
 
     const totalRow = sheet.addRow([
       "",
-      "TOTAL",
       "",
+      "",
+      "TOTAL",
       totals.shares,
       totals.dividendPercent,
       totals.faceValue,
@@ -233,10 +273,10 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       "",
       totals.costPerShare,
       totals.dividendPer100tk,
-      totals.purificationRate,
-      totals.purificationAmount,
       totals.nonShariahIncome,
       totals.totalIncome,
+      totals.purificationRate,
+      totals.purificationAmount,
       totals.netDividendAfterPurification,
     ]);
 
@@ -244,15 +284,15 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       cell.font = { bold: true };
       cell.alignment = { ...centerStyle, wrapText: true };
       cell.border = borderStyle;
-      // Net Dividend column (column 11) - green highlight
-      if (colNumber === 11) {
+      // Net Dividend column (column 12) - green highlight
+      if (colNumber === 12) {
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
         cell.fill = {
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: "FF70AD47" },
         };
-      } else if (colNumber === 19) {
+      } else if (colNumber === 20) {
         const style = getNetAfterPurificationStyle(
           totals.netDividendAfterPurification,
         );
@@ -268,6 +308,7 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
     });
 
     sheet.columns = [
+      { width: 14 },
       { width: 14 },
       { width: 12 },
       { width: 20 },
