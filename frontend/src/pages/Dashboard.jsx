@@ -161,19 +161,43 @@ const Dashboard = () => {
       "
           >
             {/* HEADER */}
-            <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-4 sm:py-5">
+            <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-4 sm:py-5">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white tracking-wide">
                 Important Trading Rules
               </h2>
 
               {/* MOTIVATION BOX */}
               <div className="mt-4 bg-white/10 border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md">
-                <h3
-                  className="text-yellow-300 [text-shadow:1px_1px_0_black,-1px_-1px_0_black,1px_-1px_0_black,-1px_1px_0_black] text-2xl font-bold"
-                  align="center"
-                >
-                  No Emotion, Only Patience
-                </h3>
+                <>
+                  <style>
+                    {`
+                      @keyframes blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0; }
+                      }
+
+                      .blink-text {
+                        animation: blink 1s infinite;
+                      }
+                    `}
+                  </style>
+
+                  <h3
+                    className="text-red-600 text-2xl font-extrabold blink-text"
+                    style={{
+                      WebkitTextStroke: "0.5px white",
+                      textShadow: `
+                        1px 0 0 #fff,
+                        -1px 0 0 #fff,
+                        0 1px 0 #fff,
+                        0 -1px 0 #fff
+                      `,
+                    }}
+                    align="center"
+                  >
+                    No Emotion, Only Patience
+                  </h3>
+                </>
 
                 <div className="w-16 sm:w-24 h-1 bg-red-400 mx-auto mt-2 rounded-full"></div>
               </div>
@@ -271,7 +295,7 @@ const Dashboard = () => {
                   </div>
 
                   {/* CASH MAP */}
-                  <div className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl p-4 text-center shadow-md">
+                  <div className="bg-linear-to-r from-red-500 to-red-600 text-white rounded-2xl p-4 text-center shadow-md">
                     <p className="text-base sm:text-lg font-bold tracking-wide">
                       Or Check Cash Map %
                     </p>

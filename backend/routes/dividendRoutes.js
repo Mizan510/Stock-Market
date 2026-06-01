@@ -21,9 +21,15 @@ router.post("/add", async (req, res) => {
       taxPercent,
       taxAmount,
       netDividend,
+      netDividendSendInBank,
       bankPaymentDate,
       costPerShare,
       dividendPer100tk,
+      purificationRate,
+      purificationAmount,
+      netDividendAfterPurification,
+      nonShariahIncome,
+      totalIncome,
     } = req.body;
 
     const data = new Dividend({
@@ -39,9 +45,15 @@ router.post("/add", async (req, res) => {
       taxPercent: Number(taxPercent || 0),
       taxAmount: Number(taxAmount || 0),
       netDividend: Number(netDividend || 0),
+      netDividendSendInBank: Number(netDividendSendInBank || 0),
       bankPaymentDate: bankPaymentDate ? new Date(bankPaymentDate) : null,
       costPerShare: Number(costPerShare || 0),
       dividendPer100tk: Number(dividendPer100tk || 0),
+      purificationRate: Number(purificationRate || 0),
+      purificationAmount: Number(purificationAmount || 0),
+      netDividendAfterPurification: Number(netDividendAfterPurification || 0),
+      nonShariahIncome: Number(nonShariahIncome || 0),
+      totalIncome: Number(totalIncome || 0),
     });
 
     await data.save();
@@ -116,9 +128,15 @@ router.put("/update/:id", async (req, res) => {
       taxPercent,
       taxAmount,
       netDividend,
+      netDividendSendInBank,
       bankPaymentDate,
       costPerShare,
       dividendPer100tk,
+      purificationRate,
+      purificationAmount,
+      netDividendAfterPurification,
+      nonShariahIncome,
+      totalIncome,
     } = req.body;
 
     const updated = await Dividend.findByIdAndUpdate(
@@ -137,11 +155,17 @@ router.put("/update/:id", async (req, res) => {
         taxPercent: Number(taxPercent || 0),
         taxAmount: Number(taxAmount || 0),
         netDividend: Number(netDividend || 0),
+        netDividendSendInBank: Number(netDividendSendInBank || 0),
         bankPaymentDate: bankPaymentDate
           ? new Date(bankPaymentDate)
           : undefined,
         costPerShare: Number(costPerShare || 0),
         dividendPer100tk: Number(dividendPer100tk || 0),
+        purificationRate: Number(purificationRate || 0),
+        purificationAmount: Number(purificationAmount || 0),
+        netDividendAfterPurification: Number(netDividendAfterPurification || 0),
+        nonShariahIncome: Number(nonShariahIncome || 0),
+        totalIncome: Number(totalIncome || 0),
       },
       { new: true },
     );

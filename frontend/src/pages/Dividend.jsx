@@ -51,6 +51,12 @@ const Dividend = () => {
     bankPaymentDate: "",
     costPerShare: "",
     dividendPer100tk: "",
+
+    purificationRate: "",
+    purificationAmount: "",
+    netDividendAfterPurification: "",
+    nonShariahIncome: "",
+    totalIncome: "",
   };
 
   const [form, setForm] = useState(defaultForm);
@@ -58,7 +64,8 @@ const Dividend = () => {
   const [list, setList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
 
-  const { fromDate: initialFromDate, toDate: initialToDate } = getFinancialYearDates();
+  const { fromDate: initialFromDate, toDate: initialToDate } =
+    getFinancialYearDates();
   const [fromDate, setFromDate] = useState(initialFromDate);
   const [toDate, setToDate] = useState(initialToDate);
 
@@ -90,6 +97,9 @@ const Dividend = () => {
     "taxAmount",
     "netDividend",
     "dividendPer100tk",
+    "purificationRate",
+    "purificationAmount",
+    "netDividendAfterPurification",
   ]);
 
   const inputClass = (name) => {
@@ -116,32 +126,84 @@ const Dividend = () => {
     const taxPercent = Number(form.taxPercent || 0);
     const costPerShare = Number(form.costPerShare || 0);
 
+    const nonShariahIncome = Number(form.nonShariahIncome || 0);
+    const totalIncome = Number(form.totalIncome || 0);
+
     const perShareDividend =
       form.dividendPercent !== "" && faceValue > 0
-        ? dividendPercent / faceValue
+        ? (dividendPercent * faceValue) / 100
         : "";
+
     const grossDividend =
       perShareDividend !== "" && form.shares !== ""
         ? shares * perShareDividend
         : "";
+
     const taxAmount =
       grossDividend !== "" ? (grossDividend * taxPercent) / 100 : "";
-    const netDividend =
-      grossDividend !== "" && taxAmount !== "" ? grossDividend - taxAmount : "";
+
+    const netDividend = grossDividend !== "" ? grossDividend - taxAmount : "";
+
     const dividendPer100tk =
       perShareDividend !== "" && costPerShare > 0
         ? (perShareDividend / costPerShare) * 100
         : "";
 
+    /* ===============================
+   15. Purification Rate
+   = Non-Shariah Income / Total Income * 100
+================================ */
+
+    const purificationRate =
+      totalIncome > 0 ? (nonShariahIncome / totalIncome) * 100 : "";
+
+    /* ===============================
+   16. Purification Amount
+   = Gross Dividend * Purification Rate / 100
+      ================================ */
+
+    const purificationAmount =
+      grossDividend !== "" && purificationRate !== ""
+        ? (grossDividend * purificationRate) / 100
+        : "";
+
+    /* ===============================
+   17. Net Dividend after Purification
+      ================================ */
+
+    const netDividendAfterPurification =
+      netDividend !== "" && purificationAmount !== ""
+        ? netDividend - purificationAmount
+        : "";
+
     const updatedForm = {
       ...form,
+
       perShareDividend:
         perShareDividend !== "" ? formatNumber(perShareDividend) : "",
+
       grossDividend: grossDividend !== "" ? formatNumber(grossDividend) : "",
+
       taxAmount: taxAmount !== "" ? formatNumber(taxAmount) : "",
+
       netDividend: netDividend !== "" ? formatNumber(netDividend) : "",
+
+      netDividendSendInBank:
+        netDividend !== "" ? formatNumber(netDividend) : "",
+
       dividendPer100tk:
         dividendPer100tk !== "" ? formatNumber(dividendPer100tk) : "",
+
+      purificationRate:
+        purificationRate !== "" ? formatNumber(purificationRate) : "",
+
+      purificationAmount:
+        purificationAmount !== "" ? formatNumber(purificationAmount) : "",
+
+      netDividendAfterPurification:
+        netDividendAfterPurification !== ""
+          ? formatNumber(netDividendAfterPurification)
+          : "",
     };
 
     if (
@@ -149,7 +211,11 @@ const Dividend = () => {
       updatedForm.grossDividend !== form.grossDividend ||
       updatedForm.taxAmount !== form.taxAmount ||
       updatedForm.netDividend !== form.netDividend ||
-      updatedForm.dividendPer100tk !== form.dividendPer100tk
+      updatedForm.dividendPer100tk !== form.dividendPer100tk ||
+      updatedForm.purificationRate !== form.purificationRate ||
+      updatedForm.purificationAmount !== form.purificationAmount ||
+      updatedForm.netDividendAfterPurification !==
+        form.netDividendAfterPurification
     ) {
       setForm(updatedForm);
     }
@@ -159,6 +225,8 @@ const Dividend = () => {
     form.shares,
     form.taxPercent,
     form.costPerShare,
+    form.nonShariahIncome,
+    form.totalIncome,
   ]);
 
   // ================= SAVE =================
@@ -181,12 +249,14 @@ const Dividend = () => {
           ...form,
         });
 
+        const saved = { ...res.data.data, ...form };
+
         setList((prev) =>
-          prev.map((item) => (item._id === editingId ? res.data.data : item)),
+          prev.map((item) => (item._id === editingId ? saved : item)),
         );
 
         setFilteredList((prev) =>
-          prev.map((item) => (item._id === editingId ? res.data.data : item)),
+          prev.map((item) => (item._id === editingId ? saved : item)),
         );
 
         setEditingId(null);
@@ -197,8 +267,9 @@ const Dividend = () => {
           ...form,
         });
 
-        setList((prev) => [res.data.data, ...prev]);
-        setFilteredList((prev) => [res.data.data, ...prev]);
+        const saved = { ...res.data.data, ...form };
+        setList((prev) => [saved, ...prev]);
+        setFilteredList((prev) => [saved, ...prev]);
         setShowReport(true);
       }
 
@@ -240,6 +311,11 @@ const Dividend = () => {
         : "",
       costPerShare: item.costPerShare || "",
       dividendPer100tk: item.dividendPer100tk || "",
+      purificationRate: item.purificationRate || "",
+      purificationAmount: item.purificationAmount || "",
+      netDividendAfterPurification: item.netDividendAfterPurification || "",
+      nonShariahIncome: item.nonShariahIncome || "",
+      totalIncome: item.totalIncome || "",
     });
     setShowReport(true);
   };
@@ -277,7 +353,8 @@ const Dividend = () => {
     setResetLoading(true);
 
     setTimeout(() => {
-      const { fromDate: fyFromDate, toDate: fyToDate } = getFinancialYearDates();
+      const { fromDate: fyFromDate, toDate: fyToDate } =
+        getFinancialYearDates();
       setFromDate(fyFromDate);
       setToDate(fyToDate);
       setFilteredList(list);
@@ -431,23 +508,6 @@ const Dividend = () => {
 
           <div>
             <label
-              htmlFor="grossDividend"
-              className="block text-sm text-gray-300 mb-1"
-            >
-              8. Gross Dividend
-            </label>
-            <input
-              id="grossDividend"
-              name="grossDividend"
-              placeholder="Gross Dividend"
-              value={form.grossDividend}
-              readOnly
-              className={inputClass("grossDividend")}
-            />
-          </div>
-
-          <div>
-            <label
               htmlFor="taxPercent"
               className="block text-sm text-gray-300 mb-1"
             >
@@ -482,18 +542,18 @@ const Dividend = () => {
 
           <div>
             <label
-              htmlFor="netDividend"
+              htmlFor="netDividendSendInBank"
               className="block text-sm text-gray-300 mb-1"
             >
-              11. Net Dividend
+              11. Net Dividend send in bank
             </label>
             <input
-              id="netDividend"
-              name="netDividend"
-              placeholder="Net Dividend"
-              value={form.netDividend}
+              id="netDividendSendInBank"
+              name="netDividendSendInBank"
+              placeholder="Net Dividend send in bank"
+              value={form.netDividendSendInBank}
               readOnly
-              className={inputClass("netDividend")}
+              className={inputClass("netDividendSendInBank")}
             />
           </div>
 
@@ -545,6 +605,89 @@ const Dividend = () => {
               value={form.dividendPer100tk}
               readOnly
               className={inputClass("dividendPer100tk")}
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="nonShariahIncome"
+              className="block text-sm text-gray-300 mb-1"
+            >
+              15. Non Shariah Income
+            </label>
+            <input
+              id="nonShariahIncome"
+              name="nonShariahIncome"
+              placeholder="Non Shariah Income"
+              value={form.nonShariahIncome}
+              onChange={handleChange}
+              className={inputClass("nonShariahIncome")}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="totalIncome"
+              className="block text-sm text-gray-300 mb-1"
+            >
+              16. Total Income
+            </label>
+            <input
+              id="totalIncome"
+              name="totalIncome"
+              placeholder="Total Income"
+              value={form.totalIncome}
+              onChange={handleChange}
+              className={inputClass("totalIncome")}
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="purificationRate"
+              className="block text-sm text-gray-300 mb-1"
+            >
+              18. Purification Rate
+            </label>
+            <input
+              id="purificationRate"
+              name="purificationRate"
+              placeholder="Purification Rate"
+              value={form.purificationRate}
+              readOnly
+              className={inputClass("purificationRate")}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="purificationAmount"
+              className="block text-sm text-gray-300 mb-1"
+            >
+              19. Purification Amount
+            </label>
+            <input
+              id="purificationAmount"
+              name="purificationAmount"
+              placeholder="Purification Amount"
+              value={form.purificationAmount}
+              readOnly
+              className={inputClass("purificationAmount")}
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="netDividendAfterPurification"
+              className="block text-sm text-gray-300 mb-1"
+            >
+              17. Net Dividend after Purification
+            </label>
+            <input
+              id="netDividendAfterPurification"
+              name="netDividendAfterPurification"
+              placeholder="Net Dividend after Purification"
+              value={form.netDividendAfterPurification}
+              readOnly
+              className={inputClass("netDividendAfterPurification")}
             />
           </div>
         </div>
@@ -641,7 +784,7 @@ const Dividend = () => {
                       Declaration Date
                     </th>
                     <th className="p-2 border border-gray-700">Record Date</th>
-                    <th className="p-2 border border-gray-700">Company</th>
+                    <th className="p-2 border border-gray-700">Company Name</th>
                     <th className="p-2 border border-gray-700">Shares</th>
                     <th className="p-2 border border-gray-700">Dividend %</th>
                     <th className="p-2 border border-gray-700">Face Value</th>
@@ -653,13 +796,28 @@ const Dividend = () => {
                     </th>
                     <th className="p-2 border border-gray-700">Tax %</th>
                     <th className="p-2 border border-gray-700">Tax Amount</th>
-                    <th className="p-2 border border-gray-700">Net Dividend</th>
+                    <th className="p-2 border border-gray-700">
+                      Net Dividend send in bank
+                    </th>
                     <th className="p-2 border border-gray-700">
                       Bank Payment Date
                     </th>
                     <th className="p-2 border border-gray-700">Cost/Share</th>
                     <th className="p-2 border border-gray-700">
                       Dividend per 100 tk
+                    </th>
+                    <th className="p-2 border border-gray-700">
+                      Non Shariah Income
+                    </th>
+                    <th className="p-2 border border-gray-700">Total Income</th>
+                    <th className="p-2 border border-gray-700">
+                      Purification Rate
+                    </th>
+                    <th className="p-2 border border-gray-700">
+                      Purification Amount
+                    </th>
+                    <th className="p-2 border border-gray-700">
+                      Net Dividend after Purification
                     </th>
                     <th className="p-2 border border-gray-700">Actions</th>
                   </tr>
@@ -709,7 +867,11 @@ const Dividend = () => {
                         {item.taxAmount || "-"}
                       </td>
                       <td className="p-2 border border-gray-700">
-                        {item.netDividend || "-"}
+                        {item.netDividendSendInBank ||
+                          (item.grossDividend && item.taxAmount
+                            ? Number(item.grossDividend) -
+                              Number(item.taxAmount)
+                            : "-")}
                       </td>
                       <td className="p-2 border border-gray-700">
                         {item.bankPaymentDate
@@ -723,6 +885,21 @@ const Dividend = () => {
                       </td>
                       <td className="p-2 border border-gray-700">
                         {item.dividendPer100tk || "-"}
+                      </td>
+                      <td className="p-2 border border-gray-700">
+                        {item.nonShariahIncome || "-"}
+                      </td>
+                      <td className="p-2 border border-gray-700">
+                        {item.totalIncome || "-"}
+                      </td>
+                      <td className="p-2 border border-gray-700">
+                        {item.purificationRate || "-"}
+                      </td>
+                      <td className="p-2 border border-gray-700">
+                        {item.purificationAmount || "-"}
+                      </td>
+                      <td className="p-2 border border-gray-700">
+                        {item.netDividendAfterPurification || "-"}
                       </td>
                       <td className="p-2 border border-gray-700">
                         <div className="flex flex-wrap gap-2">

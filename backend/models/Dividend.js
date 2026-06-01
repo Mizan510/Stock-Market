@@ -50,6 +50,10 @@ const dividendSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    netDividendSendInBank: {
+      type: Number,
+      default: 0,
+    },
     bankPaymentDate: {
       type: Date,
       default: Date.now,
@@ -59,6 +63,26 @@ const dividendSchema = new mongoose.Schema(
       default: 0,
     },
     dividendPer100tk: {
+      type: Number,
+      default: 0,
+    },
+    purificationRate: {
+      type: Number,
+      default: 0,
+    },
+    purificationAmount: {
+      type: Number,
+      default: 0,
+    },
+    netDividendAfterPurification: {
+      type: Number,
+      default: 0,
+    },
+    nonShariahIncome: {
+      type: Number,
+      default: 0,
+    },
+    totalIncome: {
       type: Number,
       default: 0,
     },
