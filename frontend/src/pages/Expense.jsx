@@ -384,14 +384,15 @@ const Expense = () => {
 
 <div className="flex items-center justify-between gap-2">
   <h2 className="text-lg sm:text-xl font-semibold">
-    {editingId ? "Edit Expense" : "Create New Expense"}
+    {editingId ? "Edit Expense" : "New Expense"}
   </h2>
 
-  <div className="flex flex-col items-end leading-tight">
-    <span className="text-[15px] sm:text-xs text-red-400">
-      This Month Total:
+  <div className="flex flex-col items-end px-4 py-0.5 rounded-lg border border-red-500 bg-gray-950/20">
+    <span className="text-sm sm:text-base font-medium text-red-400">
+      This Month Total
     </span>
-    <span className="text-red-500 font-bold text-2xl sm:text-lg">
+
+    <span className="text-red-500 font-extrabold text-xl sm:text-2xl">
       ৳{thisMonthTotal.toLocaleString()}
     </span>
   </div>
