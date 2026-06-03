@@ -388,9 +388,14 @@ const Expense = () => {
     {editingId ? "Edit Expense" : "New Expense"}
   </h2>
 
-  <span className="text-red-500 font-bold text-2xl sm:text-lg whitespace-nowrap">
-    ৳{thisMonthTotal.toLocaleString()}
-  </span>
+  <div className="whitespace-nowrap text-right">
+    <span className="text-[12px] sm:text-xs text-red-300">
+      This Month Total:
+    </span>
+    <span className="ml-1 text-red-500 font-bold text-xl sm:text-lg">
+      ৳{thisMonthTotal.toLocaleString()}
+    </span>
+  </div>
 </div>
 
 
