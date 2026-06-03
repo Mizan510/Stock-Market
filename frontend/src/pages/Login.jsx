@@ -51,7 +51,7 @@ const Login = () => {
     <div className="min-h-screen bg-linear-to-br from-gray-950 to-black flex items-center justify-center p-4">
       <form
         onSubmit={handleLogin}
-        className="w-full max-w-md bg-gray-900 border border-gray-800 p-8 rounded-2xl text-white shadow-2xl"
+        className="w-full max-w-md -mt-100 bg-gray-900 border border-gray-800 p-8 rounded-2xl text-white shadow-2xl"
       >
         {/* TITLE */}
         <h2 className="text-3xl font-bold mb-6 text-center">🔐 Login</h2>
