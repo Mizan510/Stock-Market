@@ -336,6 +336,22 @@ const Expense = () => {
     (sum, item) => sum + Number(item.amount || 0),
     0,
   );
+  // =========================
+  // THIS MONTH TOTAL
+  // =========================
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+
+  const thisMonthTotal = list.reduce((sum, item) => {
+    const d = new Date(item.date);
+
+    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+      return sum + Number(item.amount || 0);
+    }
+
+    return sum;
+  }, 0);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
@@ -365,9 +381,15 @@ const Expense = () => {
 
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-4">
-          <h2 className="text-xl font-semibold">
-            {editingId ? "Edit Expense" : "New Expense"}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">
+              {editingId ? "Edit Expense" : "New Expense"}
+            </h2>
+
+            <span className="text-red-500 font-bold text-xl">
+              This Month Total: ৳ {thisMonthTotal.toLocaleString()}
+            </span>
+          </div>
 
           <input
             type="date"
