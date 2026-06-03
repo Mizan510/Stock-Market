@@ -381,23 +381,20 @@ const Expense = () => {
 
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              {editingId ? "Edit Expense" : "New Expense"}
+            </h2>
 
-
-<div className="flex items-center justify-between gap-2">
-  <h2 className="text-lg sm:text-xl font-semibold">
-    {editingId ? "Edit Expense" : "New Expense"}
-  </h2>
-
-  <div className="whitespace-nowrap text-right">
-    <span className="text-[12px] sm:text-xs text-red-300">
-      This Month Total:
-    </span>
-    <span className="ml-1 text-red-500 font-bold text-xl sm:text-lg">
-      ৳{thisMonthTotal.toLocaleString()}
-    </span>
-  </div>
-</div>
-
+            <div className="whitespace-nowrap text-right">
+              <span className="text-[12px] sm:text-xs text-yellow-300">
+                This Month Total:
+              </span>
+              <span className="ml-1 text-red-500 font-bold text-2xl sm:text-lg">
+                ৳{thisMonthTotal.toLocaleString()}
+              </span>
+            </div>
+          </div>
 
           <input
             type="date"
