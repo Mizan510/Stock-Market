@@ -5,9 +5,20 @@ const RulesPopup = ({ onClose }) => {
 <div className="w-full max-w-3xl max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden overflow-x-hidden flex flex-col mx-auto">
       <div className="w-full max-w-md max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-4 sm:py-5">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white tracking-wide">
-            Important Trading Rules
-          </h2>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-white tracking-wide mb-4">
+  ডিভিডেন্ড পাওয়ার পর করণীয়
+</h1>
+
+<h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white tracking-wide leading-relaxed">
+  ১. AGM-এ হারাম বিনিয়োগের বিষয়ে আপত্তি (Objection) জানানো <br />
+  ২. AGM-এ হারাম প্রফিট/আয়ের বিষয়ে আপত্তি (Objection) জানানো <br />
+  ৩. প্রাপ্ত ডিভিডেন্ড পরিশোধন (Dividend Purification) করা <br />
+  ৪. বছর শেষে নিয়ম অনুযায়ী যাকাত আদায় করা
+</h2>
+
+<h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white tracking-wide mt-4">
+  Important Trading Rules
+</h2>
 
           <div className="mt-4 bg-white border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md">
             <style>
