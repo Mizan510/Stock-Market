@@ -10,12 +10,14 @@ const RulesPopup = ({ onClose }) => {
 </h1>
 
 <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
-  <ul className="space-y-3 text-gray-800 text-sm sm:text-base">
+<div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
+  <ul className="space-y-2 text-gray-800 text-sm sm:text-base">
     <li>১. AGM-এ হারাম বিনিয়োগের বিষয়ে আপত্তি জানানো</li>
     <li>২. AGM-এ হারাম প্রফিট/আয়ের বিষয়ে আপত্তি জানানো</li>
     <li>৩. প্রাপ্ত ডিভিডেন্ড পিউরিফিকেশন করা</li>
     <li>৪. বছর শেষে যাকাত আদায় করা</li>
   </ul>
+</div>
 </div>
 
 <h1 className="xl text-2xl md:text-3xl font-bold text-center text-white tracking-wide mb-4">
