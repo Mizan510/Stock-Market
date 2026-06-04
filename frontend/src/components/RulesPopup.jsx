@@ -9,16 +9,16 @@ const RulesPopup = ({ onClose }) => {
   ডিভিডেন্ড পাওয়ার পর করণীয়
 </h1>
 
-<ul className="text-white text-sm sm:text-base space-y-2 px-2 sm:px-4">
-  <li>১. AGM-এ হারাম বিনিয়োগের বিষয়ে আপত্তি জানানো</li>
-  <li>২. AGM-এ হারাম প্রফিট/আয়ের বিষয়ে আপত্তি জানানো</li>
-  <li>৩. প্রাপ্ত ডিভিডেন্ড পিউরিফিকেশন করা</li>
-  <li>৪. বছর শেষে যাকাত আদায় করা</li>
+<ul className="text-red text-sm xt-smext-base space-y-2 px-2 sm:px-4">
+  <li>১. AGM-এ হারাম বিনিয়োগের বিষয়ে আপত্তি জানাতে হবে।</li>
+  <li>২. AGM-এ হারাম প্রফিট/আয়ের বিষয়ে আপত্তি জানাতে হবে।</li>
+  <li>৩. প্রাপ্ত Dividend টাকাকে Purify করতে হবে।</li>
+  <li>৪. বছর শেষে নিযমিত যাকাত আদায় করতে হবে।</li>
 </ul>
 
-<h2 className="text-base sm:text-xl md:text-2xl font-bold text-center text-white tracking-wide mt-4">
+<h1 className="text-base sm:text-2xl md:text-2xl font-bold text-center text-white tracking-wide mt-4">
   Important Trading Rules
-</h2>
+</h1>
 
           <div className="mt-4 bg-white border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md">
             <style>
