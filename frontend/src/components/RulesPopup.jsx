@@ -45,11 +45,11 @@ const RulesPopup = ({ onClose }) => {
             `}
             </style>
 
-            <h3 className="text-red-600 text-sm sm:text-base font-extrabold text-center blink-text tracking-wide">
+            <h3 className="text-red-600 text-2xl sm:text-2xl font-extrabold text-center blink-text tracking-wide">
               No Emotion, Only Patience
             </h3>
 
-            <div className="w-14 sm:w-16 h-1 bg-red-400 mx-auto mt-1 rounded-full" />
+            {/* <div className="w-14 sm:w-16 h-1 bg-red-400 mx-auto mt-1 rounded-full" /> */}
           </div>
         </div>
 
@@ -57,11 +57,21 @@ const RulesPopup = ({ onClose }) => {
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-3 bg-gray-50/70">
           {/* Rule 3 */}
           <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-sm sm:text-base font-bold text-green-700 mb-2 flex items-center justify-center bg-yellow-200 px-2 py-1 rounded animate-blink">
-              <span className="text-red-600 text-xl font-extrabold">*</span>
-              Dominant Check Before Buy & Sale
-              <span className="text-red-600 text-xl font-extrabold">*</span>
-            </h3>
+           <h3 className="mb-2 flex items-center justify-center font-bold tracking-wide animate-blink">
+
+  <span className="text-red-500 text-2xl font-extrabold mr-3">
+    *
+  </span>
+
+  <span className="text-white text-sm sm:text-base font-bold bg-linear-to-r from-red-600 to-pink-600 px-3 py-1 rounded-lg shadow-md">
+    Dominant Check Before Buy & Sale
+  </span>
+
+  <span className="text-red-500 text-2xl font-extrabold ml-3">
+    *
+  </span>
+
+</h3>
 
             <div className="space-y-1">
               {/* Buying Zone */}
@@ -124,8 +134,8 @@ const RulesPopup = ({ onClose }) => {
 
               {/* Cash Map Box */}
               <div className="bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl py-1 px-3 text-center shadow-sm">
-                <p className="text-[11px] sm:text-xs font-bold tracking-wide">
-                  Or Check Cash Map %
+                <p className="text-[11px] sm:text-xl font-bold tracking-wide">
+                   Check Cash Map% of company and Market
                 </p>
               </div>
             </div>
