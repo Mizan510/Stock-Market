@@ -8,7 +8,7 @@ const Sidebar = ({
   handleNavigate,
 }) => {
   return (
-    <div className="w-60 bg-gray-950 border-r border-gray-800 p-5 space-y-4 min-h-screen">
+    <div className="w-full md:w-60 bg-gray-950 border-gray-800 md:border-r p-5 space-y-4 md:min-h-screen">
       <div>
         <h1 className="text-xl font-bold mb-4">📊 Dashboard</h1>
         <p className="text-sm text-gray-400">

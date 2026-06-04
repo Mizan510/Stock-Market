@@ -140,7 +140,7 @@ const Dashboard = () => {
       {/* MAIN DASHBOARD */}
       {/* ========================= */}
 
-      <div className="min-h-screen bg-gray-950 text-white flex">
+      <div className="min-h-screen bg-gray-950 text-white flex flex-col md:flex-row">
         {/* SIDEBAR */}
         <Sidebar
           menuItems={menuItems}
@@ -151,7 +151,7 @@ const Dashboard = () => {
         />
 
         {/* RIGHT SIDE */}
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-4 md:p-8">
           <SummaryPanel
             loading={summaryLoading}
             deposit={deposit}
