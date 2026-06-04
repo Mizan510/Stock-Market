@@ -9,7 +9,7 @@ const RulesPopup = ({ onClose }) => {
             Important Trading Rules
           </h2>
 
-          <div className="mt-4 bg-white/10 border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md">
+          <div className="mt-4 bg-white border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md">
             <style>
               {`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } } .blink-text {
               animation: blink 1s ease-in-out infinite;
@@ -22,7 +22,7 @@ const RulesPopup = ({ onClose }) => {
             </style>
 
             <h3
-              className="text-red-600 text-3xl font-bold blink-text"
+              className="text-red-600 text-2xl font-bold blink-text"
               style={{
                 WebkitTextStroke: "0px #f8f8f8",
                 textShadow: "0 0 0.2px #e9fd0e",
