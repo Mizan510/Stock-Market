@@ -14,12 +14,12 @@ const SummaryPanel = ({
   };
 
   const Card = ({ title, value, color }) => (
-    <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800 hover:bg-gray-800 transition-all duration-300 shadow-lg min-h-[140px] flex flex-col justify-between overflow-hidden">
-      <h3 className="text-sm text-gray-400 mb-3 break-words leading-snug">
+    <div className="bg-gray-900 p-5 rounded-2xl border border-gray-800 hover:bg-gray-800 transition-all duration-300 shadow-lg  min-height: 140px;] flex flex-col justify-between overflow-hidden">
+      <h3 className="text-sm text-gray-400 mb-3 wrap-break-word leading-snug">
         {title}
       </h3>
 
-      <p className={`text-2xl font-bold ${color} break-words leading-tight`}>
+      <p className={`text-2xl font-bold ${color}  overflow-wrap: break-word leading-tight`}>
         {value}
       </p>
     </div>
