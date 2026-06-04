@@ -5,7 +5,7 @@ const RulesPopup = ({ onClose }) => {
 <div className="w-full max-w-3xl max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden overflow-x-hidden flex flex-col mx-auto">
       <div className="w-full max-w-md max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-4 sm:py-5">
-<h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-center text-yellow-400 tracking-wide mb-4 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)">
+<h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-center text-yellow-300 tracking-wide mb-4 drop-shadow-lg bg-black/20 px-3 py-2 rounded-xl">
   ডিভিডেন্ড পাওয়ার পর করণীয়
 </h1>
 
