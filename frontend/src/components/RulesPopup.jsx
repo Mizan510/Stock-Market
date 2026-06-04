@@ -3,19 +3,19 @@ import React from "react";
 const RulesPopup = ({ onClose }) => {
   return (
     // Fixed full-screen backdrop overlay
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2">
       {/* Modal Container */}
       <div className="w-full max-w-2xl max-h-[92vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100">
         {/* ১. ডিভিডেন্ড ও ট্রেডিং রুলস সেকশন (ওপর-নিচ থেকে পারফেক্টলি চাপানো) */}
-        <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-3 sm:px-4 py-1 sm:py-2">
           {/* প্রধান শিরোনাম */}
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-center text-yellow-300 tracking-wide mb-2 drop-shadow-lg bg-black/50 px-3 py-1.5 rounded-xl">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-center text-yellow-300 tracking-wide mb-1 drop-shadow-lg bg-black/50 px-2 py-1 rounded-xl">
             ডিভিডেন্ড পাওয়ার পর করণীয়
           </h1>
 
           {/* ডিভিডেন্ড লিস্ট কার্ড */}
-          <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-200">
-            <ul className="space-y-1.5 text-red-600 text-xs sm:text-sm md:text-base font-bold">
+          <div className="bg-white rounded-2xl p-2 sm:p-3 shadow-sm border border-gray-200">
+            <ul className="space-y-1 text-red-600 text-xs sm:text-sm md:text-sm font-bold">
               <li>
                 ১. AGM-এ হারাম Investment এর বিষয়ে Mail/Written আপত্তি জানাতে
                 হবে।
@@ -29,12 +29,12 @@ const RulesPopup = ({ onClose }) => {
           </div>
 
           {/* সাব-শিরোনাম */}
-          <h2 className="text-lg sm:text-xl md:text-2xl font-black text-center text-white tracking-wide mt-2.5 mb-1">
+          <h2 className="text-base sm:text-lg md:text-xl font-black text-center text-white tracking-wide mt-2 mb-1">
             Important Trading Rules
           </h2>
 
           {/* নো ইমোশন ব্লিংকিং বক্স */}
-          <div className="mt-1 bg-white border border-white/20 rounded-2xl py-2 px-4 backdrop-blur-md">
+          <div className="mt-1 bg-white border border-white/20 rounded-2xl py-1 px-3 backdrop-blur-md">
             <style>
               {`
               @keyframes blink { 
@@ -45,30 +45,28 @@ const RulesPopup = ({ onClose }) => {
             `}
             </style>
 
-            <h3 className="text-red-600 text-xl sm:text-2xl font-extrabold text-center blink-text tracking-wide">
+            <h3 className="text-red-600 text-sm sm:text-base font-extrabold text-center blink-text tracking-wide">
               No Emotion, Only Patience
             </h3>
 
-            <div className="w-16 sm:w-20 h-1 bg-red-400 mx-auto mt-1 rounded-full" />
+            <div className="w-14 sm:w-16 h-1 bg-red-400 mx-auto mt-1 rounded-full" />
           </div>
         </div>
 
         {/* ২. স্ক্রোলযোগ্য নিচের রুলস সেকশন (Scrollable Content) */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-gray-50/70">
-
+        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-3 bg-gray-50/70">
           {/* Rule 3 */}
-          <div className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-base sm:text-lg font-bold text-green-700 mb-3 flex items-center gap-2">
-              <span className="bg-green-100 text-red-700 px-2 py-0.5 rounded-lg text-2xl">
-               ***
-              </span>
+          <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-sm sm:text-base font-bold text-green-700 mb-2 flex items-center justify-center bg-yellow-200 px-2 py-1 rounded animate-blink">
+              <span className="text-red-600 text-xl font-extrabold">*</span>
               Dominant Check Before Buy & Sale
+              <span className="text-red-600 text-xl font-extrabold">*</span>
             </h3>
 
-            <div className="space-y-3">
+            <div className="space-y-1">
               {/* Buying Zone */}
-              <div className="bg-green-50/60 border border-green-200 rounded-xl p-3">
-                <p className="font-bold text-green-700 mb-1.5 text-xs sm:text-sm">
+              <div className="bg-green-50/60 border border-green-200 rounded-xl p-2">
+                <p className="font-bold text-green-700 mb-1 text-xs sm:text-sm">
                   Buying Zone Check
                 </p>
                 <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm text-gray-600">
@@ -96,8 +94,8 @@ const RulesPopup = ({ onClose }) => {
               </div>
 
               {/* Selling Zone */}
-              <div className="bg-red-50/50 border border-red-200 rounded-xl p-3">
-                <p className="font-bold text-red-700 mb-1.5 text-xs sm:text-sm">
+              <div className="bg-red-50/50 border border-red-200 rounded-xl p-2">
+                <p className="font-bold text-red-700 mb-1 text-xs sm:text-sm">
                   Selling Zone Check
                 </p>
                 <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm text-gray-600">
@@ -125,8 +123,8 @@ const RulesPopup = ({ onClose }) => {
               </div>
 
               {/* Cash Map Box */}
-              <div className="bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl py-2 px-4 text-center shadow-sm">
-                <p className="text-xs sm:text-sm font-bold tracking-wide">
+              <div className="bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl py-1 px-3 text-center shadow-sm">
+                <p className="text-[11px] sm:text-xs font-bold tracking-wide">
                   Or Check Cash Map %
                 </p>
               </div>
@@ -134,9 +132,9 @@ const RulesPopup = ({ onClose }) => {
           </div>
 
           {/* Rule 1 */}
-          <div className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-base sm:text-lg font-bold text-green-700 mb-2 flex items-center gap-2">
-              <span className="bg-green-100 text-red-700 px-2 py-0.5 rounded-lg text-xl">
+          <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-sm sm:text-base font-bold text-green-700 mb-2 flex items-center gap-2">
+              <span className="bg-green-100 text-red-700 px-2 py-0.5 rounded-lg text-sm">
                 Step-1
               </span>
               Choose Best Company
@@ -149,9 +147,9 @@ const RulesPopup = ({ onClose }) => {
           </div>
 
           {/* Rule 2 */}
-          <div className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-base sm:text-lg font-bold text-green-700 mb-2 flex items-center gap-2">
-              <span className="bg-green-100 text-red-700 px-2 py-0.5 rounded-lg text-xl">
+          <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-sm sm:text-base font-bold text-green-700 mb-2 flex items-center gap-2">
+              <span className="bg-green-100 text-red-700 px-1 py-0.5 rounded-lg text-sm">
                 Step-2
               </span>
               Set Buying & Selling Zone
@@ -172,10 +170,10 @@ const RulesPopup = ({ onClose }) => {
         </div>
 
         {/* ৩. ফিক্সড বটম বাটন (Footer) */}
-        <div className="bg-white border-t border-gray-150 p-3 flex justify-center">
+        <div className="bg-white border-t border-gray-150 p-2 flex justify-center">
           <button
             onClick={onClose}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-sm sm:text-base px-10 py-2.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-sm sm:text-base px-6 py-1.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg"
           >
             I Understand
           </button>
