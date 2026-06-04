@@ -1,20 +1,11 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 const RulesPopup = ({ onClose }) => {
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, []);
-
   return (
     // Fixed full-screen backdrop overlay
-    <div className="fixed inset-0 z-50 overflow-hidden bg-black/60 backdrop-blur-sm flex items-center justify-center px-4 py-6">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       {/* Modal Container */}
-      <div className="w-full max-w-[92vw] max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100">
+      <div className="w-full max-w-2xl max-h-[92vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100">
         {/* ১. ডিভিডেন্ড ও ট্রেডিং রুলস সেকশন (ওপর-নিচ থেকে পারফেক্টলি চাপানো) */}
         <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-3 sm:py-4">
           {/* প্রধান শিরোনাম */}
