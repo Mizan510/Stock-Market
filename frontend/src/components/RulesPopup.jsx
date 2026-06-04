@@ -3,7 +3,7 @@
 const RulesPopup = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-5">
-      <div className="w-full max-w-4xl max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="w-full max-w-md max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-4 sm:py-5">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white tracking-wide">
             Important Trading Rules
