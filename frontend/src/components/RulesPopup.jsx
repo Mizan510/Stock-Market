@@ -10,11 +10,11 @@ const RulesPopup = ({ onClose }) => {
 </h1>
 
 <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
-  <ul className="space-y-3 text-red-600 text-sm sm:text-base font-bold">
-    <li>১. AGM-এ হারাম বিনিয়োগের বিষয়ে আপত্তি জানানো</li>
-    <li>২. AGM-এ হারাম প্রফিট/আয়ের বিষয়ে আপত্তি জানানো</li>
-    <li>৩. প্রাপ্ত ডিভিডেন্ড পিউরিফিকেশন করা</li>
-    <li>৪. বছর শেষে যাকাত আদায় করা</li>
+  <ul className="space-y-1 text-red-600 text-xs sm:text-base font-semibold">
+    <li>১. AGM-এ হারাম Investment এর বিষয়ে Mail/Written আপত্তি জানাতে হবে।</li>
+    <li>২. AGM-এ হারাম Profit এর বিষয়ে Mail/Written আপত্তি জানাতে হবে।</li>
+    <li>৩. প্রাপ্ত Dividend Purify করতে হবে।</li>
+    <li>৪. বছর শেষে যাকাত আদায় করতে হবে।</li>
   </ul>
 </div>
 
