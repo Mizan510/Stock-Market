@@ -59,7 +59,7 @@ const RulesPopup = ({ onClose }) => {
           <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
            <h3 className="mb-2 flex items-center justify-center font-bold tracking-wide animate-blink">
 
-  <span className="text-red-500 text-2xl font-extrabold mr-3">
+  <span className="text-red-500 text-4xl font-extrabold mr-3">
     *
   </span>
 
@@ -67,7 +67,7 @@ const RulesPopup = ({ onClose }) => {
     Dominant Check Before Buy & Sale
   </span>
 
-  <span className="text-red-500 text-2xl font-extrabold ml-3">
+  <span className="text-red-500 text-4xl font-extrabold ml-3">
     *
   </span>
 
@@ -183,7 +183,7 @@ const RulesPopup = ({ onClose }) => {
         <div className="bg-white border-t border-gray-150 p-2 flex justify-center">
           <button
             onClick={onClose}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-sm sm:text-base px-6 py-1.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-2xl sm:text-xl px-6 py-1.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg"
           >
             I Understand
           </button>
