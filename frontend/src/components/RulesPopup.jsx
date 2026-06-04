@@ -4,26 +4,17 @@ const RulesPopup = ({ onClose }) => {
   return (
 <div className="w-full max-w-3xl max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden overflow-x-hidden flex flex-col mx-auto">
       <div className="w-full max-w-md max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-        <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-5">
+        <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-4 sm:py-5">
+<h1 className="text-lg sm:text-2xl md:text-3xl font-bold text-center text-white tracking-wide mb-4">
+  ডিভিডেন্ড পাওয়ার পর করণীয়
+</h1>
 
-  {/* Title */}
-  <h1 className="text-xl sm:text-3xl font-bold text-center text-white tracking-wide">
-    ডিভিডেন্ড পাওয়ার পর করণীয়
-  </h1>
-
-  {/* List Card */}
-  <div className="mt-5 bg-white rounded-2xl shadow-md border border-gray-200 p-4 sm:p-5">
-    <ul className="space-y-2 text-gray-800 text-sm sm:text-base leading-relaxed">
-      <li>১. AGM-এ হারাম বিনিয়োগের বিষয়ে আপত্তি জানানো</li>
-      <li>২. AGM-এ হারাম প্রফিট/আয়ের বিষয়ে আপত্তি জানানো</li>
-      <li>৩. প্রাপ্ত ডিভিডেন্ড পিউরিফিকেশন করা</li>
-      <li>৪. বছর শেষে যাকাত আদায় করা</li>
-    </ul>
-  </div>
-
-</div>
-        
-</div>
+<ul className="text-red-600 text-sm sm:text-base space-y-2 px-2 sm:px-4">
+  <li>১. AGM-এ হারাম বিনিয়োগের বিষয়ে আপত্তি জানাতে হবে।</li>
+  <li>২. AGM-এ হারাম প্রফিট/আয়ের বিষয়ে আপত্তি জানাতে হবে।</li>
+  <li>৩. প্রাপ্ত Dividend টাকাকে Purify করতে হবে।</li>
+  <li>৪. বছর শেষে নিযমিত যাকাত আদায় করতে হবে।</li>
+</ul>
 
 <h1 className="xl text-2xl md:text-3xl font-bold text-center text-white tracking-wide mb-4">
   Important Trading Rules
