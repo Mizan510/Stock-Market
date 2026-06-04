@@ -59,7 +59,7 @@ const RulesPopup = ({ onClose }) => {
           {/* Rule 3 */}
           <div className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="text-base sm:text-lg font-bold text-green-700 mb-3 flex items-center gap-2">
-              <span className="bg-green-100 text-red-700 px-2 py-0.5 rounded-lg text-4xl">
+              <span className="bg-green-100 text-red-700 px-2 py-0.5 rounded-lg text-2xl">
                ***
               </span>
               Dominant Check Before Buy & Sale
