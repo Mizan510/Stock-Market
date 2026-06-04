@@ -81,7 +81,7 @@ const Sidebar = ({
       {/* Toggle Button */}
       <div
         onClick={onToggle}
-        className={`absolute top-1/2 right-0 z-20 flex h-14 w-8 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-l-full
+        className={`absolute top-1/2 right-0 z-20 flex h-12 w-6 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-l-full
         bg-blue-500/80 backdrop-blur-md border border-white/20 text-white shadow-lg
         hover:bg-blue-500 transition-all duration-200 ${
           isOpen ? "rotate-180" : ""
