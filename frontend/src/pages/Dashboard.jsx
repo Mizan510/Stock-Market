@@ -42,6 +42,7 @@ const Dashboard = () => {
   // =========================
   const [loadingRoute, setLoadingRoute] = useState("");
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [deposit, setDeposit] = useState(0);
   const [withdraw, setWithdraw] = useState(0);
@@ -140,24 +141,28 @@ const Dashboard = () => {
       {/* MAIN DASHBOARD */}
       {/* ========================= */}
 
-      <div className="min-h-screen bg-gray-950 text-white flex flex-col md:flex-row">
-        {/* SIDEBAR */}
-        <Sidebar
-          menuItems={menuItems}
-          logout={logout}
-          logoutLoading={logoutLoading}
-          loadingRoute={loadingRoute}
-          handleNavigate={handleNavigate}
-        />
-
-        {/* RIGHT SIDE */}
-        <div className="flex-1 p-4 md:p-8">
-          <SummaryPanel
-            loading={summaryLoading}
-            deposit={deposit}
-            withdraw={withdraw}
-            balance={balance}
+      <div className="min-h-screen bg-gray-950 text-white">
+        <div className="flex h-full">
+          {/* SIDEBAR */}
+          <Sidebar
+            isOpen={sidebarOpen}
+            onToggle={() => setSidebarOpen((prev) => !prev)}
+            menuItems={menuItems}
+            logout={logout}
+            logoutLoading={logoutLoading}
+            loadingRoute={loadingRoute}
+            handleNavigate={handleNavigate}
           />
+
+          {/* RIGHT SIDE */}
+          <div className="flex-1 p-4 md:p-8">
+            <SummaryPanel
+              loading={summaryLoading}
+              deposit={deposit}
+              withdraw={withdraw}
+              balance={balance}
+            />
+          </div>
         </div>
       </div>
     </>
