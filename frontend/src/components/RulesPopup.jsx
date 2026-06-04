@@ -4,51 +4,54 @@ const RulesPopup = ({ onClose }) => {
   return (
 <div className="w-full max-w-3xl max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden overflow-x-hidden flex flex-col mx-auto">
       <div className="w-full max-w-md max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+        
         <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-4 sm:px-6 py-4 sm:py-5">
-<h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-center text-yellow-300 tracking-wide mb-4 drop-shadow-lg bg-black/60 px-3 py-2 rounded-xl">
-  ডিভিডেন্ড পাওয়ার পর করণীয়
-</h1>
+  {/* শিরোনামের নিচের গ্যাপ কমাতে mb-2 করা হয়েছে */}
+  <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-center text-yellow-300 tracking-wide mb-2 drop-shadow-lg bg-black/60 px-3 py-2 rounded-xl">
+    ডিভিডেন্ড পাওয়ার পর করণীয়
+  </h1>
 
-<div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
-  <ul className="space-y-1 text-red-600 text-xs sm:text-base font-semibold">
-    <li>১. AGM-এ হারাম Investment এর বিষয়ে Mail/Written আপত্তি জানাতে হবে।</li>
-    <li>২. AGM-এ হারাম Profit এর বিষয়ে Mail/Written আপত্তি জানাতে হবে।</li>
-    <li>৩. প্রাপ্ত Dividend Purify করতে হবে।</li>
-    <li>৪. বছর শেষে যাকাত আদায় করতে হবে।</li>
-  </ul>
+  {/* ভেতরের লাইনের গ্যাপ বাড়াতে space-y-2 করা হয়েছে ছবির মতো */}
+  <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
+    <ul className="space-y-2 text-red-600 text-xs sm:text-base font-semibold">
+      <li>১. AGM-এ হারাম Investment এর বিষয়ে Mail/Written আপত্তি জানাতে হবে।</li>
+      <li>২. AGM-এ হারাম Profit এর বিষয়ে Mail/Written আপত্তি জানাতে হবে।</li>
+      <li>৩. প্রাপ্ত Dividend Purify করতে হবে।</li>
+      <li>৪. বছর শেষে যাকাত আদায় করতে হবে।</li>
+    </ul>
+  </div>
+
+  {/* ক্লাসের ভুল ঠিক করা হয়েছে এবং my-3 দিয়ে উপর-নিচের গ্যাপ নিয়ন্ত্রণ করা হয়েছে */}
+  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-white tracking-wide my-3">
+    Important Trading Rules
+  </h1>
+
+  {/* mt-4 কমিয়ে mt-1 করা হয়েছে যেন উপরের লেখার সাথে গ্যাপ কমে যায় */}
+  <div className="mt-1 bg-white border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md">
+    <style>
+      {`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
+      .blink-text { animation: blink 1.5s ease-in-out infinite; }`}
+    </style>
+
+    <h3
+      className="text-red-600 text-2xl font-bold blink-text"
+      style={{
+        WebkitTextStroke: "0px #f8f8f8",
+        textShadow: "0 0 0.2px #e9fd0e",
+      }}
+      align="center"
+    >
+      No Emotion, Only Patience
+    </h3>
+
+    {/* mt-2 কমিয়ে mt-1.5 করা হয়েছে */}
+    <div className="w-16 sm:w-24 h-1 bg-red-400 mx-auto mt-1.5 rounded-full" />
+  </div>
 </div>
 
-<h1 className="xl text-2xl md:text-3xl font-bold text-center text-white tracking-wide mb-4">
-  Important Trading Rules
-</h1>
 
-          <div className="mt-4 bg-white border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md">
-            <style>
-              {`@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } } .blink-text {
-              animation: blink 1s ease-in-out infinite;
-              }
 
-                @keyframes blink {
-                  0%, 100% { opacity: 1; }
-                  50% { opacity: 0.6; }
-                }`}
-            </style>
-
-            <h3
-              className="text-red-600 text-2xl font-bold blink-text"
-              style={{
-                WebkitTextStroke: "0px #f8f8f8",
-                textShadow: "0 0 0.2px #e9fd0e",
-              }}
-              align="center"
-            >
-              No Emotion, Only Patience
-            </h3>
-
-            <div className="w-16 sm:w-24 h-1 bg-red-400 mx-auto mt-2 rounded-full" />
-          </div>
-        </div>
-
+        
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 bg-gray-100">
           <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-5 shadow-sm">
             <h3 className="text-lg sm:text-xl font-bold text-green-700 mb-4">
