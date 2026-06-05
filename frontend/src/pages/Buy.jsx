@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import ReportFilter from "../components/ReportFilter";
-import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import BuyReport from "../components/BuyReport";
 
 const Buy = () => {
   const navigate = useNavigate();
@@ -34,26 +32,7 @@ const Buy = () => {
   const [totalValueWithCommission, setTotalValueWithCommission] = useState(0);
 
   const [buyList, setBuyList] = useState([]);
-  const [filteredBuyList, setFilteredBuyList] = useState([]);
-  const [showReport, setShowReport] = useState(false);
-  const [fromDate, setFromDate] = useState(getBDDate());
-  const [toDate, setToDate] = useState(getBDDate());
-  const [viewLoading, setViewLoading] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [exportLoading, setExportLoading] = useState(false);
-
-  const getFirstDayOfMonth = () => {
-    const now = new Date();
-    const bd = new Date(
-      now.toLocaleString("en-US", {
-        timeZone: "Asia/Dhaka",
-      }),
-    );
-
-    const year = bd.getFullYear();
-    const month = String(bd.getMonth() + 1).padStart(2, "0");
-    return `${year}-${month}-01`;
-  };
+  const [editingId, setEditingId] = useState(null);
 
   const formatDateString = (date) => {
     const parsed = new Date(date);
@@ -74,85 +53,11 @@ const Buy = () => {
     }
   };
 
-  const handleViewReport = async () => {
-    setViewLoading(true);
-
-    try {
-      const buys = buyList.length ? buyList : await fetchBuyRecords();
-      const filtered = (buys || []).filter((item) => {
-        const itemDate = formatDateString(item.createdAt || item.date);
-        return itemDate >= fromDate && itemDate <= toDate;
-      });
-
-      setFilteredBuyList(filtered);
-      setShowReport(true);
-    } finally {
-      setViewLoading(false);
-    }
-  };
-
-  const handleResetReport = () => {
-    setResetLoading(true);
-
-    setTimeout(() => {
-      setFromDate(getFirstDayOfMonth());
-      setToDate(getBDDate());
-      setFilteredBuyList(buyList);
-      setShowReport(false);
-      setResetLoading(false);
-    }, 100);
-  };
-
-  const handleExportReport = async () => {
-    const data = showReport ? filteredBuyList : buyList;
-
-    if (!data || data.length === 0) {
-      alert("No buy data to export. View report first.");
-      return;
-    }
-
-    setExportLoading(true);
-
-    try {
-      const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("Buy Report");
-
-      sheet.addRow([
-        "Date",
-        "Stock Name",
-        "Buy Quantity",
-        "Per Share Value",
-        "Total Value",
-        "Commission",
-        "Total with Commission",
-      ]);
-
-      data.forEach((item) => {
-        sheet.addRow([
-          formatDateString(item.createdAt || item.date),
-          item.stockName,
-          item.buyQuantity || item.quantity || "-",
-          item.perShareValue || item.price || "-",
-          item.buyingTotalShareValue || item.total || "-",
-          item.commission || "-",
-          item.totalValueWithCommission || item.total || "-",
-        ]);
-      });
-
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      saveAs(blob, `buy_report_${fromDate}_${toDate}.xlsx`);
-    } catch (err) {
-      console.log(err);
-      alert("Unable to export buy report. Please try again.");
-    } finally {
-      setExportLoading(false);
-    }
-  };
-
   // AUTO-CALCULATE FIELDS
+  useEffect(() => {
+    fetchBuyRecords();
+  }, []);
+
   useEffect(() => {
     const qty = parseFloat(buyQuantity) || 0;
     const perShare = parseFloat(perShareValue) || 0;
@@ -175,27 +80,76 @@ const Buy = () => {
 
     try {
       setLoading(true);
+      if (editingId) {
+        const res = await api.put(`/buy/update/${editingId}`, {
+          stockName,
+          buyQuantity: parseFloat(buyQuantity),
+          perShareValue: parseFloat(perShareValue),
+          buyingTotalShareValue,
+          commission,
+          totalValueWithCommission,
+          quantity: parseFloat(buyQuantity),
+          price: parseFloat(perShareValue),
+          total: totalValueWithCommission,
+        });
 
-      await api.post("/buy/add", {
-        userId,
-        stockName,
-        buyQuantity: parseFloat(buyQuantity),
-        perShareValue: parseFloat(perShareValue),
-        buyingTotalShareValue,
-        commission,
-        totalValueWithCommission,
-        date: getBDDate(),
-      });
+        const updated = res.data.data || res.data || {};
+        setBuyList((prev) =>
+          prev.map((b) => (b._id === editingId ? updated : b)),
+        );
+        setEditingId(null);
+        setStockName("");
+        setBuyQuantity("");
+        setPerShareValue("");
+        alert(res.data.message || "Buy updated successfully!");
+      } else {
+        const res = await api.post("/buy/add", {
+          userId,
+          stockName,
+          buyQuantity: parseFloat(buyQuantity),
+          perShareValue: parseFloat(perShareValue),
+          buyingTotalShareValue,
+          commission,
+          totalValueWithCommission,
+          date: getBDDate(),
+        });
 
-      alert("Buy saved successfully!");
+        const saved = res.data?.buy || res.data?.data || res.data;
+        if (saved) setBuyList((prev) => [saved, ...prev]);
+        alert(res.data.message || "Buy saved successfully!");
 
-      setStockName("");
-      setBuyQuantity("");
-      setPerShareValue("");
+        setStockName("");
+        setBuyQuantity("");
+        setPerShareValue("");
+      }
     } catch (err) {
       alert(err.response?.data?.message || "Error saving buy");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEdit = (item) => {
+    setEditingId(item._id);
+    setStockName(item.stockName || "");
+    setBuyQuantity(item.buyQuantity ?? item.quantity ?? "");
+    setPerShareValue(item.perShareValue ?? item.price ?? "");
+  };
+
+  const handleDelete = async (item) => {
+    if (!window.confirm("Delete this buy record?")) return;
+
+    try {
+      await api.delete(`/buy/delete/${item._id}`);
+      setBuyList((prev) => prev.filter((b) => b._id !== item._id));
+      if (editingId === item._id) {
+        setEditingId(null);
+        setStockName("");
+        setBuyQuantity("");
+        setPerShareValue("");
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Delete failed");
     }
   };
 
@@ -204,6 +158,7 @@ const Buy = () => {
     setStockName("");
     setBuyQuantity("");
     setPerShareValue("");
+    setEditingId(null);
   };
 
   return (
@@ -315,7 +270,13 @@ const Buy = () => {
               disabled={loading}
               className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 p-3 rounded font-bold"
             >
-              {loading ? "Saving..." : "Save Buy"}
+              {loading
+                ? editingId
+                  ? "Updating..."
+                  : "Saving..."
+                : editingId
+                  ? "Update Buy"
+                  : "Save Buy"}
             </button>
             <button
               onClick={handleReset}
@@ -327,71 +288,12 @@ const Buy = () => {
           </div>
         </div>
 
-        <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold">Buy Report</h2>
-              <p className="text-gray-400 text-sm">
-                View, export, or reset buy reports from here.
-              </p>
-            </div>
-          </div>
-
-          <ReportFilter
-            fromDate={fromDate}
-            toDate={toDate}
-            setFromDate={setFromDate}
-            setToDate={setToDate}
-            handleView={handleViewReport}
-            handleExport={handleExportReport}
-            handleReset={handleResetReport}
-            filterLoading={viewLoading}
-            reportLoading={exportLoading}
-            resetLoading={resetLoading}
-          />
-
-          {showReport ? (
-            <div className="overflow-x-auto bg-gray-950 rounded-2xl border border-gray-800 p-3">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-800 text-gray-200">
-                  <tr>
-                    <th className="p-3 border">Date</th>
-                    <th className="p-3 border">Stock</th>
-                    <th className="p-3 border">Quantity</th>
-                    <th className="p-3 border">Price</th>
-                    <th className="p-3 border">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredBuyList.map((item, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-800 hover:bg-gray-900"
-                    >
-                      <td className="p-3">
-                        {formatDateString(item.createdAt || item.date)}
-                      </td>
-                      <td className="p-3">{item.stockName}</td>
-                      <td className="p-3">
-                        {item.buyQuantity || item.quantity || "-"}
-                      </td>
-                      <td className="p-3">
-                        {item.perShareValue || item.price || "-"}
-                      </td>
-                      <td className="p-3">
-                        {item.totalValueWithCommission || item.total || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-gray-400 text-center py-6">
-              Click View to show buy report data.
-            </div>
-          )}
-        </div>
+        <BuyReport
+          buyList={buyList}
+          userId={userId}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+        />
       </div>
     </div>
   );

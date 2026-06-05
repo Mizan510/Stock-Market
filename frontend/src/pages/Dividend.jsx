@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import DividendExport from "../components/DividendExport";
 
 const Dividend = () => {
   const userId = "demo-user";
+  const navigate = useNavigate();
 
   const getBDDate = () => {
     const now = new Date();
@@ -386,7 +388,22 @@ const Dividend = () => {
     <div className="min-h-screen bg-gray-950 text-white p-6 flex justify-center">
       <div className="w-full max-w-6xl">
         {/* HEADER */}
-        <h1 className="text-2xl font-bold mb-4">Dividend</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Dividend</h1>
+
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/dashboard");
+              }
+            }}
+            className="bg-gray-700 px-4 py-2 rounded-lg"
+          >
+            Back
+          </button>
+        </div>
 
         {/* ================= FORM ================= */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 bg-gray-900 p-4 rounded">

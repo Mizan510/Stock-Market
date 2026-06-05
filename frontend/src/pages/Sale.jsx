@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
-import ReportFilter from "../components/ReportFilter";
-import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import SaleReport from "../components/SaleReport";
 
 const Sale = () => {
   const navigate = useNavigate();
@@ -36,13 +34,7 @@ const Sale = () => {
   const [showList, setShowList] = useState(false);
 
   const [saleList, setSaleList] = useState([]);
-  const [filteredSaleList, setFilteredSaleList] = useState([]);
-  const [showSaleReport, setShowSaleReport] = useState(false);
-  const [fromDate, setFromDate] = useState(getBDDate());
-  const [toDate, setToDate] = useState(getBDDate());
-  const [viewLoading, setViewLoading] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [exportLoading, setExportLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const getFirstDayOfMonth = () => {
     const now = new Date();
@@ -76,83 +68,9 @@ const Sale = () => {
     }
   };
 
-  const handleViewReport = async () => {
-    setViewLoading(true);
-
-    try {
-      const sales = saleList.length ? saleList : await fetchSaleRecords();
-      const filtered = (sales || []).filter((item) => {
-        const itemDate = formatDateString(item.createdAt || item.date);
-        return itemDate >= fromDate && itemDate <= toDate;
-      });
-
-      setFilteredSaleList(filtered);
-      setShowSaleReport(true);
-    } finally {
-      setViewLoading(false);
-    }
-  };
-
-  const handleResetReport = () => {
-    setResetLoading(true);
-
-    setTimeout(() => {
-      setFromDate(getFirstDayOfMonth());
-      setToDate(getBDDate());
-      setFilteredSaleList(saleList);
-      setShowSaleReport(false);
-      setResetLoading(false);
-    }, 100);
-  };
-
-  const handleExportReport = async () => {
-    const data = showSaleReport ? filteredSaleList : saleList;
-
-    if (!data || data.length === 0) {
-      alert("No sale data to export. View report first.");
-      return;
-    }
-
-    setExportLoading(true);
-
-    try {
-      const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("Sale Report");
-
-      sheet.addRow([
-        "Date",
-        "Stock Name",
-        "Sale Quantity",
-        "Per Share Value",
-        "Total Value",
-        "Commission",
-        "Total with Commission",
-      ]);
-
-      data.forEach((item) => {
-        sheet.addRow([
-          formatDateString(item.createdAt || item.date),
-          item.stockName,
-          item.saleQuantity || "-",
-          item.perShareValue || item.price || "-",
-          item.sallingTotalShareValue || item.total || "-",
-          item.commission || "-",
-          item.totalValueWithCommission || item.total || "-",
-        ]);
-      });
-
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      saveAs(blob, `sale_report_${fromDate}_${toDate}.xlsx`);
-    } catch (err) {
-      console.log(err);
-      alert("Unable to export sale report. Please try again.");
-    } finally {
-      setExportLoading(false);
-    }
-  };
+  useEffect(() => {
+    fetchSaleRecords();
+  }, []);
 
   // FETCH BUYED STOCK NAMES
   useEffect(() => {
@@ -203,18 +121,40 @@ const Sale = () => {
 
       const userId = "demo-user";
 
-      const res = await api.post("/sale/add", {
-        userId,
-        stockName,
-        saleQuantity: parseFloat(saleQuantity),
-        perShareValue: parseFloat(perShareValue),
-        sallingTotalShareValue,
-        commission,
-        totalValueWithCommission,
-        date: getBDDate(),
-      });
+      if (editingId) {
+        const res = await api.put(`/sale/update/${editingId}`, {
+          stockName,
+          saleQuantity: parseFloat(saleQuantity),
+          perShareValue: parseFloat(perShareValue),
+          sallingTotalShareValue,
+          commission,
+          totalValueWithCommission,
+        });
 
-      alert(res.data.message);
+        const updated = res.data.data || res.data || {};
+        setSaleList((prev) =>
+          prev.map((item) => (item._id === editingId ? updated : item)),
+        );
+        setEditingId(null);
+        alert(res.data.message || "Sale updated successfully!");
+      } else {
+        const res = await api.post("/sale/add", {
+          userId,
+          stockName,
+          saleQuantity: parseFloat(saleQuantity),
+          perShareValue: parseFloat(perShareValue),
+          sallingTotalShareValue,
+          commission,
+          totalValueWithCommission,
+          date: getBDDate(),
+        });
+
+        const saved = res.data?.data || res.data;
+        if (saved) {
+          setSaleList((prev) => [saved, ...prev]);
+        }
+        alert(res.data.message);
+      }
 
       setStockName("");
       setSaleQuantity("");
@@ -226,11 +166,36 @@ const Sale = () => {
     }
   };
 
+  const handleEdit = (item) => {
+    setEditingId(item._id);
+    setStockName(item.stockName || "");
+    setSaleQuantity(item.saleQuantity ?? "");
+    setPerShareValue(item.perShareValue ?? "");
+  };
+
+  const handleDelete = async (item) => {
+    if (!window.confirm("Delete this sale record?")) return;
+
+    try {
+      await api.delete(`/sale/delete/${item._id}`);
+      setSaleList((prev) => prev.filter((sale) => sale._id !== item._id));
+      if (editingId === item._id) {
+        setEditingId(null);
+        setStockName("");
+        setSaleQuantity("");
+        setPerShareValue("");
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Delete failed");
+    }
+  };
+
   // RESET FORM
   const handleReset = () => {
     setStockName("");
     setSaleQuantity("");
     setPerShareValue("");
+    setEditingId(null);
   };
 
   return (
@@ -366,7 +331,13 @@ const Sale = () => {
               disabled={loading}
               className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-60 p-3 rounded font-bold"
             >
-              {loading ? "Saving..." : "Save Sale"}
+              {loading
+                ? editingId
+                  ? "Updating..."
+                  : "Saving..."
+                : editingId
+                  ? "Update Sale"
+                  : "Save Sale"}
             </button>
             <button
               onClick={handleReset}
@@ -378,69 +349,11 @@ const Sale = () => {
           </div>
         </div>
 
-        <div className="bg-gray-900 p-6 rounded-2xl border border-gray-800 mt-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold">Sale Report</h2>
-              <p className="text-gray-400 text-sm">
-                View, export, or reset sale reports from here.
-              </p>
-            </div>
-          </div>
-
-          <ReportFilter
-            fromDate={fromDate}
-            toDate={toDate}
-            setFromDate={setFromDate}
-            setToDate={setToDate}
-            handleView={handleViewReport}
-            handleExport={handleExportReport}
-            handleReset={handleResetReport}
-            filterLoading={viewLoading}
-            reportLoading={exportLoading}
-            resetLoading={resetLoading}
-          />
-
-          {showSaleReport ? (
-            <div className="overflow-x-auto bg-gray-950 rounded-2xl border border-gray-800 p-3">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-gray-800 text-gray-200">
-                  <tr>
-                    <th className="p-3 border">Date</th>
-                    <th className="p-3 border">Stock</th>
-                    <th className="p-3 border">Quantity</th>
-                    <th className="p-3 border">Price</th>
-                    <th className="p-3 border">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSaleList.map((item, index) => (
-                    <tr
-                      key={index}
-                      className="border-b border-gray-800 hover:bg-gray-900"
-                    >
-                      <td className="p-3">
-                        {formatDateString(item.createdAt || item.date)}
-                      </td>
-                      <td className="p-3">{item.stockName}</td>
-                      <td className="p-3">{item.saleQuantity || "-"}</td>
-                      <td className="p-3">
-                        {item.perShareValue || item.price || "-"}
-                      </td>
-                      <td className="p-3">
-                        {item.totalValueWithCommission || item.total || "-"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-gray-400 text-center py-6">
-              Click View to show sale report data.
-            </div>
-          )}
-        </div>
+        <SaleReport
+          saleList={saleList}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+        />
       </div>
     </div>
   );
