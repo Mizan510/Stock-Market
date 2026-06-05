@@ -11,6 +11,9 @@ const ReportFilter = ({
   filterLoading,
   reportLoading,
   resetLoading,
+  companies,
+  selectedCompany,
+  setSelectedCompany,
 }) => {
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
@@ -30,6 +33,21 @@ const ReportFilter = ({
         />
       </div>
 
+      <div className="mt-2">
+        <select
+          value={selectedCompany}
+          onChange={(e) => setSelectedCompany(e.target.value)}
+          className="w-full p-3 bg-gray-800 rounded-lg outline-none"
+        >
+          <option value="All">All Companies</option>
+          {companies &&
+            companies.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+        </select>
+      </div>
       <div className="grid grid-cols-3 gap-3">
         <button
           onClick={handleView}

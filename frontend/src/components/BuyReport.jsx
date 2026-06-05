@@ -40,6 +40,31 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
     return parsed.toISOString().split("T")[0];
   };
 
+  const formatDateDisplay = (date) => {
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) {
+      return date;
+    }
+    const day = String(parsed.getDate()).padStart(2, "0");
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const month = months[parsed.getMonth()];
+    const year = parsed.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const [showReport, setShowReport] = useState(false);
   const [fromDate, setFromDate] = useState(getFirstDayOfMonth());
   const [toDate, setToDate] = useState(formatDateString(new Date()));
@@ -47,16 +72,28 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
   const [viewLoading, setViewLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState("All");
+
+  const companies = React.useMemo(() => {
+    const s = new Set();
+    (buyList || []).forEach((i) => {
+      if (i.stockName) s.add(i.stockName);
+    });
+    return Array.from(s).sort();
+  }, [buyList]);
 
   // sync filtered list when buyList or filters change
   useEffect(() => {
     const filtered = (buyList || []).filter((item) => {
       const itemDate = formatDateString(item.createdAt || item.date);
-      return itemDate >= fromDate && itemDate <= toDate;
+      const inRange = itemDate >= fromDate && itemDate <= toDate;
+      const matchCompany =
+        selectedCompany === "All" || item.stockName === selectedCompany;
+      return inRange && matchCompany;
     });
 
     setFilteredBuyList(filtered);
-  }, [buyList, fromDate, toDate]);
+  }, [buyList, fromDate, toDate, selectedCompany]);
 
   const handleViewReport = async () => {
     setViewLoading(true);
@@ -64,7 +101,10 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
     try {
       const filtered = (buyList || []).filter((item) => {
         const itemDate = formatDateString(item.createdAt || item.date);
-        return itemDate >= fromDate && itemDate <= toDate;
+        const inRange = itemDate >= fromDate && itemDate <= toDate;
+        const matchCompany =
+          selectedCompany === "All" || item.stockName === selectedCompany;
+        return inRange && matchCompany;
       });
 
       setFilteredBuyList(filtered);
@@ -80,6 +120,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
     setTimeout(() => {
       setFromDate(getFirstDayOfMonth());
       setToDate(formatDateString(new Date()));
+      setSelectedCompany("All");
       setFilteredBuyList(buyList);
       setShowReport(false);
       setResetLoading(false);
@@ -125,7 +166,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
       // header
       const headerRow = sheet.addRow([
         "Date",
-        "Stock Name",
+        "Company Name",
         "Buy Quantity",
         "Per Share Value",
         "Buying Total Share Value",
@@ -148,6 +189,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
       // data rows
       sorted.forEach((item) => {
         const qty = Number(item.buyQuantity ?? item.quantity ?? 0) || 0;
+        const perShare = Number(item.perShareValue ?? item.price ?? 0) || 0;
         const buyingVal =
           Number(item.buyingTotalShareValue ?? item.total ?? 0) || 0;
         const comm = Number(item.commission ?? 0) || 0;
@@ -160,18 +202,22 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
         totalWithCommission += tot;
 
         const row = sheet.addRow([
-          formatDateString(item.createdAt || item.date),
+          formatDateDisplay(item.createdAt || item.date),
           item.stockName || "",
           qty,
-          item.perShareValue || item.price || "",
+          perShare,
           buyingVal,
           comm,
           tot,
         ]);
 
-        row.eachCell((cell) => {
+        row.eachCell((cell, colNumber) => {
           cell.alignment = centerStyle;
           cell.border = borderStyle;
+          // Format numeric columns to 2 decimal places
+          if ([4, 5, 6, 7].includes(colNumber)) {
+            cell.numFmt = "#,##0.00";
+          }
         });
         row.height = 30;
       });
@@ -187,7 +233,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
         totalWithCommission,
       ]);
 
-      totalRow.eachCell((cell) => {
+      totalRow.eachCell((cell, colNumber) => {
         cell.font = { bold: true };
         cell.alignment = centerStyle;
         cell.border = {
@@ -201,6 +247,10 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
           pattern: "solid",
           fgColor: { argb: "FFFFD966" },
         };
+        // Format numeric columns to 2 decimal places
+        if ([5, 6, 7].includes(colNumber)) {
+          cell.numFmt = "#,##0.00";
+        }
       });
 
       sheet.columns = [
@@ -242,6 +292,9 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
         toDate={toDate}
         setFromDate={setFromDate}
         setToDate={setToDate}
+        companies={companies}
+        selectedCompany={selectedCompany}
+        setSelectedCompany={setSelectedCompany}
         handleView={handleViewReport}
         handleExport={handleExportReport}
         handleReset={handleResetReport}
@@ -256,7 +309,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
             <thead className="bg-gray-800 text-gray-200">
               <tr>
                 <th className="p-3 border">Date</th>
-                <th className="p-3 border">Stock Name</th>
+                <th className="p-3 border">Company Name</th>
                 <th className="p-3 border">Buy Quantity</th>
                 <th className="p-3 border">Per Share Value</th>
                 <th className="p-3 border">Buying Total Share Value</th>
@@ -272,21 +325,31 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
                   className="border-b border-gray-800 hover:bg-gray-900"
                 >
                   <td className="p-3">
-                    {formatDateString(item.createdAt || item.date)}
+                    {formatDateDisplay(item.createdAt || item.date)}
                   </td>
                   <td className="p-3">{item.stockName}</td>
                   <td className="p-3">
                     {item.buyQuantity || item.quantity || "-"}
                   </td>
                   <td className="p-3">
-                    {item.perShareValue || item.price || "-"}
+                    {item.perShareValue || item.price
+                      ? Number(item.perShareValue || item.price).toFixed(2)
+                      : "-"}
                   </td>
                   <td className="p-3">
-                    {item.buyingTotalShareValue || item.total || "-"}
+                    {item.buyingTotalShareValue || item.total
+                      ? Number(
+                          item.buyingTotalShareValue || item.total,
+                        ).toFixed(2)
+                      : "-"}
                   </td>
-                  <td className="p-3">{item.commission || "-"}</td>
                   <td className="p-3">
-                    {item.totalValueWithCommission || "-"}
+                    {item.commission ? Number(item.commission).toFixed(2) : "-"}
+                  </td>
+                  <td className="p-3">
+                    {item.totalValueWithCommission
+                      ? Number(item.totalValueWithCommission).toFixed(2)
+                      : "-"}
                   </td>
                   <td className="p-3">
                     <div className="flex gap-2">

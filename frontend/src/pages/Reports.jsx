@@ -49,6 +49,7 @@ const Reports = () => {
   const [resetLoading, setResetLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState("All");
 
   const formatDateString = (date) => {
     const d = new Date(date);
@@ -61,6 +62,27 @@ const Reports = () => {
   useEffect(() => {
     fetchReports();
   }, []);
+
+  const companies = useMemo(() => {
+    const s = new Set();
+    list.forEach((i) => {
+      if (i.stockName) s.add(i.stockName);
+    });
+    return Array.from(s).sort();
+  }, [list]);
+
+  // Reapply filters when date range or selected company changes
+  useEffect(() => {
+    const filtered = list.filter((item) => {
+      const itemDateStr = formatDateString(item.createdAt || item.date);
+      const inRange = itemDateStr >= fromDate && itemDateStr <= toDate;
+      const matchCompany =
+        selectedCompany === "All" || item.stockName === selectedCompany;
+      return inRange && matchCompany;
+    });
+
+    setFilteredList(filtered);
+  }, [list, fromDate, toDate, selectedCompany]);
 
   const getEarliestDate = (items) => {
     let earliest = null;
@@ -114,7 +136,10 @@ const Reports = () => {
     try {
       const filtered = list.filter((item) => {
         const itemDateStr = formatDateString(item.createdAt || item.date);
-        return itemDateStr >= fromDate && itemDateStr <= toDate;
+        const inRange = itemDateStr >= fromDate && itemDateStr <= toDate;
+        const matchCompany =
+          selectedCompany === "All" || item.stockName === selectedCompany;
+        return inRange && matchCompany;
       });
 
       setFilteredList(filtered);
@@ -133,6 +158,7 @@ const Reports = () => {
 
       setFromDate(newFromDate);
       setToDate(newToDate);
+      setSelectedCompany("All");
 
       const filtered = list.filter((item) => {
         const itemDateStr = formatDateString(item.createdAt || item.date);
@@ -397,7 +423,7 @@ const Reports = () => {
       };
 
       sheet.addRow([
-        "Company",
+        "Company Name",
         "Buy (Total Qtn)",
         "Buy (Total Value with commission)",
         "Sale (Total Qtn)",
@@ -415,7 +441,7 @@ const Reports = () => {
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FF2563EB" },
+          fgColor: { argb: "FF1F4E79" },
         };
       });
 
@@ -464,6 +490,26 @@ const Reports = () => {
               wrapText: true,
             };
           }
+          // Add different colors for column 7 (Buy Per Share) and column 8 (Sell Per Share)
+          if (colNumber === 7) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFD4EDDA" },
+            };
+          } else if (colNumber === 8) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFF8D7D3" },
+            };
+          } else if (colNumber === 11) {
+            cell.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFFCE4D6" },
+            };
+          }
         });
       });
 
@@ -496,6 +542,27 @@ const Reports = () => {
 
         if (typeof cell.value === "number") {
           cell.numFmt = numberFormat;
+        }
+
+        // Add different colors for column 7 (Buy Per Share) and column 8 (Sell Per Share) in total row
+        if (colNumber === 7) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FF70AD47" },
+          };
+        } else if (colNumber === 8) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFC5504C" },
+          };
+        } else if (colNumber === 11) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFED7D31" },
+          };
         }
       });
 
@@ -573,6 +640,9 @@ const Reports = () => {
           toDate={toDate}
           setFromDate={setFromDate}
           setToDate={setToDate}
+          companies={companies}
+          selectedCompany={selectedCompany}
+          setSelectedCompany={setSelectedCompany}
           handleView={handleView}
           handleExport={handleExport}
           handleReset={handleReset}
@@ -588,7 +658,7 @@ const Reports = () => {
               <table className="w-full text-center text-sm">
                 <thead className="bg-gray-800">
                   <tr>
-                    <th className="p-4 border">Company</th>
+                    <th className="p-4 border">Company Name</th>
                     <th className="p-4 border">Buy (Total Qtn)</th>
                     <th className="p-4 border">
                       Buy (Total Value with commission)

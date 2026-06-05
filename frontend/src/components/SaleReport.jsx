@@ -38,6 +38,31 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
     return parsed.toISOString().split("T")[0];
   };
 
+  const formatDateDisplay = (date) => {
+    const parsed = new Date(date);
+    if (Number.isNaN(parsed.getTime())) {
+      return date;
+    }
+    const day = String(parsed.getDate()).padStart(2, "0");
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const month = months[parsed.getMonth()];
+    const year = parsed.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const [showReport, setShowReport] = useState(false);
   const [fromDate, setFromDate] = useState(getFirstDayOfMonth());
   const [toDate, setToDate] = useState(formatDateString(new Date()));
@@ -45,15 +70,27 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
   const [viewLoading, setViewLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState("All");
+
+  const companies = React.useMemo(() => {
+    const s = new Set();
+    (saleList || []).forEach((i) => {
+      if (i.stockName) s.add(i.stockName);
+    });
+    return Array.from(s).sort();
+  }, [saleList]);
 
   useEffect(() => {
     const filtered = (saleList || []).filter((item) => {
       const itemDate = formatDateString(item.createdAt || item.date);
-      return itemDate >= fromDate && itemDate <= toDate;
+      const inRange = itemDate >= fromDate && itemDate <= toDate;
+      const matchCompany =
+        selectedCompany === "All" || item.stockName === selectedCompany;
+      return inRange && matchCompany;
     });
 
     setFilteredSaleList(filtered);
-  }, [saleList, fromDate, toDate]);
+  }, [saleList, fromDate, toDate, selectedCompany]);
 
   const handleViewReport = async () => {
     setViewLoading(true);
@@ -71,6 +108,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
     setTimeout(() => {
       setFromDate(getFirstDayOfMonth());
       setToDate(formatDateString(new Date()));
+      setSelectedCompany("All");
       setShowReport(false);
       setResetLoading(false);
     }, 100);
@@ -114,7 +152,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
 
       const headerRow = sheet.addRow([
         "Date",
-        "Stock Name",
+        "Company Name",
         "Sale Quantity",
         "Per Share Value",
         "Total Value",
@@ -135,6 +173,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
 
       sorted.forEach((item) => {
         const qty = Number(item.saleQuantity ?? 0) || 0;
+        const perShare = Number(item.perShareValue ?? item.price ?? 0) || 0;
         const saleValue =
           Number(item.sallingTotalShareValue ?? item.total ?? 0) || 0;
         const comm = Number(item.commission ?? 0) || 0;
@@ -147,18 +186,22 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
         totalWithCommission += tot;
 
         const row = sheet.addRow([
-          formatDateString(item.createdAt || item.date),
+          formatDateDisplay(item.createdAt || item.date),
           item.stockName || "",
           qty,
-          item.perShareValue || item.price || "",
+          perShare,
           saleValue,
           comm,
           tot,
         ]);
 
-        row.eachCell((cell) => {
+        row.eachCell((cell, colNumber) => {
           cell.alignment = centerStyle;
           cell.border = borderStyle;
+          // Format numeric columns to 2 decimal places
+          if ([4, 5, 6, 7].includes(colNumber)) {
+            cell.numFmt = "#,##0.00";
+          }
         });
         row.height = 30;
       });
@@ -172,7 +215,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
         totalCommission,
         totalWithCommission,
       ]);
-      totalRow.eachCell((cell) => {
+      totalRow.eachCell((cell, colNumber) => {
         cell.font = { bold: true };
         cell.alignment = centerStyle;
         cell.border = {
@@ -186,6 +229,10 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
           pattern: "solid",
           fgColor: { argb: "FFFFD966" },
         };
+        // Format numeric columns to 2 decimal places
+        if ([5, 6, 7].includes(colNumber)) {
+          cell.numFmt = "#,##0.00";
+        }
       });
 
       sheet.columns = [
@@ -227,6 +274,9 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
         toDate={toDate}
         setFromDate={setFromDate}
         setToDate={setToDate}
+        companies={companies}
+        selectedCompany={selectedCompany}
+        setSelectedCompany={setSelectedCompany}
         handleView={handleViewReport}
         handleExport={handleExportReport}
         handleReset={handleResetReport}
@@ -241,7 +291,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
             <thead className="bg-gray-800 text-gray-200">
               <tr>
                 <th className="p-3 border">Date</th>
-                <th className="p-3 border">Stock Name</th>
+                <th className="p-3 border">Company Name</th>
                 <th className="p-3 border">Sale Quantity</th>
                 <th className="p-3 border">Per Share Value</th>
                 <th className="p-3 border">Total Value</th>
@@ -257,19 +307,31 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
                   className="border-b border-gray-800 hover:bg-gray-900"
                 >
                   <td className="p-3">
-                    {formatDateString(item.createdAt || item.date)}
+                    {formatDateDisplay(item.createdAt || item.date)}
                   </td>
                   <td className="p-3">{item.stockName}</td>
                   <td className="p-3">{item.saleQuantity || "-"}</td>
                   <td className="p-3">
-                    {item.perShareValue || item.price || "-"}
+                    {item.perShareValue || item.price
+                      ? Number(item.perShareValue || item.price).toFixed(2)
+                      : "-"}
                   </td>
                   <td className="p-3">
-                    {item.sallingTotalShareValue || item.total || "-"}
+                    {item.sallingTotalShareValue || item.total
+                      ? Number(
+                          item.sallingTotalShareValue || item.total,
+                        ).toFixed(2)
+                      : "-"}
                   </td>
-                  <td className="p-3">{item.commission || "-"}</td>
                   <td className="p-3">
-                    {item.totalValueWithCommission || item.total || "-"}
+                    {item.commission ? Number(item.commission).toFixed(2) : "-"}
+                  </td>
+                  <td className="p-3">
+                    {item.totalValueWithCommission || item.total
+                      ? Number(
+                          item.totalValueWithCommission || item.total,
+                        ).toFixed(2)
+                      : "-"}
                   </td>
                   <td className="p-3">
                     <div className="flex gap-2">
@@ -300,24 +362,28 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
                 </td>
                 <td className="p-3">-</td>
                 <td className="p-3">
-                  {filteredSaleList.reduce(
-                    (s, it) =>
-                      s + Number(it.sallingTotalShareValue ?? it.total ?? 0),
-                    0,
-                  )}
+                  {filteredSaleList
+                    .reduce(
+                      (s, it) =>
+                        s + Number(it.sallingTotalShareValue ?? it.total ?? 0),
+                      0,
+                    )
+                    .toFixed(2)}
                 </td>
                 <td className="p-3">
-                  {filteredSaleList.reduce(
-                    (s, it) => s + Number(it.commission ?? 0),
-                    0,
-                  )}
+                  {filteredSaleList
+                    .reduce((s, it) => s + Number(it.commission ?? 0), 0)
+                    .toFixed(2)}
                 </td>
                 <td className="p-3">
-                  {filteredSaleList.reduce(
-                    (s, it) =>
-                      s + Number(it.totalValueWithCommission ?? it.total ?? 0),
-                    0,
-                  )}
+                  {filteredSaleList
+                    .reduce(
+                      (s, it) =>
+                        s +
+                        Number(it.totalValueWithCommission ?? it.total ?? 0),
+                      0,
+                    )
+                    .toFixed(2)}
                 </td>
                 <td className="p-3">-</td>
               </tr>

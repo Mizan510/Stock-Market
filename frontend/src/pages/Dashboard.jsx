@@ -4,6 +4,7 @@ import api from "../api";
 import SummaryPanel from "../components/SummaryPanel";
 import Sidebar from "../components/Sidebar";
 import RulesPopup from "../components/RulesPopup";
+import { calculatePortfolioMetrics } from "../utils/portfolioCalculations";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -44,38 +45,62 @@ const Dashboard = () => {
   const [logoutLoading, setLogoutLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const [deposit, setDeposit] = useState(0);
-  const [withdraw, setWithdraw] = useState(0);
-  const [balance, setBalance] = useState(0);
+  // Portfolio Data
+  const [portfolioMetrics, setPortfolioMetrics] = useState({
+    totalDeposit: 0,
+    totalWithdraw: 0,
+    totalDividend: 0,
+    totalBuyCost: 0,
+    totalSaleProceeds: 0,
+    cashBalance: 0,
+    totalRemainingShareValue: 0,
+    totalAssets: 0,
+    realizedProfit: 0,
+    unrealizedProfit: 0,
+    totalProfit: 0,
+    holdings: {},
+    holdingCount: 0,
+  });
 
   const [summaryLoading, setSummaryLoading] = useState(true);
 
   // =========================
-  // FETCH SUMMARY
+  // FETCH COMPREHENSIVE PORTFOLIO DATA
   // =========================
   useEffect(() => {
-    fetchInvestmentSummary();
+    fetchPortfolioData();
   }, []);
 
-  const fetchInvestmentSummary = async () => {
+  const fetchPortfolioData = async () => {
     try {
-      const res = await api.get(`/investment/demo-user`);
+      setSummaryLoading(true);
 
-      const investmentData = res.data?.data || res.data || [];
+      const userId = "demo-user"; // Replace with actual user ID from auth
 
-      const depositAmount = investmentData.reduce((sum, item) => {
-        return item.type === "deposit" ? sum + Number(item.amount || 0) : sum;
-      }, 0);
+      // Fetch all transaction data in parallel
+      const [investRes, buyRes, saleRes, dividendRes] = await Promise.all([
+        api.get(`/investment/${userId}`).catch(() => ({ data: [] })),
+        api.get(`/buy/${userId}`).catch(() => ({ data: [] })),
+        api.get(`/sale/${userId}`).catch(() => ({ data: [] })),
+        api.get(`/dividend/${userId}`).catch(() => ({ data: [] })),
+      ]);
 
-      const withdrawAmount = investmentData.reduce((sum, item) => {
-        return item.type === "withdraw" ? sum + Number(item.amount || 0) : sum;
-      }, 0);
+      const investmentData = investRes.data?.data || investRes.data || [];
+      const buyData = buyRes.data?.data || buyRes.data || [];
+      const saleData = saleRes.data?.data || saleRes.data || [];
+      const dividendData = dividendRes.data?.data || dividendRes.data || [];
 
-      setDeposit(depositAmount);
-      setWithdraw(withdrawAmount);
-      setBalance(depositAmount - withdrawAmount);
+      // Calculate comprehensive portfolio metrics
+      const metrics = calculatePortfolioMetrics(
+        buyData,
+        saleData,
+        dividendData,
+        investmentData,
+      );
+
+      setPortfolioMetrics(metrics);
     } catch (err) {
-      console.log("Summary fetch failed:", err);
+      console.log("Portfolio data fetch failed:", err);
     } finally {
       setSummaryLoading(false);
     }
@@ -158,9 +183,16 @@ const Dashboard = () => {
           <div className="flex-1 p-4 md:p-8">
             <SummaryPanel
               loading={summaryLoading}
-              deposit={deposit}
-              withdraw={withdraw}
-              balance={balance}
+              deposit={portfolioMetrics.totalDeposit}
+              withdraw={portfolioMetrics.totalWithdraw}
+              dividend={portfolioMetrics.totalDividend}
+              balance={portfolioMetrics.cashBalance}
+              profit={portfolioMetrics.totalProfit}
+              remainingShareValue={portfolioMetrics.totalRemainingShareValue}
+              totalAssets={portfolioMetrics.totalAssets}
+              realizedProfit={portfolioMetrics.realizedProfit}
+              unrealizedProfit={portfolioMetrics.unrealizedProfit}
+              holdingCount={portfolioMetrics.holdingCount}
             />
           </div>
         </div>
