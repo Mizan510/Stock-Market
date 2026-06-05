@@ -6,16 +6,28 @@ const router = express.Router();
 // CREATE BUY
 router.post("/add", async (req, res) => {
   try {
-    const { userId, stockName, quantity, price } = req.body;
-
-    const total = quantity * price;
+    const {
+      userId,
+      stockName,
+      buyQuantity,
+      perShareValue,
+      buyingTotalShareValue,
+      commission,
+      totalValueWithCommission,
+    } = req.body;
 
     const buy = new Buy({
       userId,
       stockName,
-      quantity,
-      price,
-      total,
+      buyQuantity: Number(buyQuantity),
+      perShareValue: Number(perShareValue),
+      buyingTotalShareValue: Number(buyingTotalShareValue),
+      commission: Number(commission),
+      totalValueWithCommission: Number(totalValueWithCommission),
+      // Backward compatibility
+      quantity: Number(buyQuantity),
+      price: Number(perShareValue),
+      total: Number(totalValueWithCommission),
     });
 
     await buy.save();
@@ -49,6 +61,59 @@ router.get("/:userId", async (req, res) => {
       createdAt: -1,
     });
     res.json(buys);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// UPDATE BUY
+router.put("/update/:id", async (req, res) => {
+  try {
+    const {
+      stockName,
+      buyQuantity,
+      perShareValue,
+      buyingTotalShareValue,
+      commission,
+      totalValueWithCommission,
+      quantity,
+      price,
+      total,
+    } = req.body;
+
+    const updatedBuy = await Buy.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...(stockName !== undefined && { stockName }),
+        ...(buyQuantity !== undefined && { buyQuantity }),
+        ...(perShareValue !== undefined && { perShareValue }),
+        ...(buyingTotalShareValue !== undefined && { buyingTotalShareValue }),
+        ...(commission !== undefined && { commission }),
+        ...(totalValueWithCommission !== undefined && {
+          totalValueWithCommission,
+        }),
+        ...(quantity !== undefined && { quantity }),
+        ...(price !== undefined && { price }),
+        ...(total !== undefined && { total }),
+      },
+      { new: true },
+    );
+
+    res.json({
+      success: true,
+      message: "Buy updated successfully",
+      data: updatedBuy,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE BUY
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    await Buy.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Buy deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

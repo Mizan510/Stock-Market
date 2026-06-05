@@ -13,24 +13,37 @@ const saleSchema = new mongoose.Schema(
       default: "N/A",
     },
 
-    quantity: {
+    saleQuantity: {
       type: Number,
       required: true,
     },
 
-    price: {
+    perShareValue: {
       type: Number,
       required: true,
     },
 
-    total: {
+    sallingTotalShareValue: {
       type: Number,
+      required: true,
+      default: 0,
+    },
+
+    commission: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+
+    totalValueWithCommission: {
+      type: Number,
+      required: true,
       default: 0,
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("Sale", saleSchema);

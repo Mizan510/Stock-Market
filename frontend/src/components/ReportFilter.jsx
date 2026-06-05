@@ -14,7 +14,7 @@ const ReportFilter = ({
 }) => {
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <input
           type="date"
           value={fromDate}

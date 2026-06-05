@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -6,6 +7,7 @@ import ReportFilter from "../components/ReportFilter";
 
 const Reports = () => {
   const userId = "demo-user";
+  const navigate = useNavigate();
 
   const getBDDate = () => {
     const now = new Date();
@@ -37,7 +39,7 @@ const Reports = () => {
   const [list, setList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
 
-  const [fromDate, setFromDate] = useState(getFirstDayOfMonth());
+  const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState(getBDDate());
 
   const [loading, setLoading] = useState(true);
@@ -60,6 +62,19 @@ const Reports = () => {
     fetchReports();
   }, []);
 
+  const getEarliestDate = (items) => {
+    let earliest = null;
+
+    items.forEach((item) => {
+      const dateStr = formatDateString(item.createdAt || item.date);
+      if (!earliest || dateStr < earliest) {
+        earliest = dateStr;
+      }
+    });
+
+    return earliest || getBDDate();
+  };
+
   const fetchReports = async () => {
     try {
       const [buyRes, saleRes] = await Promise.all([
@@ -77,9 +92,12 @@ const Reports = () => {
 
       setList(merged);
 
+      const earliestDate = getEarliestDate(merged);
+      setFromDate(earliestDate);
+
       const filtered = merged.filter((item) => {
         const itemDateStr = formatDateString(item.createdAt || item.date);
-        return itemDateStr >= fromDate && itemDateStr <= toDate;
+        return itemDateStr >= earliestDate && itemDateStr <= toDate;
       });
 
       setFilteredList(filtered);
@@ -110,7 +128,7 @@ const Reports = () => {
     setResetLoading(true);
 
     try {
-      const newFromDate = getFirstDayOfMonth();
+      const newFromDate = list.length ? getEarliestDate(list) : getBDDate();
       const newToDate = getBDDate();
 
       setFromDate(newFromDate);
@@ -149,10 +167,14 @@ const Reports = () => {
     const stockName = window.prompt("Stock name", item.stockName);
     if (stockName === null) return;
 
-    const quantityInput = window.prompt("Quantity", item.quantity);
+    const currentQuantity =
+      item.buyQuantity ?? item.saleQuantity ?? item.quantity ?? 0;
+    const currentPrice = item.perShareValue ?? item.price ?? 0;
+
+    const quantityInput = window.prompt("Quantity", currentQuantity);
     if (quantityInput === null) return;
 
-    const priceInput = window.prompt("Price", item.price);
+    const priceInput = window.prompt("Price", currentPrice);
     if (priceInput === null) return;
 
     const quantity = Number(quantityInput);
@@ -162,13 +184,46 @@ const Reports = () => {
       return alert("Please provide valid stock, quantity, and price.");
     }
 
+    const updatePayload = {
+      stockName: stockName.trim(),
+    };
+
+    if (item.type === "buy") {
+      const buyQuantity = quantity;
+      const perShareValue = price;
+      const buyingTotalShareValue = buyQuantity * perShareValue;
+      const commission = Number((buyingTotalShareValue * 0.004).toFixed(2));
+      const totalValueWithCommission = buyingTotalShareValue + commission;
+
+      Object.assign(updatePayload, {
+        buyQuantity,
+        perShareValue,
+        buyingTotalShareValue,
+        commission,
+        totalValueWithCommission,
+        quantity: buyQuantity,
+        price: perShareValue,
+        total: totalValueWithCommission,
+      });
+    } else {
+      const saleQuantity = quantity;
+      const perShareValue = price;
+      const sallingTotalShareValue = saleQuantity * perShareValue;
+      const commission = Number((sallingTotalShareValue * 0.004).toFixed(2));
+      const totalValueWithCommission = sallingTotalShareValue - commission;
+
+      Object.assign(updatePayload, {
+        saleQuantity,
+        perShareValue,
+        sallingTotalShareValue,
+        commission,
+        totalValueWithCommission,
+      });
+    }
+
     setActionLoading(item._id);
     try {
-      await api.put(`/${item.type}/update/${item._id}`, {
-        stockName: stockName.trim(),
-        quantity,
-        price,
-      });
+      await api.put(`/${item.type}/update/${item._id}`, updatePayload);
       await fetchReports();
     } catch (err) {
       console.log("Update error:", err);
@@ -178,9 +233,131 @@ const Reports = () => {
     }
   };
 
+  const handleEditCompany = async (stockName) => {
+    const newName = window.prompt("New company name", stockName);
+    if (newName === null || !newName.trim() || newName.trim() === stockName)
+      return;
+
+    const updates = filteredList
+      .filter((item) => item.stockName === stockName)
+      .map((item) =>
+        api.put(`/${item.type}/update/${item._id}`, {
+          stockName: newName.trim(),
+        }),
+      );
+
+    if (updates.length === 0) {
+      return alert("No matching records found to update.");
+    }
+
+    setActionLoading(stockName);
+    try {
+      await Promise.all(updates);
+      await fetchReports();
+    } catch (err) {
+      console.log("Company edit error:", err);
+      alert("Unable to rename company records. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteCompany = async (stockName) => {
+    if (!window.confirm(`Delete all records for ${stockName}?`)) return;
+
+    const deletes = filteredList
+      .filter((item) => item.stockName === stockName)
+      .map((item) => api.delete(`/${item.type}/delete/${item._id}`));
+
+    setActionLoading(stockName);
+    try {
+      await Promise.all(deletes);
+      await fetchReports();
+    } catch (err) {
+      console.log("Company delete error:", err);
+      alert("Unable to delete company records. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const companyReports = useMemo(() => {
+    const groups = {};
+
+    filteredList.forEach((item) => {
+      const stockName = item.stockName || "Unknown";
+      if (!groups[stockName]) {
+        groups[stockName] = {
+          stockName,
+          buyQty: 0,
+          buyTotalValue: 0,
+          buyCommission: 0,
+          buyNet: 0,
+          saleQty: 0,
+          saleTotalValue: 0,
+          saleCommission: 0,
+          saleNet: 0,
+        };
+      }
+
+      const qty = Number(
+        item.buyQuantity ?? item.saleQuantity ?? item.quantity ?? 0,
+      );
+      const price = Number(item.perShareValue ?? item.price ?? 0);
+      const totalValue = Number(
+        item.buyingTotalShareValue ??
+          item.sallingTotalShareValue ??
+          item.total ??
+          qty * price,
+      );
+      const commission = Number(
+        item.commission !== undefined ? item.commission : totalValue * 0.004,
+      );
+
+      if (item.type === "buy") {
+        groups[stockName].buyQty += qty;
+        groups[stockName].buyTotalValue += totalValue;
+        groups[stockName].buyCommission += commission;
+        groups[stockName].buyNet += totalValue + commission;
+      } else {
+        groups[stockName].saleQty += qty;
+        groups[stockName].saleTotalValue += totalValue;
+        groups[stockName].saleCommission += commission;
+        groups[stockName].saleNet += totalValue - commission;
+      }
+    });
+
+    return Object.values(groups).map((company) => {
+      const remainQty = company.buyQty - company.saleQty;
+      const buyEffective = company.buyQty ? company.buyNet / company.buyQty : 0;
+      const sellEffective = company.saleQty
+        ? company.saleNet / company.saleQty
+        : 0;
+      const remainQtyValue = remainQty * buyEffective;
+      const perShareProfitLoss = company.saleQty
+        ? sellEffective - buyEffective
+        : 0;
+      const netProfitLoss = company.saleQty
+        ? company.saleNet - buyEffective * company.saleQty
+        : 0;
+
+      return {
+        ...company,
+        remainQty,
+        buyEffective,
+        sellEffective,
+        remainQtyValue,
+        perShareProfitLoss,
+        netProfitLoss,
+      };
+    });
+  }, [filteredList]);
+
   const handleExport = async () => {
-    if (filteredList.length === 0) {
-      alert("No data to export. Please apply filters and view the report first.");
+    if (companyReports.length === 0) {
+      alert(
+        "No data to export. Please apply filters and view the report first.",
+      );
       return;
     }
 
@@ -188,7 +365,7 @@ const Reports = () => {
 
     try {
       const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("Trade Report");
+      const sheet = workbook.addWorksheet("Company Report");
 
       const headerStyle = {
         font: { bold: true, color: { argb: "FFFFFFFF" } },
@@ -199,42 +376,6 @@ const Reports = () => {
           bottom: { style: "thin" },
           right: { style: "thin" },
         },
-      };
-
-      const buyHeaderFill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF2F855A" },
-      };
-
-      const saleHeaderFill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFC53030" },
-      };
-
-      const dateHeaderFill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF2563EB" },
-      };
-
-      const nameHeaderFill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FF1D4ED8" },
-      };
-
-      const buyCellFill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFD1FAE5" },
-      };
-
-      const saleCellFill = {
-        type: "pattern",
-        pattern: "solid",
-        fgColor: { argb: "FFFEE2E2" },
       };
 
       const totalFill = {
@@ -256,139 +397,88 @@ const Reports = () => {
       };
 
       sheet.addRow([
-        "Date",
-        "Stock Name",
-        "Buy Qtn",
-        "Per Share Value",
-        "Buying Total Value",
-        "Commission",
-        "Total Value with commission",
-        "Sale Qtn",
-        "Per Share Value",
-        "Selling Total Value",
-        "Commission",
-        "Total Value with commission",
+        "Company",
+        "Buy (Total Qtn)",
+        "Buy (Total Value with commission)",
+        "Sale (Total Qtn)",
+        "Sale (Total Value with commission)",
+        "Remain Qtn",
+        "Buy Per Share+ Commission",
+        "Sell Per Share+ Commission",
+        "Remain Qtn Value",
+        "PER SHARE Profit/Loss",
+        "Net Profit/Loss",
       ]);
 
-      sheet.getRow(1).eachCell((cell, colNumber) => {
+      sheet.getRow(1).eachCell((cell) => {
         Object.assign(cell, headerStyle);
-
-        if (colNumber === 1) {
-          cell.fill = dateHeaderFill;
-        }
-
-        if (colNumber === 2) {
-          cell.fill = nameHeaderFill;
-        }
-
-        if (colNumber >= 3 && colNumber <= 7) {
-          cell.fill = buyHeaderFill;
-        }
-
-        if (colNumber >= 8 && colNumber <= 12) {
-          cell.fill = saleHeaderFill;
-        }
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF2563EB" },
+        };
       });
 
-      const totals = {
+      let totals = {
         buyQty: 0,
-        buyTotalValue: 0,
-        buyCommission: 0,
-        buyNet: 0,
+        buyValue: 0,
         saleQty: 0,
-        saleTotalValue: 0,
-        saleCommission: 0,
-        saleNet: 0,
+        saleValue: 0,
+        remainQty: 0,
+        remainValue: 0,
+        netProfitLoss: 0,
       };
 
-      [...filteredList]
-        .sort((a, b) => new Date(a.createdAt || a.date) - new Date(b.createdAt || b.date))
-        .forEach((item) => {
-          const qty = Number(item.quantity || 0);
-          const price = Number(item.price || 0);
-          const total = item.total || qty * price;
-          const commission = total * 0.004;
+      companyReports.forEach((item) => {
+        totals.buyQty += item.buyQty;
+        totals.buyValue += item.buyNet;
+        totals.saleQty += item.saleQty;
+        totals.saleValue += item.saleNet;
+        totals.remainQty += item.remainQty;
+        totals.remainValue += item.remainQtyValue;
+        totals.netProfitLoss += item.netProfitLoss;
 
-          let buyQty = "-",
-            buyPrice = "-",
-            buyTotalValue = "-",
-            buyCommission = "-",
-            buyNet = "-";
-          let saleQty = "-",
-            salePrice = "-",
-            saleTotalValue = "-",
-            saleCommission = "-",
-            saleNet = "-";
+        const row = sheet.addRow([
+          item.stockName,
+          item.buyQty || "-",
+          item.buyNet || "-",
+          item.saleQty || "-",
+          item.saleNet || "-",
+          item.remainQty || "-",
+          item.buyEffective || "-",
+          item.sellEffective || "-",
+          item.remainQtyValue || "-",
+          item.perShareProfitLoss || "-",
+          item.netProfitLoss || "-",
+        ]);
 
-          if (item.type === "buy") {
-            buyQty = qty;
-            buyPrice = price;
-            buyTotalValue = total;
-            buyCommission = commission;
-            buyNet = total + commission;
-
-            totals.buyQty += qty;
-            totals.buyTotalValue += total;
-            totals.buyCommission += commission;
-            totals.buyNet += buyNet;
-          } else {
-            saleQty = qty;
-            salePrice = price;
-            saleTotalValue = total;
-            saleCommission = commission;
-            saleNet = total - commission;
-
-            totals.saleQty += qty;
-            totals.saleTotalValue += total;
-            totals.saleCommission += commission;
-            totals.saleNet += saleNet;
+        row.eachCell((cell, colNumber) => {
+          Object.assign(cell, rowStyle);
+          if (typeof cell.value === "number") {
+            cell.numFmt = numberFormat;
           }
-
-          const row = sheet.addRow([
-            new Date(item.createdAt || item.date).toLocaleDateString("en-GB"),
-            item.stockName || "-",
-            buyQty,
-            buyPrice,
-            buyTotalValue,
-            buyCommission,
-            buyNet,
-            saleQty,
-            salePrice,
-            saleTotalValue,
-            saleCommission,
-            saleNet,
-          ]);
-
-          row.eachCell((cell, colNumber) => {
-            Object.assign(cell, rowStyle);
-
-            if (colNumber >= 3 && colNumber <= 7) {
-              cell.fill = buyCellFill;
-            }
-
-            if (colNumber >= 8 && colNumber <= 12) {
-              cell.fill = saleCellFill;
-            }
-
-            if (typeof cell.value === "number") {
-              cell.numFmt = numberFormat;
-            }
-          });
+          if (colNumber === 1) {
+            cell.alignment = {
+              vertical: "middle",
+              horizontal: "left",
+              wrapText: true,
+            };
+          }
         });
+      });
 
       const totalRow = sheet.addRow([
         "TOTAL",
-        "",
         totals.buyQty || "-",
-        "",
-        totals.buyTotalValue || "-",
-        totals.buyCommission || "-",
-        totals.buyNet || "-",
+        totals.buyValue || "-",
         totals.saleQty || "-",
+        totals.saleValue || "-",
+        totals.remainQty || "-",
         "",
-        totals.saleTotalValue || "-",
-        totals.saleCommission || "-",
-        totals.saleNet || "-",
+        "",
+        totals.remainValue || "-",
+        "",
+        totals.netProfitLoss || "-",
       ]);
 
       totalRow.eachCell((cell, colNumber) => {
@@ -396,8 +486,12 @@ const Reports = () => {
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
         cell.fill = totalFill;
 
-        if (colNumber === 1 || colNumber === 2) {
-          cell.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
+        if (colNumber === 1) {
+          cell.alignment = {
+            vertical: "middle",
+            horizontal: "left",
+            wrapText: true,
+          };
         }
 
         if (typeof cell.value === "number") {
@@ -406,25 +500,24 @@ const Reports = () => {
       });
 
       sheet.columns = [
+        { width: 18 },
         { width: 12 },
         { width: 18 },
-        { width: 8 },
+        { width: 12 },
+        { width: 18 },
         { width: 12 },
         { width: 16 },
-        { width: 12 },
         { width: 16 },
-        { width: 8 },
-        { width: 12 },
         { width: 16 },
-        { width: 12 },
-        { width: 16 },
+        { width: 14 },
+        { width: 14 },
       ];
 
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      saveAs(blob, `stock_report_${fromDate}_${toDate}.xlsx`);
+      saveAs(blob, `stock_company_report_${fromDate}_${toDate}.xlsx`);
     } catch (err) {
       console.log("Export failed:", err);
       alert("Unable to generate the report. Please try again.");
@@ -433,51 +526,45 @@ const Reports = () => {
     }
   };
 
-  const summary = useMemo(() => {
-    let buyQty = 0;
-    let buyValue = 0;
-    let buyCommission = 0;
-
-    let saleQty = 0;
-    let saleValue = 0;
-    let saleCommission = 0;
-
-    filteredList.forEach((item) => {
-      const qty = Number(item.quantity || 0);
-      const price = Number(item.price || 0);
-      const total = item.total || qty * price;
-      const commission = total * 0.004;
-
-      if (item.type === "buy") {
-        buyQty += qty;
-        buyValue += total;
-        buyCommission += commission;
-      }
-
-      if (item.type === "sale") {
-        saleQty += qty;
-        saleValue += total;
-        saleCommission += commission;
-      }
-    });
-
-    return {
-      buyQty,
-      buyValue,
-      buyCommission,
-      saleQty,
-      saleValue,
-      saleCommission,
-    };
-  }, [filteredList]);
+  const companySummary = useMemo(() => {
+    return companyReports.reduce(
+      (acc, item) => {
+        acc.buyQty += item.buyQty;
+        acc.buyValue += item.buyNet;
+        acc.saleQty += item.saleQty;
+        acc.saleValue += item.saleNet;
+        acc.remainQty += item.remainQty;
+        acc.remainValue += item.remainQtyValue;
+        acc.netProfitLoss += item.netProfitLoss;
+        return acc;
+      },
+      {
+        buyQty: 0,
+        buyValue: 0,
+        saleQty: 0,
+        saleValue: 0,
+        remainQty: 0,
+        remainValue: 0,
+        netProfitLoss: 0,
+      },
+    );
+  }, [companyReports]);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* HEADER */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-2">📈 Stock Reports</h1>
-          <p className="text-gray-400">Buy & Sale Performance Summary</p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+          <div className="text-center sm:text-left">
+            <h1 className="text-4xl font-bold mb-2">📈 Stock Reports</h1>
+            <p className="text-gray-400">Buy & Sale Performance Summary</p>
+          </div>
+          <button
+            onClick={() => navigate(-1)}
+            className="self-start rounded bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-600"
+          >
+            Back
+          </button>
         </div>
 
         {/* FILTER */}
@@ -499,172 +586,126 @@ const Reports = () => {
           <>
             <div className="overflow-x-auto bg-gray-900 rounded-2xl border border-gray-700 mb-8">
               <table className="w-full text-center text-sm">
-    <thead className="bg-gray-800">
-      <tr>
-        <th className="p-4 border">Date</th>
-        <th className="p-4 border">Stock Name</th>
+                <thead className="bg-gray-800">
+                  <tr>
+                    <th className="p-4 border">Company</th>
+                    <th className="p-4 border">Buy (Total Qtn)</th>
+                    <th className="p-4 border">
+                      Buy (Total Value with commission)
+                    </th>
+                    <th className="p-4 border">Sale (Total Qtn)</th>
+                    <th className="p-4 border">
+                      Sale (Total Value with commission)
+                    </th>
+                    <th className="p-4 border">Remain Qtn</th>
+                    <th className="p-4 border">Buy Per Share+ Commission</th>
+                    <th className="p-4 border">Sell Per Share+ Commission</th>
+                    <th className="p-4 border">Remain Qtn Value</th>
+                    <th className="p-4 border">PER SHARE Profit/Loss</th>
+                    <th className="p-4 border">Net Profit/Loss</th>
+                    <th className="p-4 border">Action</th>
+                  </tr>
+                </thead>
 
-        <th className="p-4 border">Buy Qtn</th>
-        <th className="p-4 border">Per Share Value</th>
-        <th className="p-4 border">Buying Total Value</th>
-        <th className="p-4 border">Commission</th>
-        <th className="p-4 border">
-          Total Value with commission
-        </th>
+                <tbody>
+                  {companyReports.map((item, index) => (
+                    <tr
+                      key={index}
+                      className="font-semibold border hover:bg-gray-800"
+                    >
+                      <td className="p-4 border text-cyan-300 text-left">
+                        {item.stockName}
+                      </td>
+                      <td className="p-4 border text-green-300">
+                        {item.buyQty || "-"}
+                      </td>
+                      <td className="p-4 border text-green-300">
+                        ৳ {item.buyNet.toFixed(2)}
+                      </td>
+                      <td className="p-4 border text-red-300">
+                        {item.saleQty || "-"}
+                      </td>
+                      <td className="p-4 border text-red-300">
+                        ৳ {item.saleNet.toFixed(2)}
+                      </td>
+                      <td className="p-4 border text-yellow-300">
+                        {item.remainQty}
+                      </td>
+                      <td className="p-4 border text-blue-300">
+                        ৳ {item.buyEffective.toFixed(2)}
+                      </td>
+                      <td className="p-4 border text-blue-300">
+                        {item.saleQty
+                          ? `৳ ${item.sellEffective.toFixed(2)}`
+                          : "-"}
+                      </td>
+                      <td className="p-4 border text-emerald-300">
+                        ৳ {item.remainQtyValue.toFixed(2)}
+                      </td>
+                      <td className="p-4 border text-pink-300">
+                        {item.saleQty
+                          ? `৳ ${item.perShareProfitLoss.toFixed(2)}`
+                          : "-"}
+                      </td>
+                      <td className="p-4 border text-pink-300">
+                        {item.saleQty
+                          ? `৳ ${item.netProfitLoss.toFixed(2)}`
+                          : "-"}
+                      </td>
+                      <td className="p-4 border">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleEditCompany(item.stockName)}
+                            disabled={actionLoading === item.stockName}
+                            className={`px-3 py-1 rounded text-xs ${actionLoading === item.stockName ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCompany(item.stockName)}
+                            disabled={actionLoading === item.stockName}
+                            className={`px-3 py-1 rounded text-xs ${actionLoading === item.stockName ? "bg-red-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
 
-        <th className="p-4 border">Sale Qtn</th>
-        <th className="p-4 border">Per Share Value</th>
-        <th className="p-4 border">Selling Total Value</th>
-        <th className="p-4 border">Commission</th>
-        <th className="p-4 border">
-          Total Value with commission
-        </th>
-
-        <th className="p-4 border">Action</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {filteredList.map((item, i) => {
-        const qty = Number(item.quantity || 0);
-        const price = Number(item.price || 0);
-        const total = item.total || qty * price;
-        const commission = total * 0.004;
-
-        return (
-          <tr
-            key={i}
-            className="font-semibold border hover:bg-gray-800"
-          >
-            {/* DATE */}
-            <td className="p-4 border">
-              {new Date(
-                item.createdAt || item.date,
-              ).toLocaleDateString("en-GB")}
-            </td>
-
-            {/* STOCK NAME */}
-            <td className="p-4 border text-cyan-300">
-              {item.stockName}
-            </td>
-
-            {/* BUY DATA */}
-            <td className="p-4 border text-green-400">
-              {item.type === "buy" ? qty : "-"}
-            </td>
-
-            <td className="p-4 border text-blue-300">
-              {item.type === "buy"
-                ? `৳ ${price.toFixed(2)}`
-                : "-"}
-            </td>
-
-            <td className="p-4 border text-green-400">
-              {item.type === "buy"
-                ? `৳ ${total.toFixed(2)}`
-                : "-"}
-            </td>
-
-            <td className="p-4 border text-yellow-300">
-              {item.type === "buy"
-                ? `৳ ${commission.toFixed(2)}`
-                : "-"}
-            </td>
-
-            <td className="p-4 border text-emerald-300">
-              {item.type === "buy"
-                ? `৳ ${(total + commission).toFixed(2)}`
-                : "-"}
-            </td>
-
-            {/* SALE DATA */}
-            <td className="p-4 border text-red-400">
-              {item.type === "sale" ? qty : "-"}
-            </td>
-
-            <td className="p-4 border text-blue-300">
-              {item.type === "sale"
-                ? `৳ ${price.toFixed(2)}`
-                : "-"}
-            </td>
-
-            <td className="p-4 border text-red-400">
-              {item.type === "sale"
-                ? `৳ ${total.toFixed(2)}`
-                : "-"}
-            </td>
-
-            <td className="p-4 border text-yellow-300">
-              {item.type === "sale"
-                ? `৳ ${commission.toFixed(2)}`
-                : "-"}
-            </td>
-
-            <td className="p-4 border text-pink-300">
-              {item.type === "sale"
-                ? `৳ ${(total - commission).toFixed(2)}`
-                : "-"}
-            </td>
-
-            <td className="p-4 border">
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  onClick={() => handleEdit(item)}
-                  className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => handleDelete(item)}
-                  className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs"
-                >
-                  Delete
-                </button>
-              </div>
-            </td>
-          </tr>
-        );
-      })}
-
-      {filteredList.length > 0 && (
-        <tr className="bg-gray-800 font-bold text-gray-100">
-          <td className="p-4 border">TOTAL</td>
-          <td className="p-4 border">&nbsp;</td>
-          <td className="p-4 border text-green-300">
-            {summary.buyQty}
-          </td>
-          <td className="p-4 border">&nbsp;</td>
-          <td className="p-4 border text-green-300">
-            ৳ {summary.buyValue.toFixed(2)}
-          </td>
-          <td className="p-4 border text-yellow-300">
-            ৳ {summary.buyCommission.toFixed(2)}
-          </td>
-          <td className="p-4 border text-emerald-300">
-            ৳ {(summary.buyValue + summary.buyCommission).toFixed(2)}
-          </td>
-          <td className="p-4 border text-red-300">
-            {summary.saleQty}
-          </td>
-          <td className="p-4 border">&nbsp;</td>
-          <td className="p-4 border text-red-300">
-            ৳ {summary.saleValue.toFixed(2)}
-          </td>
-          <td className="p-4 border text-yellow-300">
-            ৳ {summary.saleCommission.toFixed(2)}
-          </td>
-          <td className="p-4 border text-pink-300">
-            ৳ {(summary.saleValue - summary.saleCommission).toFixed(2)}
-          </td>
-          <td className="p-4 border">&nbsp;</td>
-        </tr>
-      )}
-    </tbody>
-  </table>
-</div>
-
-
+                  {companyReports.length > 0 && (
+                    <tr className="bg-purple-950 font-bold text-white">
+                      <td className="p-4 border text-left">TOTAL</td>
+                      <td className="p-4 border text-green-300">
+                        {companySummary.buyQty}
+                      </td>
+                      <td className="p-4 border text-green-300">
+                        ৳ {companySummary.buyValue.toFixed(2)}
+                      </td>
+                      <td className="p-4 border text-red-300">
+                        {companySummary.saleQty}
+                      </td>
+                      <td className="p-4 border text-red-300">
+                        ৳ {companySummary.saleValue.toFixed(2)}
+                      </td>
+                      <td className="p-4 border text-yellow-300">
+                        {companySummary.remainQty}
+                      </td>
+                      <td className="p-4 border">&nbsp;</td>
+                      <td className="p-4 border">&nbsp;</td>
+                      <td className="p-4 border text-emerald-300">
+                        ৳ {companySummary.remainValue.toFixed(2)}
+                      </td>
+                      <td className="p-4 border">&nbsp;</td>
+                      <td className="p-4 border text-pink-300">
+                        ৳ {companySummary.netProfitLoss.toFixed(2)}
+                      </td>
+                      <td className="p-4 border">&nbsp;</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </>
         ) : (
           <div className="text-center text-gray-400 py-16">

@@ -10,13 +10,32 @@ const buySchema = new mongoose.Schema(
       type: String,
       default: "N/A",
     },
-    quantity: {
+    buyQuantity: {
       type: Number,
       required: true,
     },
-    price: {
+    perShareValue: {
       type: Number,
       required: true,
+    },
+    buyingTotalShareValue: {
+      type: Number,
+      required: true,
+    },
+    commission: {
+      type: Number,
+      required: true,
+    },
+    totalValueWithCommission: {
+      type: Number,
+      required: true,
+    },
+    // Keep for backward compatibility
+    quantity: {
+      type: Number,
+    },
+    price: {
+      type: Number,
     },
     total: {
       type: Number,

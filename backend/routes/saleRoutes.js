@@ -3,29 +3,29 @@ const router = express.Router();
 
 const Sale = require("../models/Sale");
 
-
 // ==============================
 // CREATE SALE
 // ==============================
 router.post("/add", async (req, res) => {
   try {
-
     const {
       userId,
       stockName,
-      quantity,
-      price,
+      saleQuantity,
+      perShareValue,
+      sallingTotalShareValue,
+      commission,
+      totalValueWithCommission,
     } = req.body;
-
-    const total =
-      Number(quantity) * Number(price);
 
     const sale = new Sale({
       userId,
       stockName,
-      quantity: Number(quantity),
-      price: Number(price),
-      total,
+      saleQuantity: Number(saleQuantity),
+      perShareValue: Number(perShareValue),
+      sallingTotalShareValue: Number(sallingTotalShareValue),
+      commission: Number(commission),
+      totalValueWithCommission: Number(totalValueWithCommission),
     });
 
     await sale.save();
@@ -35,9 +35,7 @@ router.post("/add", async (req, res) => {
       message: "Sale saved successfully",
       data: sale,
     });
-
   } catch (err) {
-
     console.log(err);
 
     res.status(500).json({
@@ -46,22 +44,18 @@ router.post("/add", async (req, res) => {
     });
   }
 });
-
 
 // ==============================
 // GET SALES BY USER
 // ==============================
 router.get("/:userId", async (req, res) => {
   try {
-
     const sales = await Sale.find({
       userId: req.params.userId,
     }).sort({ createdAt: -1 });
 
     res.json(sales);
-
   } catch (err) {
-
     console.log(err);
 
     res.status(500).json({
@@ -71,5 +65,57 @@ router.get("/:userId", async (req, res) => {
   }
 });
 
+// ==============================
+// UPDATE SALE
+// ==============================
+router.put("/update/:id", async (req, res) => {
+  try {
+    const {
+      stockName,
+      saleQuantity,
+      perShareValue,
+      sallingTotalShareValue,
+      commission,
+      totalValueWithCommission,
+    } = req.body;
+
+    const updatedSale = await Sale.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...(stockName !== undefined && { stockName }),
+        ...(saleQuantity !== undefined && { saleQuantity }),
+        ...(perShareValue !== undefined && { perShareValue }),
+        ...(sallingTotalShareValue !== undefined && { sallingTotalShareValue }),
+        ...(commission !== undefined && { commission }),
+        ...(totalValueWithCommission !== undefined && {
+          totalValueWithCommission,
+        }),
+      },
+      { new: true },
+    );
+
+    res.json({
+      success: true,
+      message: "Sale updated successfully",
+      data: updatedSale,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ==============================
+// DELETE SALE
+// ==============================
+router.delete("/delete/:id", async (req, res) => {
+  try {
+    await Sale.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Sale deleted successfully" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 
 module.exports = router;
