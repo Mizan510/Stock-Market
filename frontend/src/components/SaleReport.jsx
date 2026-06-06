@@ -38,6 +38,9 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
     return parsed.toISOString().split("T")[0];
   };
 
+  const getSaleQuantity = (item) =>
+    Number(item.saleQuantity ?? item.quantity ?? 0) || 0;
+
   const formatDateDisplay = (date) => {
     const parsed = new Date(date);
     if (Number.isNaN(parsed.getTime())) {
@@ -172,7 +175,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
       });
 
       sorted.forEach((item) => {
-        const qty = Number(item.saleQuantity ?? 0) || 0;
+        const qty = getSaleQuantity(item);
         const perShare = Number(item.perShareValue ?? item.price ?? 0) || 0;
         const saleValue =
           Number(item.sallingTotalShareValue ?? item.total ?? 0) || 0;
@@ -310,7 +313,9 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
                     {formatDateDisplay(item.createdAt || item.date)}
                   </td>
                   <td className="p-3">{item.stockName}</td>
-                  <td className="p-3">{item.saleQuantity || "-"}</td>
+                  <td className="p-3">
+                    {item.saleQuantity ?? item.quantity ?? "-"}
+                  </td>
                   <td className="p-3">
                     {item.perShareValue || item.price
                       ? Number(item.perShareValue || item.price).toFixed(2)
@@ -356,7 +361,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
                 <td className="p-3">-</td>
                 <td className="p-3">
                   {filteredSaleList.reduce(
-                    (s, it) => s + Number(it.saleQuantity ?? 0),
+                    (s, it) => s + getSaleQuantity(it),
                     0,
                   )}
                 </td>

@@ -189,7 +189,16 @@ const Dashboard = () => {
               balance={portfolioMetrics.cashBalance}
               profit={portfolioMetrics.totalProfit}
               remainingShareValue={portfolioMetrics.totalRemainingShareValue}
+              totalBuyCost={portfolioMetrics.totalBuyCost}
               totalAssets={portfolioMetrics.totalAssets}
+              totalBuyQty={portfolioMetrics.totalBuyQty}
+              totalSaleQty={portfolioMetrics.totalSaleQty}
+              totalSaleValueWithCommission={
+                portfolioMetrics.totalSaleValueWithCommission
+              }
+              totalRemainQty={portfolioMetrics.totalRemainQty}
+              tillNowProfitLoss={portfolioMetrics.totalProfit}
+              tillNowCurrentAssets={portfolioMetrics.totalAssets}
               realizedProfit={portfolioMetrics.realizedProfit}
               unrealizedProfit={portfolioMetrics.unrealizedProfit}
               holdingCount={portfolioMetrics.holdingCount}

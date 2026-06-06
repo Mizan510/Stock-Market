@@ -41,9 +41,17 @@ export const calculatePortfolioMetrics = (
     return sum + Number(item.totalValueWithCommission || 0);
   }, 0);
 
+  const totalBuyQty = buyData.reduce((sum, item) => {
+    return sum + Number(item.buyQuantity || 0);
+  }, 0);
+
   // Total Sale Proceeds (after commission)
   const totalSaleProceeds = saleData.reduce((sum, item) => {
     return sum + Number(item.totalValueWithCommission || 0);
+  }, 0);
+
+  const totalSaleQty = saleData.reduce((sum, item) => {
+    return sum + Number(item.saleQuantity || 0);
   }, 0);
 
   // ====================================
@@ -180,6 +188,11 @@ export const calculatePortfolioMetrics = (
   // Total Profit = Realized Profit + Unrealized Profit
   const totalProfit = realizedProfit + unrealizedProfit;
 
+  const totalRemainQty = Object.values(holdingsMap).reduce(
+    (sum, h) => sum + Math.max(Number(h.quantity || 0), 0),
+    0,
+  );
+
   return {
     // Cash Flow
     totalDeposit,
@@ -197,6 +210,12 @@ export const calculatePortfolioMetrics = (
     realizedProfit,
     unrealizedProfit,
     totalProfit,
+
+    // Extended Summary
+    totalBuyQty,
+    totalSaleQty,
+    totalSaleValueWithCommission: totalSaleProceeds,
+    totalRemainQty,
 
     // Holdings
     holdings: holdingsMap,

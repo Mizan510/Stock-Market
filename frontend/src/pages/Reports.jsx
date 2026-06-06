@@ -189,12 +189,21 @@ const Reports = () => {
     }
   };
 
+  const getRecordQuantity = (item) => {
+    if (item.type === "buy") {
+      return Number(item.buyQuantity ?? item.quantity ?? 0);
+    }
+    if (item.type === "sale") {
+      return Number(item.saleQuantity ?? item.quantity ?? 0);
+    }
+    return Number(item.buyQuantity ?? item.saleQuantity ?? item.quantity ?? 0);
+  };
+
   const handleEdit = async (item) => {
     const stockName = window.prompt("Stock name", item.stockName);
     if (stockName === null) return;
 
-    const currentQuantity =
-      item.buyQuantity ?? item.saleQuantity ?? item.quantity ?? 0;
+    const currentQuantity = getRecordQuantity(item);
     const currentPrice = item.perShareValue ?? item.price ?? 0;
 
     const quantityInput = window.prompt("Quantity", currentQuantity);
@@ -326,9 +335,7 @@ const Reports = () => {
         };
       }
 
-      const qty = Number(
-        item.buyQuantity ?? item.saleQuantity ?? item.quantity ?? 0,
-      );
+      const qty = getRecordQuantity(item);
       const price = Number(item.perShareValue ?? item.price ?? 0);
       const totalValue = Number(
         item.buyingTotalShareValue ??
@@ -623,7 +630,7 @@ const Reports = () => {
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div className="text-center sm:text-left">
-            <h1 className="text-4xl font-bold mb-2">📈 Stock Reports</h1>
+            <h1 className="text-4xl font-bold mb-2">📈 Company Wise Summary</h1>
             <p className="text-gray-400">Buy & Sale Performance Summary</p>
           </div>
           <button
