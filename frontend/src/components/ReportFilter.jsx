@@ -47,8 +47,8 @@ const ReportFilter = ({
   const formattedTo = formatDate(toDate);
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
-      <div className="flex flex-col sm:flex-row items-start gap-4">
-        <div className="w-full sm:w-44 md:w-48 lg:w-52 flex flex-col">
+      <div className="flex items-start gap-3 flex-nowrap overflow-x-auto">
+        <div className="min-w-[130px] flex-1 flex flex-col">
           <label className="text-xs text-gray-300">From Date</label>
           <div className="mt-1">
             <div
@@ -60,18 +60,6 @@ const ReportFilter = ({
               }
             >
               <span className="truncate text-sm">{formattedFrom}</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-gray-400 ml-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M6 2a1 1 0 100 2h8a1 1 0 100-2H6zM3 6a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V6zm5 3a1 1 0 10-2 0v3a1 1 0 102 0V9zm6 0a1 1 0 10-2 0v3a1 1 0 102 0V9z"
-                  clipRule="evenodd"
-                />
-              </svg>
             </div>
             <input
               ref={fromRef}
@@ -83,7 +71,7 @@ const ReportFilter = ({
           </div>
         </div>
 
-        <div className="w-full sm:w-44 md:w-48 lg:w-52 flex flex-col">
+        <div className="min-w-[130px] flex-1 flex flex-col">
           <label className="text-xs text-gray-300">To Date</label>
           <div className="mt-1">
             <div
@@ -95,18 +83,6 @@ const ReportFilter = ({
               }
             >
               <span className="truncate text-sm">{formattedTo}</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-gray-400 ml-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M6 2a1 1 0 100 2h8a1 1 0 100-2H6zM3 6a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V6zm5 3a1 1 0 10-2 0v3a1 1 0 102 0V9zm6 0a1 1 0 10-2 0v3a1 1 0 102 0V9z"
-                  clipRule="evenodd"
-                />
-              </svg>
             </div>
             <input
               ref={toRef}
