@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 const ReportFilter = ({
   fromDate,
@@ -15,30 +15,82 @@ const ReportFilter = ({
   selectedCompany,
   setSelectedCompany,
 }) => {
+  const fromRef = useRef(null);
+  const toRef = useRef(null);
+
+  const formatDate = (d) => {
+    if (!d) return "DD-MMM-YYYY";
+    try {
+      const [y, m, day] = d.split("-");
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const mon = monthNames[Number(m) - 1] || "???";
+      return `${day}-${mon}-${y}`;
+    } catch (e) {
+      return d;
+    }
+  };
+
+  const formattedFrom = formatDate(fromDate);
+  const formattedTo = formatDate(toDate);
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
-      <div className="flex items-center gap-3">
-        <label className="text-sm text-gray-300">From</label>
-        <input
-          type="date"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          className="p-2 bg-gray-800 rounded-lg outline-none"
-          style={{
-            width: `${Math.max(10, (fromDate || "0000-00-00").length)}ch`,
-          }}
-        />
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-300">From Date</label>
+          <div
+            className="mt-1 p-2 bg-gray-800 rounded-lg text-gray-100 cursor-text"
+            style={{ width: `${Math.max(11, formattedFrom.length)}ch` }}
+            onClick={() =>
+              fromRef.current && fromRef.current.showPicker
+                ? fromRef.current.showPicker()
+                : fromRef.current && fromRef.current.focus()
+            }
+          >
+            {formattedFrom}
+          </div>
+          <input
+            ref={fromRef}
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="hidden"
+          />
+        </div>
 
-        <label className="text-sm text-gray-300">To</label>
-        <input
-          type="date"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          className="p-2 bg-gray-800 rounded-lg outline-none"
-          style={{
-            width: `${Math.max(10, (toDate || "0000-00-00").length)}ch`,
-          }}
-        />
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-300">To Date</label>
+          <div
+            className="mt-1 p-2 bg-gray-800 rounded-lg text-gray-100 cursor-text"
+            style={{ width: `${Math.max(11, formattedTo.length)}ch` }}
+            onClick={() =>
+              toRef.current && toRef.current.showPicker
+                ? toRef.current.showPicker()
+                : toRef.current && toRef.current.focus()
+            }
+          >
+            {formattedTo}
+          </div>
+          <input
+            ref={toRef}
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="hidden"
+          />
+        </div>
       </div>
 
       <div className="mt-2">
