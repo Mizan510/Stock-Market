@@ -19,7 +19,7 @@ const Investment = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const day = date.getDate();
     const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
