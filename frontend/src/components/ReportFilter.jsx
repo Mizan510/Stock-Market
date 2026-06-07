@@ -47,19 +47,19 @@ const ReportFilter = ({
   const formattedTo = formatDate(toDate);
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
-      <div className="flex items-start gap-3 flex-nowrap overflow-x-auto">
-        <div className="min-w-[130px] flex-1 flex flex-col">
-          <label className="text-xs text-gray-300">From Date</label>
+      <div className="flex items-start gap-2 flex-nowrap">
+        <div className="flex-1 min-w-0 flex flex-col">
+          <label className="text-[10px] text-gray-300">From Date</label>
           <div className="mt-1">
             <div
-              className="w-full px-2 py-2 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
+              className="w-full px-2 py-1.5 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center"
               onClick={() =>
                 fromRef.current && fromRef.current.showPicker
                   ? fromRef.current.showPicker()
                   : fromRef.current && fromRef.current.focus()
               }
             >
-              <span className="truncate text-sm">{formattedFrom}</span>
+              <span className="truncate text-xs">{formattedFrom}</span>
             </div>
             <input
               ref={fromRef}
@@ -71,18 +71,18 @@ const ReportFilter = ({
           </div>
         </div>
 
-        <div className="min-w-[130px] flex-1 flex flex-col">
-          <label className="text-xs text-gray-300">To Date</label>
+        <div className="flex-1 min-w-0 flex flex-col">
+          <label className="text-[10px] text-gray-300">To Date</label>
           <div className="mt-1">
             <div
-              className="w-full px-2 py-2 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
+              className="w-full px-2 py-1.5 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center"
               onClick={() =>
                 toRef.current && toRef.current.showPicker
                   ? toRef.current.showPicker()
                   : toRef.current && toRef.current.focus()
               }
             >
-              <span className="truncate text-sm">{formattedTo}</span>
+              <span className="truncate text-xs">{formattedTo}</span>
             </div>
             <input
               ref={toRef}
