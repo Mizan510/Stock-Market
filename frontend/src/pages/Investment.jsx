@@ -422,19 +422,25 @@ const Investment = () => {
 
         {/* FILTER */}
         <div className="bg-gray-900 p-3 rounded-xl mt-4 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="p-2 bg-gray-800 rounded"
+              className="p-2 bg-gray-800 rounded appearance-none"
+              style={{
+                backgroundImage: "none",
+              }}
             />
 
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="p-2 bg-gray-800 rounded"
+              className="p-2 bg-gray-800 rounded appearance-none"
+              style={{
+                backgroundImage: "none",
+              }}
             />
           </div>
 
