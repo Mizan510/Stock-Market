@@ -308,7 +308,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-800 text-gray-200">
               <tr>
-                <th className="p-3 border whitespace-nowrap min-w-[120px]">
+                <th className="p-3 border whitespace-nowrap min-w-120px">
                   Date
                 </th>
                 <th className="p-3 border">Company Name</th>
@@ -326,7 +326,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
                   key={item._id || index}
                   className="border-b border-gray-800 hover:bg-gray-900"
                 >
-                  <td className="p-3 whitespace-nowrap min-w-[120px]">
+                  <td className="p-3 whitespace-nowrap min-w-120px">
                     {formatDateDisplay(item.createdAt || item.date)}
                   </td>
                   <td className="p-3">{item.stockName}</td>
@@ -374,7 +374,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
               ))}
               {/* totals row */}
               <tr className="bg-gray-800 font-bold">
-                <td className="p-3 whitespace-nowrap min-w-[120px]">TOTAL</td>
+                <td className="p-3 whitespace-nowrap min-w-120px">TOTAL</td>
                 <td className="p-3">-</td>
                 <td className="p-3">
                   {filteredBuyList.reduce(
