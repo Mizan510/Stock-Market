@@ -471,7 +471,9 @@ const Investment = () => {
             <table className="w-full text-sm border border-gray-700 text-center">
               <thead className="bg-gray-800 font-bold text-center">
                 <tr>
-                  <th className="p-2 border">Date</th>
+                  <th className="p-2 border whitespace-nowrap min-w-[120px]">
+                    Date
+                  </th>
                   <th className="p-2 border">Deposit</th>
                   <th className="p-2 border">Withdraw</th>
                   <th className="p-2 border">Balance</th>
@@ -482,7 +484,7 @@ const Investment = () => {
               <tbody>
                 {reportData.map((item, i) => (
                   <tr key={i} className="border border-gray-700">
-                    <td className="p-2 border">
+                    <td className="p-2 border whitespace-nowrap min-w-[120px]">
                       {new Date(item.date).toLocaleDateString("en-GB")}
                     </td>
 
@@ -524,7 +526,9 @@ const Investment = () => {
                 ))}
 
                 <tr className="bg-yellow-900 font-bold">
-                  <td className="p-2 border">TOTAL</td>
+                  <td className="p-2 border whitespace-nowrap min-w-[120px]">
+                    TOTAL
+                  </td>
                   <td className="p-2 border text-green-400">{totalDeposit}</td>
                   <td className="p-2 border text-red-400">{totalWithdraw}</td>
                   <td className="p-2 border text-yellow-300">{balance}</td>

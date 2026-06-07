@@ -293,7 +293,9 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-800 text-gray-200">
               <tr>
-                <th className="p-3 border whitespace-nowrap min-w-[120px]">Date</th>
+                <th className="p-3 border whitespace-nowrap min-w-[120px]">
+                  Date
+                </th>
                 <th className="p-3 border">Company Name</th>
                 <th className="p-3 border">Sale Quantity</th>
                 <th className="p-3 border">Per Share Value</th>
