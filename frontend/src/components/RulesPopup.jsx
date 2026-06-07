@@ -78,7 +78,7 @@ const RulesPopup = ({ onClose }) => {
         {/* ২. স্ক্রোলযোগ্য নিচের রুলস সেকশন (Scrollable Content) */}
         <div className="flex-1 overflow-y-auto p-2 sm:p-2 space-y-3 bg-gray-50/70">
           {/* Rule 3 */}
-          <div className="bg-white border border-gray-200/80 rounded-2xl p-1 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white border border-gray-200/80 rounded-2xl p-2 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="mb-2 flex items-center justify-center font-bold tracking-wide">
               <span className="text-red-500 text-4xl font-extrabold mr-3">
                 *
