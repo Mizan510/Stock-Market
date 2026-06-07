@@ -120,6 +120,16 @@ const RulesPopup = ({ onClose }) => {
                       কারণ দাম দ্রুত বাড়তে পারে।
                     </span>
                   </li>
+                  <li>
+                    Stop Loss →
+                    <span className="font-bold text-red-600">
+                      3% Loss Limit
+                    </span>{" "}
+                    —{" "}
+                    <span className="text-red-700 font-medium bg-red-100 px-1 rounded">
+                      যদি ৩% নিচে নামে, সাথে সাথে বিক্রি করুন।
+                    </span>
+                  </li>
                 </ul>
               </div>
 
@@ -147,6 +157,16 @@ const RulesPopup = ({ onClose }) => {
                     —{" "}
                     <span className="text-red-600 font-medium bg-red-100 px-1 rounded">
                       কারণ দাম দ্রুত কমতে পারে।
+                    </span>
+                  </li>
+                  <li>
+                    Target Profit →
+                    <span className="font-bold text-green-600">
+                      Sell at 20% Profit
+                    </span>{" "}
+                    —{" "}
+                    <span className="text-green-700 font-medium bg-green-100 px-1 rounded">
+                      ২০% লাভ হলে প্রফিট বুক করে বের হয়ে যান।
                     </span>
                   </li>
                 </ul>
