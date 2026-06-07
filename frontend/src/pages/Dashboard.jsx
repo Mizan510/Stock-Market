@@ -14,29 +14,7 @@ const Dashboard = () => {
   // =========================
   const [showRulesPopup, setShowRulesPopup] = useState(true);
 
-  // =========================
-  // BACK BUTTON LOGOUT
-  // =========================
-  useEffect(() => {
-    window.history.pushState({ dashboard: true }, "", window.location.href);
-
-    const handlePopState = () => {
-      const confirmed = window.confirm("Are you sure you want to log out?");
-
-      if (confirmed) {
-        localStorage.removeItem("auth");
-        localStorage.removeItem("token");
-
-        navigate("/login", { replace: true });
-      } else {
-        window.history.pushState({ dashboard: true }, "", window.location.href);
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [navigate]);
+  // Back-button behavior is handled globally in ProtectedRoute.
 
   // =========================
   // STATES

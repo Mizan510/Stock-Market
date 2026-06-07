@@ -9,13 +9,13 @@ const ProtectedRoute = ({ children }) => {
     if (!token) return;
 
     const handlePopState = () => {
-      // When the user navigates back (popstate), prompt whether to force logout.
-      // We intentionally do not block the navigation — the browser already moved to the previous entry.
-      // After navigation completes, ask user if they want to logout. If yes, clear auth and go to login.
+      // When the user navigates back (popstate), ask whether they want to logout.
+      // Do not force logout; if the user cancels, keep them logged in.
+      // The browser already performed the navigation, so we just prompt and react accordingly.
       setTimeout(() => {
         try {
           const confirmLogout = window.confirm(
-            "Forcefully logout (clear session) and go to login?",
+            "Do you want to log out? Click OK to log out, Cancel to stay logged in.",
           );
 
           if (confirmLogout) {
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children }) => {
         } catch (err) {
           console.log("popstate handler error:", err);
         }
-      }, 50);
+      }, 100);
     };
 
     window.addEventListener("popstate", handlePopState);
