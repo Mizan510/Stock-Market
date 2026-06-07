@@ -433,15 +433,22 @@ const Investment = () => {
               }}
             />
 
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="p-2 sm:p-3 bg-gray-800 rounded appearance-none text-sm sm:text-base"
-              style={{
-                backgroundImage: "none",
-              }}
-            />
+<input
+  type="date"
+  value={toDate}
+  onChange={(e) => setToDate(e.target.value)}
+  className="
+    w-full sm:w-auto
+    px-3 py-2 sm:px-2 sm:py-1
+    bg-gray-800
+    text-white text-sm sm:text-base
+    rounded-md
+    border border-gray-700
+    focus:outline-none focus:ring-2 focus:ring-blue-500
+    appearance-none
+  "
+  style={{ backgroundImage: "none" }}
+/>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
