@@ -51,7 +51,9 @@ router.post("/login", async (req, res) => {
 
   // Prevent inactive users from logging in
   if (user.isActive === false) {
-    return res.status(403).json({ message: "Account inactive. Contact administrator." });
+    return res
+      .status(403)
+      .json({ message: "Account inactive. Contact administrator." });
   }
 
   const valid = await bcrypt.compare(password, user.password);

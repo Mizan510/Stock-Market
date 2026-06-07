@@ -179,11 +179,11 @@ const UserManager = () => {
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <div className="flex flex-wrap justify-end gap-2">
+                      <div className="flex items-center justify-end gap-2 flex-nowrap whitespace-nowrap">
                         <button
                           disabled={actionLoading === user._id}
                           onClick={() => handleToggleActive(user)}
-                          className="rounded-2xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:border-white transition disabled:opacity-50"
+                          className="rounded-2xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:border-white transition disabled:opacity-50 whitespace-nowrap"
                         >
                           {actionLoading === user._id
                             ? "..."
@@ -194,7 +194,7 @@ const UserManager = () => {
                         <button
                           disabled={actionLoading === user._id}
                           onClick={() => handleDeleteUser(user)}
-                          className="rounded-2xl border border-rose-500 bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition disabled:opacity-50"
+                          className="rounded-2xl border border-rose-500 bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition disabled:opacity-50 whitespace-nowrap"
                         >
                           Delete
                         </button>
