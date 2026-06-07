@@ -57,7 +57,7 @@ const Register = () => {
 
   if (!accessGranted) {
     return (
-  <div className="flex items-center justify-center min-h-screen bg-gray-50 -translate-y-10">
+  <div className="flex items-center justify-center min-h-screen bg-gray-50 -translate-y-16 px-4">
         <form
           onSubmit={handleAccessSubmit}
           className="bg-white p-6 rounded-xl shadow-lg w-80 text-center"
