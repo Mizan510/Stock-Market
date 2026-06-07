@@ -43,7 +43,7 @@ const RulesPopup = ({ onClose }) => {
                 52%, 100% { opacity: 0; transform: translateX(-20px) scale(0.95); }
               }
             `}</style>
-            <div className="relative h-8 sm:h-9 md:h-10">
+            <div className="relative h-8 sm:h-7 md:h-10">
               <span
                 className="absolute inset-0 flex items-center justify-center text-red-600 text-2xl sm:text-3xl font-extrabold tracking-wide bg-red-100/90 rounded-2xl px-4 py-2 shadow-md"
                 style={{
