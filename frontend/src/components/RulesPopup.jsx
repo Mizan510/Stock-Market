@@ -84,7 +84,7 @@ const RulesPopup = ({ onClose }) => {
                 *
               </span>
 
-              <span className="text-white text-sm sm:text-base font-bold bg-linear-to-l from-red-600 to-pink-600 px-3 py-1 rounded-lg shadow-md">
+              <span className="text-white text-sm sm:text-base font-bold bg-linear-to-l from-red-600 to-pink-600 px-3 py-3 rounded-lg shadow-md">
                 Dominant Check Before Buy & Sale
               </span>
 
@@ -153,7 +153,7 @@ const RulesPopup = ({ onClose }) => {
               </div>
 
               {/* Cash Map Box */}
-              <div className="bg-linear-to-r from-red-800 to-red-600 text-white rounded-xl py-1 px-3 text-center shadow-sm">
+              <div className="bg-linear-to-r from-red-800 to-red-600 text-white rounded-xl py-3 px-3 text-center shadow-sm">
                 <p className="text-[11px] sm:text-xl font-bold tracking-wide">
                   Check Cash Map% of *Company* and *Market*
                 </p>
