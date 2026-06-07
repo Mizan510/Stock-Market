@@ -427,7 +427,7 @@ const Investment = () => {
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="p-2 bg-gray-800 rounded appearance-none text-sm"
+              className="p-3 bg-gray-800 rounded appearance-none text-base"
               style={{
                 backgroundImage: "none",
               }}
@@ -437,7 +437,7 @@ const Investment = () => {
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="p-2 bg-gray-800 rounded appearance-none text-sm"
+              className="p-3 bg-gray-800 rounded appearance-none text-base"
               style={{
                 backgroundImage: "none",
               }}
