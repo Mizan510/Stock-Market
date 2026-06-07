@@ -6,26 +6,35 @@ const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ❌ If not logged in → redirect
+  // ❌ Not logged in → redirect
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
   useEffect(() => {
+    // Push fake history entry to trap back button
+    window.history.pushState({ page: "protected" }, "", window.location.href);
+
     const handlePopState = () => {
       const confirmLogout = window.confirm(
         "Do you want to log out?"
       );
 
       if (confirmLogout) {
-        // ✅ logout user
+        // ✅ logout
         localStorage.removeItem("auth");
         localStorage.removeItem("token");
 
         navigate("/login", { replace: true });
       } else {
-        // ✅ user cancelled → keep them stable in current page
-        // restore current route to avoid broken navigation state
+        // ❌ user stays → re-push state so back doesn't exit
+        window.history.pushState(
+          { page: "protected" },
+          "",
+          window.location.href
+        );
+
+        // keep user on same page
         navigate(location.pathname + location.search, { replace: true });
       }
     };
@@ -36,20 +45,6 @@ const ProtectedRoute = ({ children }) => {
       window.removeEventListener("popstate", handlePopState);
     };
   }, [navigate, location.pathname, location.search]);
-
-  // Optional: protect against refresh/close confusion (safe UX)
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
 
   return children;
 };
