@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../api";
+import { useAlert } from "../components/ConfirmProvider";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -9,14 +10,18 @@ const Register = () => {
 
   const [loading, setLoading] = useState(false);
   const [backLoading, setBackLoading] = useState(false);
+  const [accessPassword, setAccessPassword] = useState("");
+  const [accessGranted, setAccessGranted] = useState(false);
 
   const navigate = useNavigate();
+  const alert = useAlert();
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
     if (!name || !email || !password) {
-      return alert("Please fill all fields");
+      await alert("Please fill all fields");
+      return;
     }
 
     try {
@@ -28,15 +33,61 @@ const Register = () => {
         password,
       });
 
-      alert("Account created successfully!");
+      await alert("Account created successfully!");
 
       navigate("/login", { replace: true });
     } catch (error) {
-      alert(error.response?.data?.message || "Registration failed");
+      await alert(error.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
+
+  // ✅ Access verification for registration page
+  const handleAccessSubmit = async (e) => {
+    e.preventDefault();
+    if (accessPassword === "11221122") {
+      setAccessGranted(true);
+      setAccessPassword("");
+    } else {
+      await alert("❌ Invalid access password");
+      setAccessPassword("");
+    }
+  };
+
+  if (!accessGranted) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <form
+          onSubmit={handleAccessSubmit}
+          className="bg-white p-6 rounded-xl shadow-lg w-80 text-center"
+        >
+          <h2 className="text-lg font-semibold mb-4">🔐 Admin Access</h2>
+          <input
+            type="password"
+            placeholder="Enter Access Password"
+            value={accessPassword}
+            onChange={(e) => setAccessPassword(e.target.value)}
+            className="border p-2 rounded w-full mb-4"
+            required
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700 transition mb-2"
+          >
+            Verify
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate("/login")}
+            className="bg-gray-500 text-white font-semibold w-full py-2 rounded hover:bg-gray-400 transition"
+          >
+            Back to Login
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
@@ -79,7 +130,7 @@ const Register = () => {
           {loading ? "Creating..." : "Create Account"}
         </button>
 
-        {/* LOGIN LINK */}
+        {/* LOGIN Link */}
         <p className="text-sm text-gray-400 mt-5 text-center">
           Already have an account?{" "}
           <Link to="/login" className="text-blue-400 hover:underline">

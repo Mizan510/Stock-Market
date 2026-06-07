@@ -9,9 +9,21 @@ export const ConfirmProvider = ({ children }) => {
     resolve: null,
   });
 
+  const [alertState, setAlertState] = useState({
+    open: false,
+    message: "",
+    resolve: null,
+  });
+
   const confirm = useCallback((message) => {
     return new Promise((resolve) => {
       setConfirmState({ open: true, message, resolve });
+    });
+  }, []);
+
+  const alert = useCallback((message) => {
+    return new Promise((resolve) => {
+      setAlertState({ open: true, message, resolve });
     });
   }, []);
 
@@ -22,9 +34,17 @@ export const ConfirmProvider = ({ children }) => {
     setConfirmState({ open: false, message: "", resolve: null });
   };
 
+  const handleAlertClose = () => {
+    if (alertState.resolve) {
+      alertState.resolve(true);
+    }
+    setAlertState({ open: false, message: "", resolve: null });
+  };
+
   return (
-    <ConfirmContext.Provider value={confirm}>
+    <ConfirmContext.Provider value={{ confirm, alert }}>
       {children}
+
       {confirmState.open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
@@ -50,16 +70,45 @@ export const ConfirmProvider = ({ children }) => {
           </div>
         </div>
       )}
+
+      {alertState.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 text-center shadow-2xl">
+            <p className="text-lg font-semibold text-gray-900">
+              {alertState.message}
+            </p>
+            <div className="mt-5 flex justify-center">
+              <button
+                type="button"
+                onClick={handleAlertClose}
+                className="inline-flex justify-center rounded-full bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </ConfirmContext.Provider>
   );
 };
 
 export const useConfirm = () => {
-  const confirm = useContext(ConfirmContext);
+  const ctx = useContext(ConfirmContext);
 
-  if (!confirm) {
+  if (!ctx) {
     throw new Error("useConfirm must be used within a ConfirmProvider");
   }
 
-  return confirm;
+  return ctx.confirm;
+};
+
+export const useAlert = () => {
+  const ctx = useContext(ConfirmContext);
+
+  if (!ctx) {
+    throw new Error("useAlert must be used within a ConfirmProvider");
+  }
+
+  return ctx.alert;
 };
