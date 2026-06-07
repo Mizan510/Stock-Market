@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import { ConfirmProvider } from "./components/ConfirmProvider";
 
 // Pages
 import Home from "./pages/Home";
@@ -17,88 +18,90 @@ import Expense from "./pages/Expense";
 
 const App = () => {
   return (
-    <Routes>
-      {/* ================= PUBLIC ROUTES ================= */}
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+    <ConfirmProvider>
+      <Routes>
+        {/* ================= PUBLIC ROUTES ================= */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      {/* ================= PROTECTED ROUTES ================= */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
+        {/* ================= PROTECTED ROUTES ================= */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/zone"
-        element={
-          <ProtectedRoute>
-            <Zone />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/zone"
+          element={
+            <ProtectedRoute>
+              <Zone />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/investment"
-        element={
-          <ProtectedRoute>
-            <Investment />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/investment"
+          element={
+            <ProtectedRoute>
+              <Investment />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/buy"
-        element={
-          <ProtectedRoute>
-            <Buy />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/buy"
+          element={
+            <ProtectedRoute>
+              <Buy />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/sale"
-        element={
-          <ProtectedRoute>
-            <Sale />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/sale"
+          element={
+            <ProtectedRoute>
+              <Sale />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/dividend"
-        element={
-          <ProtectedRoute>
-            <Dividend />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/dividend"
+          element={
+            <ProtectedRoute>
+              <Dividend />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/reports"
-        element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
 
-      <Route
-        path="/expense"
-        element={
-          <ProtectedRoute>
-            <Expense />
-          </ProtectedRoute>
-        }
-      />
+        <Route
+          path="/expense"
+          element={
+            <ProtectedRoute>
+              <Expense />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* ================= FALLBACK ROUTE ================= */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* ================= FALLBACK ROUTE ================= */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ConfirmProvider>
   );
 };
 

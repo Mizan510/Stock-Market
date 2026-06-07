@@ -4,10 +4,12 @@ import api from "../api";
 import SummaryPanel from "../components/SummaryPanel";
 import Sidebar from "../components/Sidebar";
 import RulesPopup from "../components/RulesPopup";
+import { useConfirm } from "../components/ConfirmProvider";
 import { calculatePortfolioMetrics } from "../utils/portfolioCalculations";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   // =========================
   // POPUP STATE
@@ -88,7 +90,7 @@ const Dashboard = () => {
   // LOGOUT
   // =========================
   const logout = async () => {
-    const confirmed = window.confirm("Are you sure you want to log out?");
+    const confirmed = await confirm("Are you sure you want to log out?");
 
     if (!confirmed) return;
 

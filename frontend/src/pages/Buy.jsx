@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import BuyReport from "../components/BuyReport";
+import { useConfirm } from "../components/ConfirmProvider";
 
 const Buy = () => {
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   // ✅ Bangladesh Local Date (Safe & Clean)
   const getBDDate = () => {
@@ -137,7 +139,8 @@ const Buy = () => {
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm("Delete this buy record?")) return;
+    const confirmDelete = await confirm("Delete this buy record?");
+    if (!confirmDelete) return;
 
     try {
       await api.delete(`/buy/delete/${item._id}`);
@@ -169,13 +172,7 @@ const Buy = () => {
           <h1 className="text-3xl font-bold">🟢 Buy Stocks</h1>
 
           <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate("/dashboard");
-              }
-            }}
+            onClick={() => navigate("/dashboard")}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back

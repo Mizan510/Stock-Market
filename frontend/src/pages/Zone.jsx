@@ -84,13 +84,7 @@ const Zone = () => {
           </button>
 
           <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate("/dashboard");
-              }
-            }}
+            onClick={() => navigate("/dashboard")}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back

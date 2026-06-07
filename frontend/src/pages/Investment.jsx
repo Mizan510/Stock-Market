@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { useConfirm } from "../components/ConfirmProvider";
 
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -19,7 +20,20 @@ const Investment = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     const day = date.getDate();
     const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
@@ -44,6 +58,7 @@ const Investment = () => {
   const [backLoading, setBackLoading] = useState(false);
 
   const [showReport, setShowReport] = useState(false);
+  const confirm = useConfirm();
 
   useEffect(() => {
     fetchData();
@@ -298,7 +313,7 @@ const Investment = () => {
   // DELETE ROW
   // =====================
   const handleDelete = async (index, item) => {
-    const confirmDelete = window.confirm(
+    const confirmDelete = await confirm(
       "Are you sure you want to delete this transaction?",
     );
 
@@ -367,11 +382,7 @@ const Investment = () => {
             onClick={() => {
               setBackLoading(true);
               setTimeout(() => {
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate("/dashboard");
-                }
+                navigate("/dashboard");
                 setBackLoading(false);
               }, 300);
             }}
@@ -442,11 +453,11 @@ const Investment = () => {
               }}
             />
 
-<input
-  type="date"
-  value={toDate}
-  onChange={(e) => setToDate(e.target.value)}
-  className="
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="
     w-full sm:w-auto
     px-3 py-2 sm:px-2 sm:py-1
     bg-gray-800
@@ -456,8 +467,8 @@ const Investment = () => {
     focus:outline-none focus:ring-2 focus:ring-blue-500
     appearance-none
   "
-  style={{ backgroundImage: "none" }}
-/>
+              style={{ backgroundImage: "none" }}
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-2">

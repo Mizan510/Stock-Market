@@ -1,10 +1,12 @@
 import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { useConfirm } from "../components/ConfirmProvider";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const location = useLocation();
+  const confirm = useConfirm();
 
   // ❌ Not logged in → redirect
   if (!token) {
@@ -15,10 +17,8 @@ const ProtectedRoute = ({ children }) => {
     // Push fake history entry to trap back button
     window.history.pushState({ page: "protected" }, "", window.location.href);
 
-    const handlePopState = () => {
-      const confirmLogout = window.confirm(
-        "Do you want to log out?"
-      );
+    const handlePopState = async () => {
+      const confirmLogout = await confirm("Are you sure you want to log out?");
 
       if (confirmLogout) {
         // ✅ logout
@@ -31,7 +31,7 @@ const ProtectedRoute = ({ children }) => {
         window.history.pushState(
           { page: "protected" },
           "",
-          window.location.href
+          window.location.href,
         );
 
         // keep user on same page
@@ -44,7 +44,7 @@ const ProtectedRoute = ({ children }) => {
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [navigate, location.pathname, location.search]);
+  }, [confirm, navigate, location.pathname, location.search]);
 
   return children;
 };

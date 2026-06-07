@@ -4,10 +4,12 @@ import api from "../api";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import ReportFilter from "../components/ReportFilter";
+import { useConfirm } from "../components/ConfirmProvider";
 
 const Reports = () => {
   const userId = "demo-user";
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   const getBDDate = () => {
     const now = new Date();
@@ -173,7 +175,10 @@ const Reports = () => {
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Delete ${item.type} record for ${item.stockName}?`)) {
+    const confirmDelete = await confirm(
+      `Delete ${item.type} record for ${item.stockName}?`,
+    );
+    if (!confirmDelete) {
       return;
     }
 
@@ -298,7 +303,8 @@ const Reports = () => {
   };
 
   const handleDeleteCompany = async (stockName) => {
-    if (!window.confirm(`Delete all records for ${stockName}?`)) return;
+    const confirmDelete = await confirm(`Delete all records for ${stockName}?`);
+    if (!confirmDelete) return;
 
     const deletes = filteredList
       .filter((item) => item.stockName === stockName)
@@ -634,7 +640,7 @@ const Reports = () => {
             <p className="text-gray-400">Buy & Sale Performance Summary</p>
           </div>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/dashboard")}
             className="self-end rounded bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-600"
           >
             Back

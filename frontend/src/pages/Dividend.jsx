@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import DividendExport from "../components/DividendExport";
+import { useConfirm } from "../components/ConfirmProvider";
 
 const Dividend = () => {
   const userId = "demo-user";
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   const getBDDate = () => {
     const now = new Date();
@@ -322,7 +324,8 @@ const Dividend = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this dividend record?")) return;
+    const confirmDelete = await confirm("Delete this dividend record?");
+    if (!confirmDelete) return;
 
     try {
       await api.delete(`/dividend/delete/${id}`);
@@ -392,13 +395,7 @@ const Dividend = () => {
           <h1 className="text-2xl font-bold">Dividend</h1>
 
           <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate("/dashboard");
-              }
-            }}
+            onClick={() => navigate("/dashboard")}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back

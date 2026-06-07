@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { useConfirm } from "../components/ConfirmProvider";
 
 import ExpenseFilter from "../components/ExpenseFilter";
 import ExpenseHistory from "../components/ExpenseHistory";
@@ -10,6 +11,7 @@ import { saveAs } from "file-saver";
 const Expense = () => {
   const navigate = useNavigate();
   const userId = "demo-user";
+  const confirm = useConfirm();
 
   // =========================
   // DATE (Bangladesh Time)
@@ -166,7 +168,8 @@ const Expense = () => {
   // DELETE
   // =========================
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this expense?")) return;
+    const confirmDelete = await confirm("Delete this expense?");
+    if (!confirmDelete) return;
 
     try {
       await api.delete(`/expense/delete/${id}`);
@@ -366,13 +369,7 @@ const Expense = () => {
           </div>
 
           <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate("/dashboard");
-              }
-            }}
+            onClick={() => navigate("/dashboard")}
             className="bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-600"
           >
             Back
@@ -381,22 +378,21 @@ const Expense = () => {
 
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold">
+              {editingId ? "Edit Expense" : "New Expense"}
+            </h2>
 
-<div className="flex items-center justify-between gap-2">
-  <h2 className="text-lg sm:text-xl font-semibold">
-    {editingId ? "Edit Expense" : "New Expense"}
-  </h2>
+            <div className="flex flex-col items-end px-4 py-0.5 rounded-lg border border-red-500 bg-gray-950/20">
+              <span className="text-sm sm:text-base font-medium text-red-400">
+                This Month Total
+              </span>
 
-  <div className="flex flex-col items-end px-4 py-0.5 rounded-lg border border-red-500 bg-gray-950/20">
-    <span className="text-sm sm:text-base font-medium text-red-400">
-      This Month Total
-    </span>
-
-    <span className="text-red-500 font-extrabold text-xl sm:text-2xl">
-      ৳{thisMonthTotal.toLocaleString()}
-    </span>
-  </div>
-</div>
+              <span className="text-red-500 font-extrabold text-xl sm:text-2xl">
+                ৳{thisMonthTotal.toLocaleString()}
+              </span>
+            </div>
+          </div>
 
           <input
             type="date"
