@@ -6,6 +6,7 @@ require("dotenv").config();
 const buyRoutes = require("./routes/buyRoutes");
 const saleRoutes = require("./routes/saleRoutes");
 const authRoutes = require("./routes/auth");
+const userRoutes = require("./routes/userRoutes");
 const investmentRoutes = require("./routes/investmentRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 
@@ -26,6 +27,7 @@ mongoose
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/buy", buyRoutes);
 app.use("/api/sale", saleRoutes);
 app.use("/api/investment", investmentRoutes);

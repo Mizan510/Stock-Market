@@ -156,6 +156,14 @@ const Register = () => {
           </Link>
         </p>
 
+        <button
+          type="button"
+          onClick={() => navigate("/user-manager")}
+          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-semibold transition"
+        >
+          Go to User Manager
+        </button>
+
         {/* BACK HOME BUTTON */}
         <button
           type="button"

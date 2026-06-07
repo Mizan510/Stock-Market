@@ -6,6 +6,7 @@ import { ConfirmProvider } from "./components/ConfirmProvider";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import UserManager from "./pages/UserManager";
 import Dashboard from "./pages/Dashboard";
 
 import Zone from "./pages/Zone";
@@ -24,6 +25,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/user-manager" element={<UserManager />} />
 
         {/* ================= PROTECTED ROUTES ================= */}
         <Route
