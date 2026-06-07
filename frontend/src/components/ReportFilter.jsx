@@ -48,21 +48,21 @@ const ReportFilter = ({
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
       <div className="flex items-start gap-4">
-        <div className="flex-1 flex flex-col">
-          <label className="text-sm text-gray-300">From Date</label>
+        <div className="w-40 flex flex-col">
+          <label className="text-xs text-gray-300">From Date</label>
           <div className="mt-1">
             <div
-              className="w-full p-3 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
+              className="w-full px-2 py-2 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
               onClick={() =>
                 fromRef.current && fromRef.current.showPicker
                   ? fromRef.current.showPicker()
                   : fromRef.current && fromRef.current.focus()
               }
             >
-              <span className="truncate">{formattedFrom}</span>
+              <span className="truncate text-sm">{formattedFrom}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-400 ml-2"
+                className="h-4 w-4 text-gray-400 ml-2"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -83,21 +83,21 @@ const ReportFilter = ({
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col">
-          <label className="text-sm text-gray-300">To Date</label>
+        <div className="w-40 flex flex-col">
+          <label className="text-xs text-gray-300">To Date</label>
           <div className="mt-1">
             <div
-              className="w-full p-3 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
+              className="w-full px-2 py-2 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
               onClick={() =>
                 toRef.current && toRef.current.showPicker
                   ? toRef.current.showPicker()
                   : toRef.current && toRef.current.focus()
               }
             >
-              <span className="truncate">{formattedTo}</span>
+              <span className="truncate text-sm">{formattedTo}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 text-gray-400 ml-2"
+                className="h-4 w-4 text-gray-400 ml-2"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
