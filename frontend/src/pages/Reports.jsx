@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { getCurrentUserId } from "../utils/auth";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import ReportFilter from "../components/ReportFilter";
 import { useConfirm } from "../components/ConfirmProvider";
 
 const Reports = () => {
-  const userId = "demo-user";
+  const userId = getCurrentUserId();
   const navigate = useNavigate();
   const confirm = useConfirm();
 
@@ -62,6 +63,7 @@ const Reports = () => {
   };
 
   useEffect(() => {
+    if (!userId) return navigate("/login", { replace: true });
     fetchReports();
   }, []);
 

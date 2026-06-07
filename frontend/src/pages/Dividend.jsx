@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { getCurrentUserId } from "../utils/auth";
 import DividendExport from "../components/DividendExport";
 import { useConfirm } from "../components/ConfirmProvider";
 
 const Dividend = () => {
-  const userId = "demo-user";
+  const userId = getCurrentUserId();
   const navigate = useNavigate();
   const confirm = useConfirm();
 
@@ -74,6 +75,7 @@ const Dividend = () => {
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
+    if (!userId) return navigate("/login", { replace: true });
     fetchData();
   }, []);
 

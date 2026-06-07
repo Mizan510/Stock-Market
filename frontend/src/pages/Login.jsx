@@ -34,6 +34,27 @@ const Login = () => {
       });
 
       localStorage.setItem("token", response.data.token);
+      // store user id and name returned by backend (decode token for id)
+      try {
+        const token = response.data.token;
+        const name = response.data.user;
+        let id = null;
+        if (token) {
+          const parts = token.split(".");
+          if (parts.length > 1) {
+            const payload = JSON.parse(
+              atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+            );
+            id = payload.id || payload.userId || null;
+          }
+        }
+        const auth = { ...(id ? { id } : {}), ...(name ? { name } : {}) };
+        if (Object.keys(auth).length > 0) {
+          localStorage.setItem("auth", JSON.stringify(auth));
+        }
+      } catch (e) {
+        // ignore
+      }
 
       setSuccess("Login successful! Redirecting...");
 

@@ -55,7 +55,36 @@ const Dashboard = () => {
     try {
       setSummaryLoading(true);
 
-      const userId = "demo-user"; // Replace with actual user ID from auth
+      // Determine current user id from localStorage.auth or decoded token
+      let userId = null;
+      try {
+        const authStr = localStorage.getItem("auth");
+        if (authStr) {
+          const auth = JSON.parse(authStr);
+          if (auth.id) userId = auth.id;
+        }
+        if (!userId) {
+          const token = localStorage.getItem("token");
+          if (token) {
+            const parts = token.split(".");
+            if (parts.length > 1) {
+              const payload = JSON.parse(
+                atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+              );
+              if (payload.id) userId = payload.id;
+            }
+          }
+        }
+      } catch (e) {
+        console.log("Failed to determine user id:", e);
+      }
+
+      if (!userId) {
+        // no authenticated user — redirect to login
+        navigate("/login", { replace: true });
+        setSummaryLoading(false);
+        return;
+      }
 
       // Fetch all transaction data in parallel
       const [investRes, buyRes, saleRes, dividendRes] = await Promise.all([

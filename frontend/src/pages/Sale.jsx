@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { getCurrentUserId } from "../utils/auth";
 import SaleReport from "../components/SaleReport";
 import { useConfirm } from "../components/ConfirmProvider";
 
 const Sale = () => {
   const navigate = useNavigate();
   const confirm = useConfirm();
+  const userId = getCurrentUserId();
 
   // ✅ Bangladesh Local Date (Safe & Clean)
   const getBDDate = () => {
@@ -61,7 +63,7 @@ const Sale = () => {
 
   const fetchSaleRecords = async () => {
     try {
-      const res = await api.get(`/sale/demo-user`);
+      const res = await api.get(`/sale/${userId}`);
       setSaleList(res.data || []);
       return res.data || [];
     } catch (err) {
@@ -71,6 +73,7 @@ const Sale = () => {
   };
 
   useEffect(() => {
+    if (!userId) return navigate("/login", { replace: true });
     fetchSaleRecords();
   }, []);
 
@@ -78,7 +81,6 @@ const Sale = () => {
   useEffect(() => {
     const fetchStocks = async () => {
       try {
-        const userId = "demo-user";
         const res = await api.get(`/buy/names/${userId}`);
         setStockList(res.data);
       } catch (err) {
@@ -121,7 +123,7 @@ const Sale = () => {
     try {
       setLoading(true);
 
-      const userId = "demo-user";
+      // use outer-scope userId
 
       if (editingId) {
         const res = await api.put(`/sale/update/${editingId}`, {

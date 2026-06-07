@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { getCurrentUserId } from "../utils/auth";
 import { useConfirm } from "../components/ConfirmProvider";
 
 import ExpenseFilter from "../components/ExpenseFilter";
@@ -10,7 +11,7 @@ import { saveAs } from "file-saver";
 
 const Expense = () => {
   const navigate = useNavigate();
-  const userId = "demo-user";
+  const userId = getCurrentUserId();
   const confirm = useConfirm();
 
   // =========================
@@ -62,6 +63,7 @@ const Expense = () => {
   // INIT LOAD
   // =========================
   useEffect(() => {
+    if (!userId) return navigate("/login", { replace: true });
     fetchExpenses();
   }, []);
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { getCurrentUserId } from "../utils/auth";
 import { useConfirm } from "../components/ConfirmProvider";
 
 import ExcelJS from "exceljs";
@@ -8,7 +9,7 @@ import { saveAs } from "file-saver";
 
 const Investment = () => {
   const navigate = useNavigate();
-  const userId = "demo-user";
+  const userId = getCurrentUserId();
 
   const getBDDate = () => {
     const now = new Date();
@@ -61,6 +62,7 @@ const Investment = () => {
   const confirm = useConfirm();
 
   useEffect(() => {
+    if (!userId) return navigate("/login", { replace: true });
     fetchData();
   }, []);
 

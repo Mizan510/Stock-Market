@@ -27,11 +27,29 @@ const Register = () => {
     try {
       setLoading(true);
 
-      await api.post("/auth/register", {
+      const res = await api.post("/auth/register", {
         name,
         email,
         password,
       });
+
+      // if backend returned token, save auth and go to dashboard
+      if (res.data?.token) {
+        localStorage.setItem("token", res.data.token);
+        const userName = res.data.user || name;
+        const id = res.data.id || null;
+        const authObj = {
+          ...(id ? { id } : {}),
+          ...(userName ? { name: userName } : {}),
+        };
+        if (Object.keys(authObj).length > 0) {
+          localStorage.setItem("auth", JSON.stringify(authObj));
+        }
+
+        await alert("Account created and logged in!");
+        navigate("/dashboard", { replace: true });
+        return;
+      }
 
       await alert("Account created successfully!");
 
@@ -57,7 +75,7 @@ const Register = () => {
 
   if (!accessGranted) {
     return (
-  <div className="flex items-center justify-center min-h-screen bg-gray-50 -translate-y-18">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 -translate-y-18">
         <form
           onSubmit={handleAccessSubmit}
           className="bg-white p-6 rounded-xl shadow-lg w-80 text-center"

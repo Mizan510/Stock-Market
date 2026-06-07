@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
+import { getCurrentUserId } from "../utils/auth";
 import BuyReport from "../components/BuyReport";
 import { useConfirm } from "../components/ConfirmProvider";
 
@@ -22,7 +23,7 @@ const Buy = () => {
       .replace(/ /g, "-");
   };
 
-  const userId = "demo-user";
+  const userId = getCurrentUserId();
   const [stockName, setStockName] = useState("");
   const [buyQuantity, setBuyQuantity] = useState("");
   const [perShareValue, setPerShareValue] = useState("");
@@ -57,6 +58,7 @@ const Buy = () => {
 
   // AUTO-CALCULATE FIELDS
   useEffect(() => {
+    if (!userId) return navigate("/login", { replace: true });
     fetchBuyRecords();
   }, []);
 

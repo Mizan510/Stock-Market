@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 
 const Sidebar = ({
@@ -10,6 +10,40 @@ const Sidebar = ({
   loadingRoute,
   handleNavigate,
 }) => {
+  const [displayName, setDisplayName] = useState("");
+
+  useEffect(() => {
+    let name = "";
+    const authStr = localStorage.getItem("auth");
+    if (authStr) {
+      try {
+        const auth = JSON.parse(authStr);
+        name = auth.name || "";
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (!name) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const parts = token.split(".");
+          if (parts.length > 1) {
+            const payload = JSON.parse(
+              atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
+            );
+            name = payload.name || payload.user || payload.username || "";
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
+    setDisplayName(name);
+  }, []);
+
   return (
     <div
       className={`relative h-screen flex flex-col bg-gray-950 border-gray-800 md:border-r transition-all duration-300 overflow-visible ${
@@ -28,7 +62,7 @@ const Sidebar = ({
           <div>
             <h1 className="text-xl font-bold mb-1 text-white">Dashboard</h1>
             <p className="text-sm text-gray-400">
-              Quick navigation for all sections.
+              {displayName || "Quick navigation for all sections."}
             </p>
           </div>
         )}
