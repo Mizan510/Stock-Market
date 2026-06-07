@@ -7,7 +7,7 @@ const RulesPopup = ({ onClose }) => {
       {/* Modal Container */}
       <div className="w-full max-w-2xl max-h-[92vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100">
         {/* ১. ডিভিডেন্ড ও ট্রেডিং রুলস সেকশন (ওপর-নিচ থেকে পারফেক্টলি চাপানো) */}
-        <div className="bg-linear-to-r from-blue-700 via-blue-600 to-blue-700 px-3 sm:px-4 py-1 sm:py-2">
+        <div className="bg-linear-to-l from-blue-700 via-blue-600 to-blue-700 px-3 sm:px-4 py-1 sm:py-2">
           {/* প্রধান শিরোনাম */}
           <h1 className="text-lg sm:text-xl md:text-2xl font-extrabold text-center text-yellow-300 tracking-wide mb-1 drop-shadow-lg bg-black/50 px-2 py-1 rounded-xl">
             ডিভিডেন্ড পাওয়ার পর করণীয়
@@ -33,23 +33,45 @@ const RulesPopup = ({ onClose }) => {
             Important Trading Rules
           </h2>
 
-          {/* নো ইমোশন ব্লিংকিং বক্স */}
-          <div className="mt-1 bg-white border border-white/20 rounded-2xl py-1 px-3 backdrop-blur-md">
-            <style>
-              {`
-              @keyframes blink { 
-                0%, 100% { opacity: 1; } 
-                50% { opacity: 0.3; } 
-              } 
-              .blink-text { animation: blink 1.2s ease-in-out infinite; }
-            `}
-            </style>
-
-            <h3 className="text-red-600 text-2xl sm:text-2xl font-extrabold text-center blink-text tracking-wide">
-              No Emotion, Only Patience
-            </h3>
-
-            {/* <div className="w-14 sm:w-16 h-1 bg-red-400 mx-auto mt-1 rounded-full" /> */}
+          {/* নো ইমোশন হাইলাইট বক্স */}
+          <div className="mt-1 bg-white border border-white/20 rounded-2xl py-3 px-4 backdrop-blur-md overflow-hidden">
+            <style>{`
+              @keyframes highlight-slide {
+                0%, 14% { opacity: 0; transform: translateX(20px) scale(0.95); }
+                18%, 32% { opacity: 1; transform: translateX(0) scale(1.05); }
+                36%, 48% { opacity: 1; transform: translateX(0) scale(1); }
+                52%, 100% { opacity: 0; transform: translateX(-20px) scale(0.95); }
+              }
+            `}</style>
+            <div className="relative h-8 sm:h-9 md:h-10">
+              <span
+                className="absolute inset-0 flex items-center justify-center text-red-600 text-2xl sm:text-3xl font-extrabold tracking-wide bg-red-100/90 rounded-2xl px-4 py-2 shadow-md"
+                style={{
+                  animation: "highlight-slide 9s ease-in-out infinite",
+                  animationDelay: "0s",
+                }}
+              >
+                কোনো আবেগ নয়
+              </span>
+              <span
+                className="absolute inset-0 flex items-center justify-center text-red-600 text-2xl sm:text-3xl font-extrabold tracking-wide bg-red-100/90 rounded-2xl px-4 py-2 shadow-md"
+                style={{
+                  animation: "highlight-slide 9s ease-in-out infinite",
+                  animationDelay: "3s",
+                }}
+              >
+                ধৈর্য ধরে থাকুন
+              </span>
+              <span
+                className="absolute inset-0 flex items-center justify-center text-red-600 text-2xl sm:text-3xl font-extrabold tracking-wide bg-red-100/90 rounded-2xl px-4 py-2 shadow-md"
+                style={{
+                  animation: "highlight-slide 9s ease-in-out infinite",
+                  animationDelay: "6s",
+                }}
+              >
+                Rules Follow করুন
+              </span>
+            </div>
           </div>
         </div>
 
@@ -57,29 +79,27 @@ const RulesPopup = ({ onClose }) => {
         <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-3 bg-gray-50/70">
           {/* Rule 3 */}
           <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
-           <h3 className="mb-2 flex items-center justify-center font-bold tracking-wide animate-blink">
+            <h3 className="mb-2 flex items-center justify-center font-bold tracking-wide">
+              <span className="text-red-500 text-4xl font-extrabold mr-3">
+                *
+              </span>
 
-  <span className="text-red-500 text-4xl font-extrabold mr-3">
-    *
-  </span>
+              <span className="text-white text-sm sm:text-base font-bold bg-linear-to-l from-red-600 to-pink-600 px-3 py-1 rounded-lg shadow-md">
+                Dominant Check Before Buy & Sale
+              </span>
 
-  <span className="text-white text-sm sm:text-base font-bold bg-linear-to-r from-red-600 to-pink-600 px-3 py-1 rounded-lg shadow-md">
-    Dominant Check Before Buy & Sale
-  </span>
-
-  <span className="text-red-500 text-4xl font-extrabold ml-3">
-    *
-  </span>
-
-</h3>
+              <span className="text-red-500 text-4xl font-extrabold ml-3">
+                *
+              </span>
+            </h3>
 
             <div className="space-y-1">
               {/* Buying Zone */}
-              <div className="bg-green-50/60 border border-green-200 rounded-xl p-2">
-                <p className="font-bold text-green-700 mb-1 text-xs sm:text-sm">
+              <div className="bg-green-200 border border-blue-400 rounded-xl p-2">
+                <p className="font-bold text-green-700 mb-1 text-sm sm:text-sm">
                   Buying Zone Check
                 </p>
-                <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm text-gray-600">
+                <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm font-bold text-black-600">
                   <li>
                     If Seller Dominates →{" "}
                     <span className="font-bold text-amber-600">
@@ -104,11 +124,11 @@ const RulesPopup = ({ onClose }) => {
               </div>
 
               {/* Selling Zone */}
-              <div className="bg-red-50/50 border border-red-200 rounded-xl p-2">
+              <div className="bg-red-200 border border-blue-400 rounded-xl p-2">
                 <p className="font-bold text-red-700 mb-1 text-xs sm:text-sm">
                   Selling Zone Check
                 </p>
-                <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm text-gray-600">
+                <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm font-bold text-black-500">
                   <li>
                     If Buyer Dominates →{" "}
                     <span className="font-bold text-amber-600">
@@ -133,9 +153,9 @@ const RulesPopup = ({ onClose }) => {
               </div>
 
               {/* Cash Map Box */}
-              <div className="bg-linear-to-r from-red-500 to-red-600 text-white rounded-xl py-1 px-3 text-center shadow-sm">
+              <div className="bg-linear-to-r from-red-800 to-red-600 text-white rounded-xl py-1 px-3 text-center shadow-sm">
                 <p className="text-[11px] sm:text-xl font-bold tracking-wide">
-                   Check Cash Map% of company and Market
+                  Check Cash Map% of *Company* and *Market*
                 </p>
               </div>
             </div>
