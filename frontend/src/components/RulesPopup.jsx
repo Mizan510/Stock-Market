@@ -84,7 +84,7 @@ const RulesPopup = ({ onClose }) => {
                 *
               </span>
 
-              <span className="text-white text-sm sm:text-2xl font-bold bg-linear-to-l from-red-600 to-pink-600 px-3 py-3 rounded-lg shadow-md">
+              <span className="text-white text-sm sm:text-2xl font-bold bg-linear-to-l from-red-600 to-pink-600 px-3 py-2 rounded-lg shadow-md">
                 Dominant Check Before Buy & Sale
               </span>
 
