@@ -43,7 +43,7 @@ const RulesPopup = ({ onClose }) => {
                 52%, 100% { opacity: 0; transform: translateX(-20px) scale(0.95); }
               }
             `}</style>
-            <div className="relative h-8 sm:h-7 md:h-10">
+            <div className="relative h-8 sm:h-10 md:h-10">
               <span
                 className="absolute inset-0 flex items-center justify-center text-red-600 text-2xl sm:text-3xl font-extrabold tracking-wide bg-red-100/90 rounded-2xl px-4 py-2 shadow-md"
                 style={{
@@ -76,9 +76,9 @@ const RulesPopup = ({ onClose }) => {
         </div>
 
         {/* ২. স্ক্রোলযোগ্য নিচের রুলস সেকশন (Scrollable Content) */}
-        <div className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-3 bg-gray-50/70">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-2 space-y-3 bg-gray-50/70">
           {/* Rule 3 */}
-          <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white border border-gray-200/80 rounded-2xl p-1 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="mb-2 flex items-center justify-center font-bold tracking-wide">
               <span className="text-red-500 text-4xl font-extrabold mr-3">
                 *
