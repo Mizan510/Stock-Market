@@ -17,6 +17,15 @@ const Investment = () => {
     return bd.toISOString().split("T")[0];
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const day = date.getDate();
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const [type, setType] = useState("deposit");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -204,7 +213,7 @@ const Investment = () => {
         }
 
         const row = sheet.addRow([
-          new Date(item.date).toLocaleDateString("en-GB"),
+          formatDate(item.date),
           depositCell,
           withdrawCell,
           balanceCell,
@@ -498,7 +507,7 @@ const Investment = () => {
                 {reportData.map((item, i) => (
                   <tr key={i} className="border border-gray-700">
                     <td className="p-2 border whitespace-nowrap min-w-80px">
-                      {new Date(item.date).toLocaleDateString("en-GB")}
+                      {formatDate(item.date)}
                     </td>
 
                     <td className="p-2 border text-green-400">
