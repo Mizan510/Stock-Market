@@ -47,49 +47,75 @@ const ReportFilter = ({
   const formattedTo = formatDate(toDate);
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
-      <div className="flex items-center gap-4">
-        <div className="flex flex-col">
+      <div className="flex items-start gap-4">
+        <div className="flex-1 flex flex-col">
           <label className="text-sm text-gray-300">From Date</label>
-          <div
-            className="mt-1 p-2 bg-gray-800 rounded-lg text-gray-100 cursor-text"
-            style={{ width: `${Math.max(11, formattedFrom.length)}ch` }}
-            onClick={() =>
-              fromRef.current && fromRef.current.showPicker
-                ? fromRef.current.showPicker()
-                : fromRef.current && fromRef.current.focus()
-            }
-          >
-            {formattedFrom}
+          <div className="mt-1">
+            <div
+              className="w-full p-3 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
+              onClick={() =>
+                fromRef.current && fromRef.current.showPicker
+                  ? fromRef.current.showPicker()
+                  : fromRef.current && fromRef.current.focus()
+              }
+            >
+              <span className="truncate">{formattedFrom}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-400 ml-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M6 2a1 1 0 100 2h8a1 1 0 100-2H6zM3 6a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V6zm5 3a1 1 0 10-2 0v3a1 1 0 102 0V9zm6 0a1 1 0 10-2 0v3a1 1 0 102 0V9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <input
+              ref={fromRef}
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="hidden"
+            />
           </div>
-          <input
-            ref={fromRef}
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="hidden"
-          />
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex-1 flex flex-col">
           <label className="text-sm text-gray-300">To Date</label>
-          <div
-            className="mt-1 p-2 bg-gray-800 rounded-lg text-gray-100 cursor-text"
-            style={{ width: `${Math.max(11, formattedTo.length)}ch` }}
-            onClick={() =>
-              toRef.current && toRef.current.showPicker
-                ? toRef.current.showPicker()
-                : toRef.current && toRef.current.focus()
-            }
-          >
-            {formattedTo}
+          <div className="mt-1">
+            <div
+              className="w-full p-3 bg-gray-800 rounded-lg text-gray-100 cursor-text flex items-center justify-between"
+              onClick={() =>
+                toRef.current && toRef.current.showPicker
+                  ? toRef.current.showPicker()
+                  : toRef.current && toRef.current.focus()
+              }
+            >
+              <span className="truncate">{formattedTo}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-400 ml-2"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M6 2a1 1 0 100 2h8a1 1 0 100-2H6zM3 6a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V6zm5 3a1 1 0 10-2 0v3a1 1 0 102 0V9zm6 0a1 1 0 10-2 0v3a1 1 0 102 0V9z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <input
+              ref={toRef}
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="hidden"
+            />
           </div>
-          <input
-            ref={toRef}
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="hidden"
-          />
         </div>
       </div>
 
