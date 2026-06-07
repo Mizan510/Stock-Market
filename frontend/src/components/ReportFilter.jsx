@@ -47,8 +47,8 @@ const ReportFilter = ({
   const formattedTo = formatDate(toDate);
   return (
     <div className="bg-gray-900 p-4 rounded-2xl mb-6 space-y-3 border border-gray-700">
-      <div className="flex items-start gap-4">
-        <div className="w-40 flex flex-col">
+      <div className="flex flex-col sm:flex-row items-start gap-4">
+        <div className="w-full sm:w-44 md:w-48 lg:w-52 flex flex-col">
           <label className="text-xs text-gray-300">From Date</label>
           <div className="mt-1">
             <div
@@ -83,7 +83,7 @@ const ReportFilter = ({
           </div>
         </div>
 
-        <div className="w-40 flex flex-col">
+        <div className="w-full sm:w-44 md:w-48 lg:w-52 flex flex-col">
           <label className="text-xs text-gray-300">To Date</label>
           <div className="mt-1">
             <div
