@@ -52,14 +52,10 @@ const Sidebar = ({
     >
       {/* Header */}
       <div
-        className={`flex items-center gap-3 ${
-          isOpen ? "mb-6" : "justify-center"
-        }`}
+        className={`flex flex-col items-center ${isOpen ? "mb-6" : "justify-center"}`}
       >
-        <div className="text-xl">📊</div>
-
         {isOpen && (
-          <div>
+          <div className="w-full text-center">
             <h1 className="text-xl font-bold mb-1 text-white">Dashboard</h1>
             <p className="text-sm text-gray-400">
               {displayName || "Quick navigation for all sections."}

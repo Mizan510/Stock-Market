@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserManager from "./pages/UserManager";
+import RiskBenefitAnalysis from "./pages/RiskBenefitAnalysis";
 import Dashboard from "./pages/Dashboard";
 
 import Zone from "./pages/Zone";
@@ -96,6 +97,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Expense />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/risk-benefit"
+          element={
+            <ProtectedRoute>
+              <RiskBenefitAnalysis />
             </ProtectedRoute>
           }
         />
