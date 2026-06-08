@@ -28,7 +28,9 @@ const SummaryPanel = ({
 }) => {
   const formatMoney = (amount) => {
     if (loading) return "Loading...";
-    return `৳ ${Number(amount || 0).toFixed(2)}`;
+    return `৳ ${Number(amount || 0)
+      .toFixed(2)
+      .replace(/\.?0+$/, "")}`;
   };
 
   const finalCashInvestment = deposit - withdraw;
@@ -89,9 +91,9 @@ const SummaryPanel = ({
             High-level portfolio performance and ROI at a glance
           </p>
         </div>
-        <div className="rounded-2xl border border-red-500 bg-slate-950/20 px-4 py-1 text-right">
-          <p className="text-sm text-red-400">Monthly Expense</p>
-          <p className="text-lg font-semibold text-red-600">
+        <div className="text-right">
+          <p className="text-sm text-red-400 -mb-1">Monthly Expense</p>
+          <p className="text-2xl font-bold text-red-500">
             {formatMoney(monthlyExpense)}
           </p>
         </div>

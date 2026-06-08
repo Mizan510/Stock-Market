@@ -29,7 +29,7 @@ const RulesPopup = ({ onClose }) => {
           </div>
 
           {/* সাব-শিরোনাম */}
-          <h2 className="text-base sm:text-lg md:text-xl font-black text-center text-white tracking-wide mt-2 mb-1">
+          <h2 className="text-base sm:text-lg md:text-xl font-black text-center text-cyan-100 tracking-wide mt-2 mb-1">
             Important Trading Rules
           </h2>
 
@@ -76,7 +76,7 @@ const RulesPopup = ({ onClose }) => {
         </div>
 
         {/* ২. স্ক্রোলযোগ্য নিচের রুলস সেকশন (Scrollable Content) */}
-        <div className="flex-1 overflow-y-auto p-2 sm:p-2 space-y-3 bg-gray-50/70">
+        <div className="flex-1 overflow-y-auto p-2 sm:p-2 space-y-2 bg-gray-50/70">
           {/* Rule 3 */}
           <div className="bg-white border border-gray-200/80 rounded-2xl p-2 shadow-sm hover:shadow-md transition-shadow">
             <h3 className="mb-2 flex items-center justify-center font-bold tracking-wide">
@@ -96,7 +96,7 @@ const RulesPopup = ({ onClose }) => {
             <div className="space-y-1">
               {/* Buying Zone */}
               <div className="bg-green-200 border border-blue-400 rounded-xl p-2">
-                <p className="font-bold text-green-700 mb-1 text-sm sm:text-sm">
+                <p className="font-bold text-emerald-800 mb-1 text-sm sm:text-sm">
                   Buying Zone Check
                 </p>
                 <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm font-bold text-black-600">
@@ -135,7 +135,7 @@ const RulesPopup = ({ onClose }) => {
 
               {/* Selling Zone */}
               <div className="bg-red-200 border border-blue-400 rounded-xl p-2">
-                <p className="font-bold text-red-700 mb-1 text-xs sm:text-sm">
+                <p className="font-bold text-rose-800 mb-1 text-xs sm:text-sm">
                   Selling Zone Check
                 </p>
                 <ul className="list-disc ml-5 space-y-1 text-xs sm:text-sm font-bold text-black-500">
@@ -183,8 +183,8 @@ const RulesPopup = ({ onClose }) => {
 
           {/* Rule 1 */}
           <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-sm sm:text-base font-bold text-green-700 mb-2 flex items-center gap-2">
-              <span className="bg-green-100 text-red-700 px-2 py-0.5 rounded-lg text-sm">
+            <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+              <span className="bg-violet-100 text-violet-700 px-2 py-0.5 rounded-lg text-sm">
                 Step-1
               </span>
               Choose Best Company
@@ -198,8 +198,8 @@ const RulesPopup = ({ onClose }) => {
 
           {/* Rule 2 */}
           <div className="bg-white border border-gray-200/80 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow">
-            <h3 className="text-sm sm:text-base font-bold text-green-700 mb-2 flex items-center gap-2">
-              <span className="bg-green-100 text-red-700 px-1 py-0.5 rounded-lg text-sm">
+            <h3 className="text-sm sm:text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+              <span className="bg-cyan-100 text-cyan-700 px-1 py-0.5 rounded-lg text-sm">
                 Step-2
               </span>
               Set Buying & Selling Zone
@@ -216,6 +216,140 @@ const RulesPopup = ({ onClose }) => {
                 Company.
               </li>
             </ul>
+          </div>
+
+          {/* Rule 3 */}
+          <div className="bg-gray-300 border border-gray-200/80 rounded-2xl p-2 shadow-sm hover:shadow-md transition-shadow">
+            <h3 className="text-2xl sm:text-xl text-center font-bold text-red-600 mb-1">
+              Important Tips
+            </h3>
+
+            <div className="space-y-2 text-sm sm:text-base text-slate-700">
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-sky-700">
+                  🛡️ Risk Management (3% Rule)
+                </p>
+                <p>এক ট্রেডে 3% এর বেশি ঝুঁকি নিবে না।</p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-cyan-700">
+                  📊 Stock Selection
+                </p>
+                <p>
+                  শক্তিশালী স্টক খুঁজো (High volume + strong move)। লো ভলিউম /
+                  ডেড স্টক এড়িয়ে চলো।
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-violet-700">
+                  ⏳ Market Discipline
+                </p>
+                <p>
+                  সুযোগ না থাকলে ক্যাশে থাকো। বেশি ট্রেড = বেশি ভুল। 90% সময়
+                  মার্কেট পর্যবেক্ষণ করো।
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-rose-700">❌ Entry Rules</p>
+                <ul className="list-disc ml-5 space-y-1 mt-2 text-slate-700">
+                  <li>গুজব / টিপস দেখে কিনবে না।</li>
+                  <li>অন্যরা ট্রেড করছে দেখে ঢুকবে না (FOMO এড়িয়ে চলো)।</li>
+                  <li>সাপোর্ট/রেজিস্ট্যান্স ব্রেক হলে ট্রেড শুরু করো।</li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-indigo-700">
+                  🧠 Psychology Rules
+                </p>
+                <ul className="list-disc ml-5 space-y-1 mt-2 text-slate-700">
+                  <li>ধৈর্যই সবচেয়ে বড় শক্তি।</li>
+                  <li>
+                    “কুমিরের মতো ধৈর্য ধরো… একদম নিশ্চিত সুযোগ না এলে ট্রেড করো
+                    না।”
+                  </li>
+                  <li>নিয়ম ভেঙেছো কিনা সবসময় চেক করো।</li>
+                  <li>
+                    প্রথম লক্ষ্য: টাকা বাঁচানো। দ্বিতীয় লক্ষ্য: টাকা বাড়ানো।
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-red-700">❌ Exit Rules</p>
+                <ul className="list-disc ml-5 space-y-1 mt-2 text-slate-700">
+                  <li>যদি ভুল হয়, সেটা মেনে বের হয়ে যাও।</li>
+                  <li>লাভ হলে তাড়াহুড়া করে বিক্রি করবে না।</li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-emerald-700">
+                  📈 Strategy Rules
+                </p>
+                <p>“Pivot দিয়ে এন্ট্রি নাও, Pyramid দিয়ে লাভ বাড়াও।”</p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-sky-700">📍 Pivot Point</p>
+                <p>
+                  Pivot = Center reference level। Market bias বোঝার base point।
+                </p>
+                <p className="mt-2 font-semibold text-slate-900">
+                  📈 Bias Rules:
+                </p>
+                <p>Price Pivot এর উপরে → bullish 📈</p>
+                <p>Price Pivot এর নিচে → bearish 📉</p>
+                <p>Pivot ব্রেক → নতুন trend শুরু হতে পারে।</p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-violet-700">
+                  📊 Pivot Example
+                </p>
+                <p>
+                  If Stock Price High/Resistance = 110, Low/Support = 90, Close
+                  = 100
+                </p>
+                <p className="mt-2">
+                  👉 Pivot = (High + Low + Close) ÷ 3 = 100
+                </p>
+                <p>যদি প্রাইস 100 এর উপরে থাকে → bullish bias 📈</p>
+                <p>যদি প্রাইস 100 এর নিচে থাকে → bearish bias 📉</p>
+                <p>100 ব্রেক করলে → নতুন trend শুরু হতে পারে।</p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-orange-700">🧱 Pyramid Rule</p>
+                <ul className="list-disc ml-5 space-y-1 mt-2 text-slate-700">
+                  <li>30% → Initial entry</li>
+                  <li>30% → Trend confirm হলে add</li>
+                  <li>40% → Strong trend হলে add</li>
+                </ul>
+                <p className="mt-2">
+                  👉 মোট: 30 + 30 + 40 = step-by-step entry
+                </p>
+                <p className="mt-1 text-slate-900 font-semibold">
+                  ✔️ শুধুমাত্র winning trade এ add করা
+                </p>
+                <p className="text-slate-900 font-semibold">
+                  ❌ লসিং ট্রেডে add করা যাবে না
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 p-3">
+                <p className="font-semibold text-fuchsia-700">
+                  🧠 Final Mindset
+                </p>
+                <p>
+                  “লাভ বাড়লে পজিশন বাড়াও, লস হলে নয়। ধৈর্য ধরো, capital protect
+                  করো, high-quality setup এ ট্রেড করো।”
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
