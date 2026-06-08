@@ -9,6 +9,7 @@ router.post("/add", async (req, res) => {
     const {
       userId,
       stockName,
+      date,
       buyQuantity,
       perShareValue,
       buyingTotalShareValue,
@@ -19,6 +20,7 @@ router.post("/add", async (req, res) => {
     const buy = new Buy({
       userId,
       stockName,
+      date,
       buyQuantity: Number(buyQuantity),
       perShareValue: Number(perShareValue),
       buyingTotalShareValue: Number(buyingTotalShareValue),

@@ -10,6 +10,9 @@ const buySchema = new mongoose.Schema(
       type: String,
       default: "N/A",
     },
+    date: {
+      type: String,
+    },
     buyQuantity: {
       type: Number,
       required: true,
