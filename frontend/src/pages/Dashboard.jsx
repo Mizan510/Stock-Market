@@ -6,6 +6,7 @@ import Sidebar from "../components/Sidebar";
 import RulesPopup from "../components/RulesPopup";
 import { useConfirm } from "../components/ConfirmProvider";
 import { calculatePortfolioMetrics } from "../utils/portfolioCalculations";
+import { getCurrentUserId } from "../utils/auth";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -43,6 +44,10 @@ const Dashboard = () => {
   });
 
   const [summaryLoading, setSummaryLoading] = useState(true);
+  const [lbslReport, setLbslReport] = useState({
+    costAmount: null,
+    currentAssetsPP: null,
+  });
 
   // =========================
   // FETCH COMPREHENSIVE PORTFOLIO DATA
@@ -55,49 +60,42 @@ const Dashboard = () => {
     try {
       setSummaryLoading(true);
 
-      // Determine current user id from localStorage.auth or decoded token
-      let userId = null;
-      try {
-        const authStr = localStorage.getItem("auth");
-        if (authStr) {
-          const auth = JSON.parse(authStr);
-          if (auth.id) userId = auth.id;
-        }
-        if (!userId) {
-          const token = localStorage.getItem("token");
-          if (token) {
-            const parts = token.split(".");
-            if (parts.length > 1) {
-              const payload = JSON.parse(
-                atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")),
-              );
-              if (payload.id) userId = payload.id;
-            }
-          }
-        }
-      } catch (e) {
-        console.log("Failed to determine user id:", e);
-      }
-
+      const userId = getCurrentUserId();
       if (!userId) {
-        // no authenticated user — redirect to login
         navigate("/login", { replace: true });
         setSummaryLoading(false);
         return;
       }
 
       // Fetch all transaction data in parallel
-      const [investRes, buyRes, saleRes, dividendRes] = await Promise.all([
-        api.get(`/investment/${userId}`).catch(() => ({ data: [] })),
-        api.get(`/buy/${userId}`).catch(() => ({ data: [] })),
-        api.get(`/sale/${userId}`).catch(() => ({ data: [] })),
-        api.get(`/dividend/${userId}`).catch(() => ({ data: [] })),
-      ]);
+      const [investRes, buyRes, saleRes, dividendRes, lbslRes] =
+        await Promise.all([
+          api.get(`/investment/${userId}`).catch(() => ({ data: [] })),
+          api.get(`/buy/${userId}`).catch(() => ({ data: [] })),
+          api.get(`/sale/${userId}`).catch(() => ({ data: [] })),
+          api.get(`/dividend/${userId}`).catch(() => ({ data: [] })),
+          api.get(`/lbsl/${userId}`).catch(() => ({ data: null })),
+        ]);
 
       const investmentData = investRes.data?.data || investRes.data || [];
       const buyData = buyRes.data?.data || buyRes.data || [];
       const saleData = saleRes.data?.data || saleRes.data || [];
       const dividendData = dividendRes.data?.data || dividendRes.data || [];
+      const lbslData = lbslRes.data?.data || null;
+
+      if (lbslData) {
+        setLbslReport({
+          costAmount:
+            lbslData.costAmount !== undefined && lbslData.costAmount !== null
+              ? Number(lbslData.costAmount)
+              : null,
+          currentAssetsPP:
+            lbslData.currentAssetsPP !== undefined &&
+            lbslData.currentAssetsPP !== null
+              ? Number(lbslData.currentAssetsPP)
+              : null,
+        });
+      }
 
       // Calculate comprehensive portfolio metrics
       const metrics = calculatePortfolioMetrics(
@@ -153,13 +151,14 @@ const Dashboard = () => {
 
   const menuItems = [
     { icon: "🟡", title: "Buy / Selling Zone", route: "/zone" },
+    { icon: "📊", title: "Risk/Benefit", route: "/risk-benefit" },
     { icon: "💼", title: "Investment", route: "/investment" },
     { icon: "🟢", title: "Buy", route: "/buy" },
     { icon: "🔴", title: "Sale", route: "/sale" },
     { icon: "💎", title: "Dividend", route: "/Dividend" },
     { icon: "📈", title: "Reports", route: "/reports" },
     { icon: "💰", title: "Expense", route: "/expense" },
-    { icon: "📊", title: "Risk/Benefit", route: "/risk-benefit" },
+    { icon: "📄", title: "LBSL Report", route: "/lbsl-report" },
   ];
 
   return (
@@ -209,6 +208,8 @@ const Dashboard = () => {
               totalRemainQty={portfolioMetrics.totalRemainQty}
               tillNowProfitLoss={portfolioMetrics.totalProfit}
               tillNowCurrentAssets={portfolioMetrics.totalAssets}
+              lbslCostAmount={lbslReport.costAmount}
+              lbslCurrentAssetsPP={lbslReport.currentAssetsPP}
               realizedProfit={portfolioMetrics.realizedProfit}
               unrealizedProfit={portfolioMetrics.unrealizedProfit}
               holdingCount={portfolioMetrics.holdingCount}

@@ -17,6 +17,7 @@ import Sale from "./pages/Sale";
 import Dividend from "./pages/Dividend";
 import Reports from "./pages/Reports";
 import Expense from "./pages/Expense";
+import LBSLReport from "./pages/LBSLReport";
 
 const App = () => {
   return (
@@ -97,6 +98,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Expense />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/lbsl-report"
+          element={
+            <ProtectedRoute>
+              <LBSLReport />
             </ProtectedRoute>
           }
         />

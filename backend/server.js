@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/userRoutes");
 const investmentRoutes = require("./routes/investmentRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
+const lbslReportRoutes = require("./routes/lbslReportRoutes");
 
 // ✅ Dividend routes (FIXED NAME)
 const dividendRoutes = require("./routes/dividendRoutes");
@@ -32,6 +33,7 @@ app.use("/api/buy", buyRoutes);
 app.use("/api/sale", saleRoutes);
 app.use("/api/investment", investmentRoutes);
 app.use("/api/expense", expenseRoutes);
+app.use("/api/lbsl", lbslReportRoutes);
 
 // ✅ Dividend API
 app.use("/api/dividend", dividendRoutes);

@@ -10,39 +10,68 @@ const SummaryPanel = ({
   remainingShareValue = 0,
   totalBuyCost = 0,
   totalAssets = 0,
+  lbslCostAmount = null,
+  lbslCurrentAssetsPP = null,
   totalBuyQty = 0,
   totalSaleQty = 0,
   totalSaleValueWithCommission = 0,
   totalRemainQty = 0,
   tillNowProfitLoss = 0,
   tillNowCurrentAssets = 0,
+  cardPadding = "p-2",
+  cardValueSize = "text-xl",
+  cardTitleSize = "text-base md:text-lg font-semibold",
+  cardSubtitleSize = "text-[10px] md:text-xs",
+  cardRadius = "rounded-2xl",
+  cardGap = "gap-3",
 }) => {
   const formatMoney = (amount) => {
     if (loading) return "Loading...";
     return `৳ ${Number(amount || 0).toFixed(2)}`;
   };
 
+  const finalCashInvestment = deposit - withdraw;
+  const assetsIncrease = profit + dividend;
+  const currentAssetsCashProfit = finalCashInvestment + tillNowProfitLoss;
+  const availableBalance =
+    finalCashInvestment + totalBuyCost + totalSaleValueWithCommission;
+  const totalAssetsValue = availableBalance + remainingShareValue + profit;
+  const lbslCostAmountValue =
+    lbslCostAmount !== null && lbslCostAmount !== undefined
+      ? lbslCostAmount
+      : totalBuyCost;
+  const lbslCurrentAssetsValue =
+    lbslCurrentAssetsPP !== null && lbslCurrentAssetsPP !== undefined
+      ? lbslCurrentAssetsPP
+      : tillNowCurrentAssets;
+  const costDeviation = lbslCostAmountValue - availableBalance;
+  const currentDeviation = lbslCurrentAssetsValue - currentAssetsCashProfit;
+
   const Card = ({
     title,
     value,
     subtitle,
-    icon,
     bgColor = "bg-slate-950",
     borderColor = "border-slate-800",
     accent = "text-white",
+    textColor = "text-gray-100",
+    subtitleColor = "text-gray-200",
   }) => (
     <div
-      className={`p-5 rounded-2xl border ${borderColor} ${bgColor} hover:shadow-xl transition-all duration-300 shadow-lg flex flex-col justify-between overflow-hidden`}
+      className={`${cardPadding} ${cardRadius} border ${borderColor} ${bgColor} hover:shadow-xl transition-all duration-300 shadow-lg flex flex-col justify-between overflow-hidden`}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className="text-sm text-gray-300 mb-2 leading-snug">{title}</h3>
-          {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
-        </div>
-        {icon && <span className="text-2xl">{icon}</span>}
+      <div>
+        <h3 className={`${cardTitleSize} ${textColor} mb-0.5 leading-snug`}>
+          {title}
+        </h3>
+        {subtitle && (
+          <p className={`${cardSubtitleSize} ${subtitleColor} leading-snug`}>
+            {subtitle}
+          </p>
+        )}
       </div>
 
-      <p className={`text-2xl font-bold mt-3 leading-tight ${accent}`}>
+      <p className={`${cardValueSize} font-bold mt-2 leading-tight ${accent}`}>
         {value}
       </p>
     </div>
@@ -58,231 +87,184 @@ const SummaryPanel = ({
       </div>
 
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-300 mb-4">
-          📦 Total Summary
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card
-            title="Total Deposit"
-            subtitle="Money added so far"
-            value={formatMoney(deposit)}
-            bgColor="bg-emerald-950"
-            borderColor="border-emerald-700"
-            accent="text-emerald-300"
-            icon="📥"
-          />
-          <Card
-            title="Total Withdraw"
-            subtitle="Money removed so far"
-            value={formatMoney(withdraw)}
-            bgColor="bg-red-950"
-            borderColor="border-red-700"
-            accent="text-red-300"
-            icon="📤"
-          />
-          <Card
-            title="Net Cash Invested"
-            subtitle="Deposit minus withdraw"
-            value={formatMoney(deposit - withdraw)}
-            bgColor="bg-yellow-950"
-            borderColor="border-yellow-700"
-            accent="text-yellow-300"
-            icon="💰"
-          />
-          <Card
-            title="Shares Purchased"
-            subtitle="Total shares bought"
-            value={totalBuyQty}
-            bgColor="bg-indigo-950"
-            borderColor="border-indigo-700"
-            accent="text-indigo-300"
-            icon="🟢"
-          />
-          <Card
-            title="Buy Value After Fees"
-            subtitle="Total purchase cost"
-            value={formatMoney(totalBuyCost)}
-            bgColor="bg-purple-950"
-            borderColor="border-purple-700"
-            accent="text-purple-300"
-            icon="💹"
-          />
-          <Card
-            title="Shares Sold"
-            subtitle="Total shares sold"
-            value={totalSaleQty}
-            bgColor="bg-rose-950"
-            borderColor="border-rose-700"
-            accent="text-rose-300"
-            icon="🔴"
-          />
-          <Card
-            title="Sale Value After Fees"
-            subtitle="Total sale proceeds"
-            value={formatMoney(totalSaleValueWithCommission)}
-            bgColor="bg-fuchsia-950"
-            borderColor="border-fuchsia-700"
-            accent="text-fuchsia-300"
-            icon="📉"
-          />
-          <Card
-            title="Remaining Shares"
-            subtitle="Shares still held"
-            value={totalRemainQty}
-            bgColor="bg-amber-950"
-            borderColor="border-amber-700"
-            accent="text-amber-300"
-            icon="🟡"
-          />
-          <Card
-            title="Remaining Shares Value"
-            subtitle="Current holding value"
-            value={formatMoney(remainingShareValue)}
-            bgColor="bg-sky-950"
-            borderColor="border-sky-700"
-            accent="text-sky-300"
-            icon="📊"
-          />
-          <Card
-            title="Overall Profit/Loss"
-            subtitle="Net portfolio return"
-            value={formatMoney(tillNowProfitLoss)}
-            bgColor={tillNowProfitLoss >= 0 ? "bg-emerald-950" : "bg-red-950"}
-            borderColor={
-              tillNowProfitLoss >= 0 ? "border-emerald-700" : "border-red-700"
-            }
-            accent={
-              tillNowProfitLoss >= 0 ? "text-emerald-300" : "text-red-300"
-            }
-            icon={tillNowProfitLoss >= 0 ? "🎯" : "⚠️"}
-          />
-          <Card
-            title="Dividend Income"
-            subtitle="Earnings from dividends"
-            value={formatMoney(dividend)}
-            bgColor="bg-cyan-950"
-            borderColor="border-cyan-700"
-            accent="text-cyan-300"
-            icon="💎"
-          />
-          <Card
-            title="Current Portfolio Value"
-            subtitle="Total assets now"
-            value={formatMoney(tillNowCurrentAssets)}
-            bgColor="bg-pink-950"
-            borderColor="border-pink-700"
-            accent="text-pink-300"
-            icon="🌐"
-          />
-        </div>
+        <Card
+          title="ROI (Return on Investment)"
+          subtitle="(Profit / Deposit) * 100"
+          value={
+            deposit > 0 ? `${((profit / deposit) * 100).toFixed(2)}%` : "0%"
+          }
+          bgColor="bg-yellow-200"
+          borderColor="border-yellow-400"
+          accent="text-slate-950"
+          textColor="text-slate-950"
+          subtitleColor="text-slate-700"
+        />
       </div>
 
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-300 mb-4">
-          📌 Performance Snapshot
+          📊 Result Summary
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${cardGap}`}
+        >
           <Card
-            title="Cash Investment"
-            subtitle="Total money used to buy shares"
-            value={formatMoney(totalBuyCost)}
-            bgColor="bg-emerald-950"
-            borderColor="border-emerald-700"
-            accent="text-emerald-300"
-            icon="💵"
+            title="Profit/Loss"
+            subtitle="Net gain"
+            value={formatMoney(tillNowProfitLoss)}
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
           />
           <Card
-            title="Total Profit"
-            subtitle="Realized and unrealized gain"
-            value={formatMoney(profit)}
-            bgColor={profit >= 0 ? "bg-emerald-950" : "bg-red-950"}
-            borderColor={profit >= 0 ? "border-emerald-700" : "border-red-700"}
-            accent={profit >= 0 ? "text-emerald-300" : "text-red-300"}
-            icon={profit >= 0 ? "📈" : "📉"}
-          />
-          <Card
-            title="Total Dividends"
-            subtitle="Dividend income received"
+            title="Dividend after Purification"
+            subtitle="Sum of netDividend after purification"
             value={formatMoney(dividend)}
-            bgColor="bg-cyan-950"
-            borderColor="border-cyan-700"
-            accent="text-cyan-300"
-            icon="💎"
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
           />
           <Card
-            title=" Final  Invest Without Dividend "
-            subtitle="Holdings value only"
-            value={formatMoney(totalAssets - dividend)}
-            bgColor="bg-violet-950"
-            borderColor="border-violet-700"
-            accent="text-violet-300"
-            icon="🧾"
-          />
-          <Card
-            title="Cash + Profit"
-            subtitle="Available value plus gains"
-            value={formatMoney(balance + profit)}
-            bgColor="bg-yellow-950"
-            borderColor="border-yellow-700"
-            accent="text-yellow-300"
-            icon="🏦"
-          />
-          <Card
-            title="Profit + Dividend"
-            subtitle="Total asset increase"
-            value={formatMoney(profit + dividend)}
-            bgColor="bg-lime-950"
-            borderColor="border-lime-700"
-            accent="text-lime-300"
-            icon="✨"
-          />
-          <Card
-            title="Current Holdings Value"
-            subtitle="Present Purchased Share Value"
-            value={formatMoney(remainingShareValue)}
-            bgColor="bg-purple-950"
-            borderColor="border-purple-700"
-            accent="text-purple-300"
-            icon="📊"
-          />
-          <Card
-            title="Available Balance"
-            subtitle="Cash ready for investment"
-            value={formatMoney(balance)}
-            bgColor="bg-sky-950"
-            borderColor="border-sky-700"
-            accent="text-sky-300"
-            icon="💰"
+            title="Assets Increase"
+            subtitle="Profit + Dividend"
+            value={formatMoney(assetsIncrease)}
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
           />
           <Card
             title="Total Assets"
-            subtitle="Overall portfolio value"
-            value={formatMoney(totalAssets)}
-            bgColor="bg-pink-950"
-            borderColor="border-pink-700"
-            accent="text-pink-300"
-            icon="🌐"
+            subtitle="Available Balance + Remaining Purchased Share Value + Profit/Loss"
+            value={formatMoney(totalAssetsValue)}
+            bgColor="bg-slate-900"
+            borderColor="border-slate-700"
+            accent="text-white"
           />
         </div>
       </div>
 
       <div className="mb-8">
         <h3 className="text-lg font-semibold text-gray-300 mb-4">
-          ⚙️ Key Metric
+          💰 Cash Summary
         </h3>
-        <div className="grid grid-cols-1 gap-4">
+        <div className={`grid grid-cols-1 sm:grid-cols-3 ${cardGap}`}>
           <Card
-            title="ROI"
-            subtitle="Return on Investment"
-            value={
-              totalAssets > 0
-                ? `${((profit / deposit) * 100).toFixed(2)}%`
-                : "0%"
-            }
-            bgColor="bg-slate-950"
+            title="Total Deposit"
+            subtitle="Money added"
+            value={formatMoney(deposit)}
+            bgColor="bg-slate-800"
             borderColor="border-slate-700"
-            accent={profit >= 0 ? "text-green-300" : "text-red-300"}
-            icon="📊"
+            accent="text-white"
+          />
+          <Card
+            title="Total Withdraw"
+            subtitle="Money removed"
+            value={formatMoney(withdraw)}
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
+          />
+          <Card
+            title="Final Cash Investment"
+            subtitle="Deposit - Withdraw"
+            value={formatMoney(finalCashInvestment)}
+            bgColor="bg-slate-100"
+            borderColor="border-slate-300"
+            accent="text-slate-950"
+            textColor="text-slate-950"
+            subtitleColor="text-slate-700"
+          />
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-300 mb-4">
+          📦 Holdings Summary
+        </h3>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 ${cardGap}`}>
+          <Card
+            title="Remaining Purchased Share Qtn"
+            subtitle="Remaining shares quantity after sale"
+            value={totalRemainQty}
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
+          />
+          <Card
+            title="Remaining Purchased Share Value"
+            subtitle="Remaining shares value after sale"
+            value={formatMoney(remainingShareValue)}
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
+          />
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-300 mb-4">
+          🟢 Liquidity / Cost
+        </h3>
+        <div className={`grid grid-cols-1 sm:grid-cols-3 ${cardGap}`}>
+          <Card
+            title="Available Balance (for Further Purchase)"
+            subtitle="Final Cash Investment + Total buy Value with Commission + Total sale Value with Commission"
+            value={formatMoney(availableBalance)}
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
+          />
+          <Card
+            title="As per LBSL (Cost Amount (TK.)"
+            subtitle="As per LBSL Report"
+            value={formatMoney(lbslCostAmountValue)}
+            bgColor="bg-slate-800"
+            borderColor="border-slate-700"
+            accent="text-white"
+          />
+          <Card
+            title="Deviation"
+            subtitle="LBSL Cost Amount - Available Balance"
+            value={formatMoney(costDeviation)}
+            bgColor="bg-violet-600"
+            borderColor="border-violet-700"
+            accent="text-white"
+          />
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-300 mb-4">
+          📈 Current Asset Details
+        </h3>
+        <div className={`grid grid-cols-1 sm:grid-cols-3 ${cardGap}`}>
+          <Card
+            title="Current Assets"
+            subtitle="Final Cash Investment + Profit/Loss"
+            value={formatMoney(currentAssetsCashProfit)}
+            bgColor="bg-slate-100"
+            borderColor="border-slate-300"
+            accent="text-slate-950"
+            textColor="text-slate-950"
+            subtitleColor="text-slate-700"
+          />
+          <Card
+            title="As per LBSL (Current Assets)/ PP"
+            subtitle="As per LBSL Report"
+            value={formatMoney(lbslCurrentAssetsValue)}
+            bgColor="bg-slate-100"
+            borderColor="border-slate-300"
+            accent="text-slate-950"
+            textColor="text-slate-950"
+            subtitleColor="text-slate-700"
+          />
+          <Card
+            title="Deviation"
+            subtitle="LBSL Current Assets PP - Current Assets (Cash + Profit)"
+            value={formatMoney(currentDeviation)}
+            bgColor="bg-violet-500"
+            borderColor="border-violet-600"
+            accent="text-white"
           />
         </div>
       </div>

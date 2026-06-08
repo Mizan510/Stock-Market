@@ -31,9 +31,9 @@ export const calculatePortfolioMetrics = (
     return item.type === "withdraw" ? sum + Number(item.amount || 0) : sum;
   }, 0);
 
-  // Total Dividends Received
+  // Total Net Dividend after Purification
   const totalDividend = dividendData.reduce((sum, item) => {
-    return sum + Number(item.netDividend || 0);
+    return sum + Number(item.netDividendAfterPurification || 0);
   }, 0);
 
   // Total Buy Cost (with commission)
