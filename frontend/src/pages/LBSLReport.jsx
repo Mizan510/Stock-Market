@@ -133,7 +133,7 @@ const LBSLReport = () => {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="self-start rounded-2xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-slate-800"
+            className="self-end rounded-2xl border border-slate-700 bg-slate-900 px-6 py-2 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-slate-800"
           >
             Back
           </button>

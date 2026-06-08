@@ -65,6 +65,8 @@ const Expense = () => {
   useEffect(() => {
     if (!userId) return navigate("/login", { replace: true });
     fetchExpenses();
+    // show data on initial load
+    setShowReport(true);
   }, []);
 
   const fetchExpenses = async () => {

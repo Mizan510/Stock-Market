@@ -18,6 +18,7 @@ const SummaryPanel = ({
   totalRemainQty = 0,
   tillNowProfitLoss = 0,
   tillNowCurrentAssets = 0,
+  monthlyExpense = 0,
   cardPadding = "p-2",
   cardValueSize = "text-xl",
   cardTitleSize = "text-base md:text-lg font-semibold",
@@ -79,14 +80,24 @@ const SummaryPanel = ({
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">💼 Portfolio Summary</h2>
-        <p className="text-gray-400 text-sm mt-1">
-          High-level portfolio performance and ROI at a glance
-        </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white">
+            💼 Portfolio Summary
+          </h2>
+          <p className="text-gray-400 text-sm mt-1">
+            High-level portfolio performance and ROI at a glance
+          </p>
+        </div>
+        <div className="rounded-2xl border border-red-500 bg-slate-950/20 px-4 py-1 text-right">
+          <p className="text-sm text-red-400">Monthly Expense</p>
+          <p className="text-lg font-semibold text-red-600">
+            {formatMoney(monthlyExpense)}
+          </p>
+        </div>
       </div>
 
-      <div className="mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-4 xl:grid-cols-1">
         <Card
           title="ROI (Return on Investment)"
           subtitle="(Profit / Deposit) * 100"

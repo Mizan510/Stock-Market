@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import SummaryPanel from "../components/SummaryPanel";
@@ -48,15 +48,12 @@ const Dashboard = () => {
     costAmount: null,
     currentAssetsPP: null,
   });
+  const [monthlyExpense, setMonthlyExpense] = useState(0);
 
   // =========================
   // FETCH COMPREHENSIVE PORTFOLIO DATA
   // =========================
-  useEffect(() => {
-    fetchPortfolioData();
-  }, []);
-
-  const fetchPortfolioData = async () => {
+  const fetchPortfolioData = useCallback(async () => {
     try {
       setSummaryLoading(true);
 
@@ -67,21 +64,34 @@ const Dashboard = () => {
         return;
       }
 
-      // Fetch all transaction data in parallel
-      const [investRes, buyRes, saleRes, dividendRes, lbslRes] =
-        await Promise.all([
-          api.get(`/investment/${userId}`).catch(() => ({ data: [] })),
-          api.get(`/buy/${userId}`).catch(() => ({ data: [] })),
-          api.get(`/sale/${userId}`).catch(() => ({ data: [] })),
-          api.get(`/dividend/${userId}`).catch(() => ({ data: [] })),
-          api.get(`/lbsl/${userId}`).catch(() => ({ data: null })),
-        ]);
+      // Fetch all transaction data in parallel (including monthly expense)
+      const [
+        investRes,
+        buyRes,
+        saleRes,
+        dividendRes,
+        lbslRes,
+        expenseMonthRes,
+      ] = await Promise.all([
+        api.get(`/investment/${userId}`).catch(() => ({ data: [] })),
+        api.get(`/buy/${userId}`).catch(() => ({ data: [] })),
+        api.get(`/sale/${userId}`).catch(() => ({ data: [] })),
+        api.get(`/dividend/${userId}`).catch(() => ({ data: [] })),
+        api.get(`/lbsl/${userId}`).catch(() => ({ data: null })),
+        api
+          .get(`/expense/monthly/${userId}`)
+          .catch(() => ({ data: { total: 0 } })),
+      ]);
 
       const investmentData = investRes.data?.data || investRes.data || [];
       const buyData = buyRes.data?.data || buyRes.data || [];
       const saleData = saleRes.data?.data || saleRes.data || [];
       const dividendData = dividendRes.data?.data || dividendRes.data || [];
       const lbslData = lbslRes.data?.data || null;
+      const monthlyTotal =
+        expenseMonthRes?.data?.total ?? expenseMonthRes?.data ?? 0;
+
+      setMonthlyExpense(Number(monthlyTotal || 0));
 
       if (lbslData) {
         setLbslReport({
@@ -111,7 +121,12 @@ const Dashboard = () => {
     } finally {
       setSummaryLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchPortfolioData();
+  }, [fetchPortfolioData]);
 
   // =========================
   // LOGOUT
@@ -127,9 +142,7 @@ const Dashboard = () => {
       localStorage.removeItem("auth");
       localStorage.removeItem("token");
 
-      setTimeout(() => {
-        navigate("/login", { replace: true });
-      }, 500);
+      navigate("/login", { replace: true });
     } catch (err) {
       console.log(err);
     } finally {
@@ -212,6 +225,7 @@ const Dashboard = () => {
               lbslCurrentAssetsPP={lbslReport.currentAssetsPP}
               realizedProfit={portfolioMetrics.realizedProfit}
               unrealizedProfit={portfolioMetrics.unrealizedProfit}
+              monthlyExpense={monthlyExpense}
               holdingCount={portfolioMetrics.holdingCount}
             />
           </div>
