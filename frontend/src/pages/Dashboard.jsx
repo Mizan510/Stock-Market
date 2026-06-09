@@ -24,7 +24,7 @@ const Dashboard = () => {
   // =========================
   const [loadingRoute, setLoadingRoute] = useState("");
   const [logoutLoading, setLogoutLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Portfolio Data
   const [portfolioMetrics, setPortfolioMetrics] = useState({

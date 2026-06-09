@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
 
 const Sidebar = ({
-  isOpen = true,
+  isOpen = false,
   onToggle,
   menuItems = [],
   logout,
