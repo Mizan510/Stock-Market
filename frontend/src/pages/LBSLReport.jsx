@@ -2,6 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { getCurrentUserId } from "../utils/auth";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 const LBSLReport = () => {
   const navigate = useNavigate();
@@ -24,6 +29,11 @@ const LBSLReport = () => {
 
   const fetchSavedReport = async () => {
     try {
+      if (!userId) {
+        console.warn("No userId available for fetching LBSL report");
+        return;
+      }
+
       const response = await api.get(`/lbsl/${userId}`);
       const data = response.data?.data;
 
@@ -38,13 +48,16 @@ const LBSLReport = () => {
         );
       }
     } catch (err) {
-      console.log("Failed to load saved LBSL report", err);
+      console.error("Failed to load saved LBSL report:", err);
+      if (err.response?.status === 500) {
+        showErrorAlert("Server error loading report. Please refresh the page.");
+      }
     }
   };
 
   const handleSave = async () => {
     if (costAmount === "" || currentAssetsPP === "") {
-      alert("Please fill in both fields before saving.");
+      showAlert("Please fill in both fields before saving.");
       return;
     }
 
@@ -73,11 +86,11 @@ const LBSLReport = () => {
         setCostAmount("");
         setCurrentAssetsPP("");
         setShowSavedReport(true);
-        alert("LBSL report saved successfully.");
+        showSuccessAlert("LBSL report saved successfully.");
       }
     } catch (err) {
       console.log(err);
-      alert(err.response?.data?.message || "Error saving report");
+      showErrorAlert(err.response?.data?.message || "Error saving report");
     } finally {
       setLoading(false);
     }
@@ -112,10 +125,10 @@ const LBSLReport = () => {
       setShowSavedReport(false);
       setCostAmount("");
       setCurrentAssetsPP("");
-      alert("Saved LBSL report deleted successfully.");
+      showSuccessAlert("Saved LBSL report deleted successfully.");
     } catch (err) {
       console.log(err);
-      alert(err.response?.data?.message || "Error deleting report");
+      showErrorAlert(err.response?.data?.message || "Error deleting report");
     }
   };
 

@@ -13,6 +13,7 @@ const lbslReportRoutes = require("./routes/lbslReportRoutes");
 
 // ✅ Dividend routes (FIXED NAME)
 const dividendRoutes = require("./routes/dividendRoutes");
+const zoneRoutes = require("./routes/zoneRoutes");
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/lbsl", lbslReportRoutes);
 
 // ✅ Dividend API
 app.use("/api/dividend", dividendRoutes);
+app.use("/api/zone", zoneRoutes);
 
 // Server
 app.listen(5000, () => {

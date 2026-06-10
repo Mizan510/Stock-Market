@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import ReportFilter from "./ReportFilter";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
   const getBDDate = () => {
@@ -121,7 +126,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
     const data = showReport ? filteredSaleList : saleList;
 
     if (!data || data.length === 0) {
-      alert("No sale data to export. View report first.");
+      showAlert("No sale data to export. View report first.");
       return;
     }
 
@@ -255,7 +260,7 @@ const SaleReport = ({ saleList, handleEdit, handleDelete }) => {
       saveAs(blob, `sale_report_${fromDate}_${toDate}.xlsx`);
     } catch (err) {
       console.log(err);
-      alert("Unable to export sale report. Please try again.");
+      showErrorAlert("Unable to export sale report. Please try again.");
     } finally {
       setExportLoading(false);
     }

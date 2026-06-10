@@ -6,6 +6,11 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import ReportFilter from "../components/ReportFilter";
 import { useConfirm } from "../components/ConfirmProvider";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 const Reports = () => {
   const userId = getCurrentUserId();
@@ -190,7 +195,7 @@ const Reports = () => {
       await fetchReports();
     } catch (err) {
       console.log("Delete error:", err);
-      alert("Unable to delete record. Please try again.");
+      showErrorAlert("Unable to delete record. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -223,7 +228,7 @@ const Reports = () => {
     const price = Number(priceInput);
 
     if (!stockName.trim() || !quantity || !price) {
-      return alert("Please provide valid stock, quantity, and price.");
+      return showAlert("Please provide valid stock, quantity, and price.");
     }
 
     const updatePayload = {
@@ -269,7 +274,7 @@ const Reports = () => {
       await fetchReports();
     } catch (err) {
       console.log("Update error:", err);
-      alert("Unable to update record. Please try again.");
+      showErrorAlert("Unable to update record. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -289,7 +294,7 @@ const Reports = () => {
       );
 
     if (updates.length === 0) {
-      return alert("No matching records found to update.");
+      return showAlert("No matching records found to update.");
     }
 
     setActionLoading(stockName);
@@ -298,7 +303,7 @@ const Reports = () => {
       await fetchReports();
     } catch (err) {
       console.log("Company edit error:", err);
-      alert("Unable to rename company records. Please try again.");
+      showErrorAlert("Unable to rename company records. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -318,7 +323,7 @@ const Reports = () => {
       await fetchReports();
     } catch (err) {
       console.log("Company delete error:", err);
-      alert("Unable to delete company records. Please try again.");
+      showErrorAlert("Unable to delete company records. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -396,7 +401,7 @@ const Reports = () => {
 
   const handleExport = async () => {
     if (companyReports.length === 0) {
-      alert(
+      showAlert(
         "No data to export. Please apply filters and view the report first.",
       );
       return;
@@ -450,6 +455,9 @@ const Reports = () => {
         "PER SHARE Profit/Loss",
         "Net Profit/Loss",
       ]);
+
+      // CHANGE HEADER HEIGHT HERE
+      sheet.getRow(1).height = 80;
 
       sheet.getRow(1).eachCell((cell) => {
         Object.assign(cell, headerStyle);
@@ -583,16 +591,16 @@ const Reports = () => {
 
       sheet.columns = [
         { width: 18 },
-        { width: 12 },
+        { width: 10 },
+        { width: 18 },
+        { width: 10 },
         { width: 18 },
         { width: 12 },
-        { width: 18 },
+        { width: 16 },
+        { width: 16 },
         { width: 12 },
-        { width: 16 },
-        { width: 16 },
-        { width: 16 },
-        { width: 14 },
-        { width: 14 },
+        { width: 12 },
+        { width: 12 },
       ];
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -602,7 +610,7 @@ const Reports = () => {
       saveAs(blob, `stock_company_report_${fromDate}_${toDate}.xlsx`);
     } catch (err) {
       console.log("Export failed:", err);
-      alert("Unable to generate the report. Please try again.");
+      showErrorAlert("Unable to generate the report. Please try again.");
     } finally {
       setReportLoading(false);
     }

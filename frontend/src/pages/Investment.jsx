@@ -6,6 +6,11 @@ import { useConfirm } from "../components/ConfirmProvider";
 
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 const Investment = () => {
   const navigate = useNavigate();
@@ -92,12 +97,12 @@ const Investment = () => {
   // =====================
   const handleSave = async () => {
     if (!amount || !date || !type) {
-      alert("Please fill all required fields");
+      showAlert("Please fill all required fields");
       return;
     }
 
     if (isNaN(Number(amount))) {
-      alert("Amount must be a number");
+      showAlert("Amount must be a number");
       return;
     }
 
@@ -121,7 +126,7 @@ const Investment = () => {
       setNote("");
       setDate(getBDDate());
     } catch (err) {
-      alert("Error saving transaction");
+      showErrorAlert("Error saving transaction");
     } finally {
       setLoading(false);
     }
@@ -333,7 +338,7 @@ const Investment = () => {
       const mainUpdated = list.filter((x) => x._id !== item._id);
       setList(mainUpdated);
     } catch (err) {
-      alert("Delete failed");
+      showErrorAlert("Delete failed");
     } finally {
       setLoading(false);
     }
@@ -349,7 +354,7 @@ const Investment = () => {
     if (newAmount === null) return;
 
     if (isNaN(Number(newAmount))) {
-      alert("Amount must be a number");
+      showAlert("Amount must be a number");
       return;
     }
 
@@ -369,7 +374,7 @@ const Investment = () => {
       setList(updatedList);
       setFilteredList(updatedList);
     } catch (err) {
-      alert("Update failed");
+      showErrorAlert("Update failed");
     }
   };
 

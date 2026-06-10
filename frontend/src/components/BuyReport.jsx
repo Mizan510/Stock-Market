@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import ReportFilter from "./ReportFilter";
+import { showAlert, showErrorAlert } from "../utils/sweetAlert";
 
 const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
   // Get current date in BD timezone
@@ -131,7 +132,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
     const data = showReport ? filteredBuyList : buyList;
 
     if (!data || data.length === 0) {
-      alert("No buy data to export. View report first.");
+      showAlert("No buy data to export. View report first.");
       return;
     }
 
@@ -270,7 +271,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
       saveAs(blob, `buy_report_${fromDate}_${toDate}.xlsx`);
     } catch (err) {
       console.log(err);
-      alert("Unable to export buy report. Please try again.");
+      showErrorAlert("Unable to export buy report. Please try again.");
     } finally {
       setExportLoading(false);
     }

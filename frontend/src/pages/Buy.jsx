@@ -4,6 +4,11 @@ import api from "../api";
 import { getCurrentUserId } from "../utils/auth";
 import BuyReport from "../components/BuyReport";
 import { useConfirm } from "../components/ConfirmProvider";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 const Buy = () => {
   const navigate = useNavigate();
@@ -78,7 +83,7 @@ const Buy = () => {
 
   const handleSave = async () => {
     if (!buyQuantity || !perShareValue) {
-      alert("Buy Quantity and Per Share Value are required");
+      showAlert("Buy Quantity and Per Share Value are required");
       return;
     }
 
@@ -105,7 +110,7 @@ const Buy = () => {
         setStockName("");
         setBuyQuantity("");
         setPerShareValue("");
-        alert(res.data.message || "Buy updated successfully!");
+        showSuccessAlert(res.data.message || "Buy updated successfully!");
       } else {
         const res = await api.post("/buy/add", {
           userId,
@@ -120,14 +125,14 @@ const Buy = () => {
 
         const saved = res.data?.buy || res.data?.data || res.data;
         if (saved) setBuyList((prev) => [saved, ...prev]);
-        alert(res.data.message || "Buy saved successfully!");
+        showSuccessAlert(res.data.message || "Buy saved successfully!");
 
         setStockName("");
         setBuyQuantity("");
         setPerShareValue("");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Error saving buy");
+      showErrorAlert(err.response?.data?.message || "Error saving buy");
     } finally {
       setLoading(false);
     }
@@ -154,7 +159,7 @@ const Buy = () => {
         setPerShareValue("");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed");
+      showErrorAlert(err.response?.data?.message || "Delete failed");
     }
   };
 

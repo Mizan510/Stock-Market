@@ -4,6 +4,11 @@ import api from "../api";
 import { getCurrentUserId } from "../utils/auth";
 import SaleReport from "../components/SaleReport";
 import { useConfirm } from "../components/ConfirmProvider";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 const Sale = () => {
   const navigate = useNavigate();
@@ -117,7 +122,7 @@ const Sale = () => {
   // SAVE SALE
   const handleSave = async () => {
     if (!saleQuantity || !perShareValue) {
-      return alert("Sale Quantity and Per Share Value are required");
+      return showAlert("Sale Quantity and Per Share Value are required");
     }
 
     try {
@@ -140,7 +145,7 @@ const Sale = () => {
           prev.map((item) => (item._id === editingId ? updated : item)),
         );
         setEditingId(null);
-        alert(res.data.message || "Sale updated successfully!");
+        showSuccessAlert(res.data.message || "Sale updated successfully!");
       } else {
         const res = await api.post("/sale/add", {
           userId,
@@ -157,14 +162,14 @@ const Sale = () => {
         if (saved) {
           setSaleList((prev) => [saved, ...prev]);
         }
-        alert(res.data.message);
+        showSuccessAlert(res.data.message);
       }
 
       setStockName("");
       setSaleQuantity("");
       setPerShareValue("");
     } catch (err) {
-      alert(err.response?.data?.message || "Error saving sale");
+      showErrorAlert(err.response?.data?.message || "Error saving sale");
     } finally {
       setLoading(false);
     }
@@ -191,7 +196,7 @@ const Sale = () => {
         setPerShareValue("");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed");
+      showErrorAlert(err.response?.data?.message || "Delete failed");
     }
   };
 

@@ -34,22 +34,12 @@ router.post("/add", async (req, res) => {
       data: lbslReport,
     });
   } catch (err) {
+    console.error("Error creating/updating LBSL report:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET SINGLE LBSL REPORT FOR USER
-router.get("/:userId", async (req, res) => {
-  try {
-    const lbslReport = await LbslReport.findOne({ userId: req.params.userId });
-
-    res.json({ data: lbslReport });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// UPDATE LBSL REPORT
+// UPDATE LBSL REPORT (must come before generic GET)
 router.put("/update/:id", async (req, res) => {
   try {
     const { costAmount, currentAssetsPP } = req.body;
@@ -74,17 +64,41 @@ router.put("/update/:id", async (req, res) => {
       data: updatedReport,
     });
   } catch (err) {
+    console.error("Error updating LBSL report:", err);
     res.status(500).json({ message: err.message });
   }
 });
 
-// DELETE LBSL REPORT
+// DELETE LBSL REPORT (must come before generic GET)
 router.delete("/delete/:id", async (req, res) => {
   try {
     await LbslReport.findByIdAndDelete(req.params.id);
 
     res.json({ success: true, message: "LBSL report deleted successfully" });
   } catch (err) {
+    console.error("Error deleting LBSL report:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET SINGLE LBSL REPORT FOR USER (generic, must come last)
+router.get("/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Validate userId is not empty or "undefined"
+    if (!userId || userId === "undefined" || userId === "null") {
+      return res.status(400).json({
+        message: "Invalid userId",
+        data: null,
+      });
+    }
+
+    const lbslReport = await LbslReport.findOne({ userId });
+
+    res.json({ data: lbslReport || null });
+  } catch (err) {
+    console.error("Error fetching LBSL report:", err);
     res.status(500).json({ message: err.message });
   }
 });

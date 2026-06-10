@@ -4,6 +4,11 @@ import api from "../api";
 import { getCurrentUserId } from "../utils/auth";
 import DividendExport from "../components/DividendExport";
 import { useConfirm } from "../components/ConfirmProvider";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 const Dividend = () => {
   const userId = getCurrentUserId();
@@ -235,7 +240,7 @@ const Dividend = () => {
       !form.dividendPercent ||
       !form.costPerShare
     ) {
-      alert("Please fill required fields");
+      showAlert("Please fill required fields");
       return;
     }
 
@@ -273,7 +278,7 @@ const Dividend = () => {
 
       setForm(defaultForm);
     } catch (err) {
-      alert(err.response?.data?.message || "Save failed");
+      showErrorAlert(err.response?.data?.message || "Save failed");
     } finally {
       setLoading(false);
     }
@@ -334,7 +339,7 @@ const Dividend = () => {
       setList((prev) => prev.filter((item) => item._id !== id));
       setFilteredList((prev) => prev.filter((item) => item._id !== id));
     } catch (err) {
-      alert(err.response?.data?.message || "Delete failed");
+      showErrorAlert(err.response?.data?.message || "Delete failed");
     }
   };
 
@@ -384,7 +389,7 @@ const Dividend = () => {
         setExportLoading,
       });
     } catch (err) {
-      alert(err?.message || "Export failed");
+      showErrorAlert(err?.message || "Export failed");
       setExportLoading(false);
     }
   };

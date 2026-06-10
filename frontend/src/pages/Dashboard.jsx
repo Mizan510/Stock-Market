@@ -163,7 +163,7 @@ const Dashboard = () => {
   };
 
   const menuItems = [
-    { icon: "🟡", title: "Buy / Selling Zone", route: "/zone" },
+    { icon: "🟡", title: "Trade Zones", route: "/zone" },
     { icon: "📊", title: "Risk/Benefit", route: "/risk-benefit" },
     { icon: "💼", title: "Investment", route: "/investment" },
     { icon: "🟢", title: "Buy", route: "/buy" },

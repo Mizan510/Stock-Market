@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { getCurrentUserId } from "../utils/auth";
 import { useConfirm } from "../components/ConfirmProvider";
+import {
+  showAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../utils/sweetAlert";
 
 import ExpenseFilter from "../components/ExpenseFilter";
 import ExpenseHistory from "../components/ExpenseHistory";
@@ -97,12 +102,12 @@ const Expense = () => {
   // =========================
   const handleSave = async () => {
     if (!title.trim() || !amount || !date) {
-      alert("Please fill all required fields");
+      showAlert("Please fill all required fields");
       return;
     }
 
     if (isNaN(Number(amount)) || Number(amount) <= 0) {
-      alert("Amount must be a valid number");
+      showAlert("Amount must be a valid number");
       return;
     }
 
@@ -131,7 +136,7 @@ const Expense = () => {
           prev.map((i) => (i._id === updated._id ? updated : i)),
         );
 
-        alert("Expense updated successfully");
+        showSuccessAlert("Expense updated successfully");
       } else {
         const res = await api.post("/expense/add", payload);
 
@@ -140,13 +145,13 @@ const Expense = () => {
         setList((prev) => [newExpense, ...prev]);
         setFilteredList((prev) => [newExpense, ...prev]);
 
-        alert("Expense saved successfully");
+        showSuccessAlert("Expense saved successfully");
       }
 
       clearForm();
     } catch (err) {
       console.log(err);
-      alert(err.response?.data?.message || "Error saving expense");
+      showErrorAlert(err.response?.data?.message || "Error saving expense");
     } finally {
       setLoading(false);
     }
@@ -181,10 +186,10 @@ const Expense = () => {
       setList((prev) => prev.filter((i) => i._id !== id));
       setFilteredList((prev) => prev.filter((i) => i._id !== id));
 
-      alert("Expense deleted");
+      showSuccessAlert("Expense deleted");
     } catch (err) {
       console.log(err);
-      alert(err.response?.data?.message || "Error deleting expense");
+      showErrorAlert(err.response?.data?.message || "Error deleting expense");
     }
   };
 
@@ -315,7 +320,7 @@ const Expense = () => {
       saveAs(blob, "expense_report.xlsx");
     } catch (err) {
       console.log(err);
-      alert("Failed to generate report");
+      showErrorAlert("Failed to generate report");
     } finally {
       setExportLoading(false);
     }
