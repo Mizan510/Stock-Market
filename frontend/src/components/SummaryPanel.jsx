@@ -98,9 +98,9 @@ const SummaryPanel = ({
           </p>
         </div>
 
-        <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-800 text-left sm:text-right min-w-160px">
-          <p className="text-xs font-medium text-rose-400 uppercase tracking-wider">Monthly Expense</p>
-          <p className="text-xl md:text-2xl font-bold text-rose-500 mt-0.5">
+        <div className="text-right">
+          <p className="text-sm text-red-400 -mb-1">Monthly Expense</p>
+          <p className="text-2xl font-bold text-red-500">
             {formatMoney(monthlyExpense)}
           </p>
         </div>
