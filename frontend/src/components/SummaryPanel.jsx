@@ -86,9 +86,9 @@ const SummaryPanel = ({
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-2">
       {/* HEADER SECTION */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800 pb-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800 pb-2">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
             <span>💼</span> Portfolio Summary
@@ -98,12 +98,13 @@ const SummaryPanel = ({
           </p>
         </div>
 
-        <div className="text-right">
-          <p className="text-sm text-red-400 -mb-1">Monthly Expense</p>
-          <p className="text-2xl font-bold text-red-500">
+        <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-800 text-left sm:text-right min-w-160px">
+          <p className="text-xs font-medium text-rose-400 uppercase tracking-wider">Monthly Expense</p>
+          <p className="text-xl md:text-2xl font-bold text-rose-500 mt-0.5">
             {formatMoney(monthlyExpense)}
           </p>
         </div>
+
       </div>
 
       {/* ROI HERO SECTION */}
