@@ -82,16 +82,24 @@ export const calculatePortfolioMetrics = (
     if (!holdingsMap[symbol]) {
       holdingsMap[symbol] = {
         quantity: 0,
+        originalBuyQuantity: 0,
         totalCostWithCommission: 0,
         totalShareValue: 0,
         buyTransactions: 0,
+        avgPrice: 0,
       };
     }
 
     holdingsMap[symbol].quantity += qty;
+    holdingsMap[symbol].originalBuyQuantity += qty;
     holdingsMap[symbol].totalCostWithCommission += totalWithComm;
     holdingsMap[symbol].totalShareValue += buyValue;
     holdingsMap[symbol].buyTransactions += 1;
+
+    // Calculate avgPrice AFTER each buy (based on all buys so far)
+    holdingsMap[symbol].avgPrice =
+      holdingsMap[symbol].totalCostWithCommission /
+      holdingsMap[symbol].originalBuyQuantity;
   });
 
   // Process Sale transactions
@@ -102,23 +110,15 @@ export const calculatePortfolioMetrics = (
     if (!holdingsMap[symbol]) {
       holdingsMap[symbol] = {
         quantity: 0,
+        originalBuyQuantity: 0,
         totalCostWithCommission: 0,
         totalShareValue: 0,
         buyTransactions: 0,
+        avgPrice: 0,
       };
     }
 
     holdingsMap[symbol].quantity -= qty;
-  });
-
-  // Calculate avg price per holding
-  Object.keys(holdingsMap).forEach((symbol) => {
-    const holding = holdingsMap[symbol];
-    if (holding.quantity > 0) {
-      holding.avgPrice = holding.totalCostWithCommission / holding.quantity;
-    } else {
-      holding.avgPrice = 0;
-    }
   });
 
   // ====================================

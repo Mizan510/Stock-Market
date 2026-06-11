@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { showAlert, showErrorAlert } from "../utils/sweetAlert";
 
-const Zone = () => {
+const BuyZone = () => {
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
 
@@ -92,29 +92,12 @@ const Zone = () => {
     load();
   }, []);
 
-  const addRow = () => {
-    setRows((prev) => [
-      ...prev,
-      {
-        company: "",
-        low: "",
-        high: "",
-        buyPercent: 20,
-        sellPercent: 70,
-        todaysHigh: "",
-        todaysLow: "",
-        closingPrice: "",
-        isEditing: true,
-      },
-    ]);
-  };
-
   const handleChange = (index, field, value) => {
     setRows((prev) => {
       const updated = [...prev];
       updated[index] = {
         ...updated[index],
-        [field]: field === "company" ? value : value,
+        [field]: value,
       };
       return updated;
     });
@@ -230,20 +213,12 @@ const Zone = () => {
     }
   };
 
-  const saveAll = async () => {
-    for (let i = 0; i < rows.length; i += 1) {
-      const row = rows[i];
-      if (!row.company || !row.company.trim()) continue;
-      await saveRow(i);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
       <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            📊 Trade Zones
+            Buy Zone
           </h1>
           <p className="mt-1 text-lg font-semibold tracking-wide bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent inline-block">
             Smart Buy & Sell Zones Based on Pivot Analysis
@@ -252,20 +227,8 @@ const Zone = () => {
 
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={addRow}
-            className="bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg"
-          >
-            + Add Company
-          </button>
-          <button
-            onClick={saveAll}
-            className="bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-lg"
-          >
-            Save All
-          </button>
-          <button
             onClick={() => navigate("/dashboard")}
-            className="bg-gray-700 px-3 py-2 rounded-lg"
+            className="bg-gray-700 hover:bg-gray-600 transition px-3 py-2 rounded-lg text-sm font-medium"
           >
             Back
           </button>
@@ -274,29 +237,40 @@ const Zone = () => {
 
       {rows.length === 0 ? (
         <div className="text-center text-gray-500 mt-20">
-          No companies added yet. Click "Add Company".
+          No companies available.
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border border-gray-800 text-center">
-            <thead className="bg-gray-900">
-              <tr>
-                <th className="p-3 border">Company</th>
-                <th className="p-2 border">1Y Low</th>
-                <th className="p-2 border">1Y High</th>
-                <th className="p-2 border">Today's Low</th>
-                <th className="p-2 border">Today's High</th>
-                <th className="p-2 border">Closing</th>
-                <th className="p-2 border">Pivot Point</th>
-                <th className="p-2 border">Next Day Forecast</th>
-                <th className="p-2 border">Buy % (≤)</th>
-                <th className="p-2 border">Sell % (≥)</th>
-                <th className="p-2 border">Buying Zone</th>
-                <th className="p-2 border">Selling Zone</th>
-                <th className="p-2 border">Actions</th>
+        <div className="overflow-x-auto rounded-xl border border-gray-800">
+          <table className="w-full text-sm text-center border-collapse">
+            <thead>
+              {/* Top Header Grouping */}
+              <tr className="bg-blue-950 text-xs font-bold uppercase tracking-wider text-blue-200 border-b border-gray-800">
+                <th className="p-3 border-r border-gray-800">Asset</th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">1 Year Range</th>
+                <th className="p-3 border-r border-gray-800" colSpan="3">Today's Session Data</th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">Predictive Metrics</th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">Target Configurations</th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">Execution Thresholds</th>
+                <th className="p-3">Operations</th>
+              </tr>
+              {/* Detailed Multi-Color Subheaders */}
+              <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold">
+                <th className="p-3 border-r border-gray-800">Company Name</th>
+                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">1Y Low</th>
+                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">1Y High</th>
+                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">Session Low</th>
+                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">Session High</th>
+                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">Session Close</th>
+                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">Pivot Point</th>
+                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">Forecast Matrix</th>
+                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">Buy % Target</th>
+                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">Sell % Target</th>
+                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">Buy Action Entry</th>
+                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">Sell Action Target</th>
+                <th className="p-2">Action Control</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-800">
               {rows.map((row, index) => {
                 const pivotPoint = computePivotPoint(row);
                 const nextDayPlan = computeNextDayPlan(pivotPoint, row);
@@ -304,205 +278,187 @@ const Zone = () => {
                 const sellZone = calcZone(row.low, row.high, row.sellPercent);
 
                 return (
-                  <tr key={row._id || index} className="border border-gray-800">
-                    <td className="p-3">
+                  <tr key={row._id || index} className="hover:bg-gray-900/50 transition-colors">
+                    {/* Company (Gray Base) */}
+                    <td className="p-2 bg-gray-900/30 border-r border-gray-800 font-medium">
                       {row.isEditing ? (
                         <input
                           type="text"
                           value={formatValue(row.company)}
-                          onChange={(e) =>
-                            handleChange(index, "company", e.target.value)
-                          }
-                          className="w-56 bg-gray-800 p-2 rounded text-center text-base font-semibold"
+                          onChange={(e) => handleChange(index, "company", e.target.value)}
+                          className="w-full max-w-180px bg-gray-800 border border-gray-700 p-1.5 rounded text-center text-sm font-semibold focus:outline-hidden focus:border-blue-500 text-white"
+                          placeholder="e.g. AAPL"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
+                        <div className="py-1.5 px-2 truncate max-w-180px  text-align: left inline-block w-full text-center">
                           {formatValue(row.company)}
                         </div>
                       )}
                     </td>
 
-                    <td className="p-2">
+                    {/* 1Y Low (Blue Panel) */}
+                    <td className="p-2 bg-blue-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.low)}
-                          onChange={(e) =>
-                            handleChange(index, "low", e.target.value)
-                          }
-                          className="w-20 bg-gray-800 p-1 rounded text-center"
+                          onChange={(e) => handleChange(index, "low", e.target.value)}
+                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
-                          {formatValue(row.low)}
-                        </div>
+                        <div className="py-1">{formatValue(row.low)}</div>
                       )}
                     </td>
 
-                    <td className="p-2">
+                    {/* 1Y High (Blue Panel) */}
+                    <td className="p-2 bg-blue-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.high)}
-                          onChange={(e) =>
-                            handleChange(index, "high", e.target.value)
-                          }
-                          className="w-20 bg-gray-800 p-1 rounded text-center"
+                          onChange={(e) => handleChange(index, "high", e.target.value)}
+                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
-                          {formatValue(row.high)}
-                        </div>
+                        <div className="py-1">{formatValue(row.high)}</div>
                       )}
                     </td>
 
-                    <td className="p-2">
+                    {/* Today's Low (Green Panel) */}
+                    <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.todaysLow)}
-                          onChange={(e) =>
-                            handleChange(index, "todaysLow", e.target.value)
-                          }
-                          className="w-24 bg-gray-800 p-1 rounded text-center"
+                          onChange={(e) => handleChange(index, "todaysLow", e.target.value)}
+                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
-                          {formatValue(row.todaysLow)}
-                        </div>
+                        <div className="py-1">{formatValue(row.todaysLow)}</div>
                       )}
                     </td>
 
-                    <td className="p-2">
+                    {/* Today's High (Green Panel) */}
+                    <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.todaysHigh)}
-                          onChange={(e) =>
-                            handleChange(index, "todaysHigh", e.target.value)
-                          }
-                          className="w-24 bg-gray-800 p-1 rounded text-center"
+                          onChange={(e) => handleChange(index, "todaysHigh", e.target.value)}
+                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
-                          {formatValue(row.todaysHigh)}
-                        </div>
+                        <div className="py-1">{formatValue(row.todaysHigh)}</div>
                       )}
                     </td>
 
-                    <td className="p-2">
+                    {/* Today's Close (Green Panel) */}
+                    <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.closingPrice)}
-                          onChange={(e) =>
-                            handleChange(index, "closingPrice", e.target.value)
-                          }
-                          className="w-24 bg-gray-800 p-1 rounded text-center"
+                          onChange={(e) => handleChange(index, "closingPrice", e.target.value)}
+                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
-                          {formatValue(row.closingPrice)}
-                        </div>
+                        <div className="py-1">{formatValue(row.closingPrice)}</div>
                       )}
                     </td>
 
-                    <td className="p-2 text-yellow-300 font-bold">
+                    {/* Pivot Point (Yellow Panel) */}
+                    <td className="p-2 bg-amber-950/10 border-r border-gray-800 text-amber-400 font-bold">
                       {pivotPoint !== undefined ? pivotPoint.toFixed(2) : ""}
                     </td>
 
-                    <td className="p-2">
-                      <div className="text-lg">
+                    {/* Forecast (Yellow Panel) */}
+                    <td className="p-2 bg-amber-950/10 border-r border-gray-800">
+                      <div className="text-xs font-bold tracking-wider uppercase">
                         {nextDayPlan === "Bullish" ? (
-                          <span className="text-green-400 font-bold">
-                            {nextDayPlan}
-                          </span>
+                          <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-sm">{nextDayPlan}</span>
                         ) : nextDayPlan === "Bearish" ? (
-                          <span className="text-red-400 font-bold">
-                            {nextDayPlan}
-                          </span>
+                          <span className="bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-sm">{nextDayPlan}</span>
+                        ) : nextDayPlan === "Neutral" ? (
+                          <span className="bg-gray-500/20 text-gray-300 px-2 py-0.5 rounded-sm">{nextDayPlan}</span>
                         ) : (
-                          <span className="text-gray-300 font-medium">
-                            {nextDayPlan}
-                          </span>
+                          ""
                         )}
                       </div>
                     </td>
 
-                    <td className="p-2">
+                    {/* Buy % (Purple Panel) */}
+                    <td className="p-2 bg-purple-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.buyPercent)}
-                          onChange={(e) =>
-                            handleChange(index, "buyPercent", e.target.value)
-                          }
-                          className="w-16 bg-gray-800 p-1 rounded text-center"
+                          onChange={(e) => handleChange(index, "buyPercent", e.target.value)}
+                          className="w-16 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
-                          {formatValue(row.buyPercent)}
-                        </div>
+                        <div className="py-1 text-purple-300 font-medium">{formatValue(row.buyPercent)}%</div>
                       )}
                     </td>
 
-                    <td className="p-2">
+                    {/* Sell % (Purple Panel) */}
+                    <td className="p-2 bg-purple-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.sellPercent)}
-                          onChange={(e) =>
-                            handleChange(index, "sellPercent", e.target.value)
-                          }
-                          className="w-16 bg-gray-800 p-1 rounded text-center"
+                          onChange={(e) => handleChange(index, "sellPercent", e.target.value)}
+                          className="w-16 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="min-h-9.5 flex items-center justify-center">
-                          {formatValue(row.sellPercent)}
-                        </div>
+                        <div className="py-1 text-purple-300 font-medium">{formatValue(row.sellPercent)}%</div>
                       )}
                     </td>
 
-                    <td className="p-2 text-green-400 font-bold">
+                    {/* Buy Zone (Orange Panel) */}
+                    <td className="p-2 bg-orange-950/10 border-r border-gray-800 text-emerald-400 font-bold">
                       {buyZone !== "" ? `≤ ${buyZone.toFixed(2)}` : ""}
                     </td>
 
-                    <td className="p-2 text-red-400 font-bold">
+                    {/* Sell Zone (Orange Panel) */}
+                    <td className="p-2 bg-orange-950/10 border-r border-gray-800 text-rose-400 font-bold">
                       {sellZone !== "" ? `≥ ${sellZone.toFixed(2)}` : ""}
                     </td>
 
-                    <td className="p-2 flex flex-wrap gap-2 justify-center">
-                      {row.isEditing ? (
-                        <>
-                          <button
-                            onClick={() => saveRow(index)}
-                            className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => toggleEdit(index)}
-                            className="bg-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-xs"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => toggleEdit(index)}
-                            className="bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-xs"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => deleteRow(index)}
-                            className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
+                    {/* Actions (Cyan Operations) */}
+                    <td className="p-2 bg-slate-900/40">
+                      <div className="flex gap-1.5 justify-center items-center min-h-32px">
+                        {row.isEditing ? (
+                          <>
+                            <button
+                              onClick={() => saveRow(index)}
+                              className="bg-blue-600 hover:bg-blue-500 transition-colors px-2.5 py-1 rounded text-xs font-semibold"
+                            >
+                              Save
+                            </button>
+                            <button
+                              onClick={() => toggleEdit(index)}
+                              className="bg-gray-700 hover:bg-gray-600 transition-colors px-2.5 py-1 rounded text-xs font-semibold"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => toggleEdit(index)}
+                              className="bg-amber-600 hover:bg-amber-500 transition-colors px-2.5 py-1 rounded text-xs font-semibold"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => deleteRow(index)}
+                              className="bg-rose-600 hover:bg-rose-500 transition-colors px-2.5 py-1 rounded text-xs font-semibold"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -515,4 +471,4 @@ const Zone = () => {
   );
 };
 
-export default Zone;
+export default BuyZone;

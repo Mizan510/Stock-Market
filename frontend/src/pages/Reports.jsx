@@ -17,41 +17,31 @@ const Reports = () => {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
+  // Active state tracking which company row is expanded for inline editing
+  const [expandedEditCompany, setExpandedEditCompany] = useState(null);
+
+  // Track inputs for the specific sub-transaction being edited inline
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [editStockName, setEditStockName] = useState("");
+  const [editQuantity, setEditQuantity] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+
   const getBDDate = () => {
     const now = new Date();
-
     const bd = new Date(
       now.toLocaleString("en-US", {
         timeZone: "Asia/Dhaka",
       }),
     );
-
     return bd.toISOString().split("T")[0];
-  };
-
-  const getFirstDayOfMonth = () => {
-    const now = new Date();
-
-    const bd = new Date(
-      now.toLocaleString("en-US", {
-        timeZone: "Asia/Dhaka",
-      }),
-    );
-
-    const year = bd.getFullYear();
-    const month = String(bd.getMonth() + 1).padStart(2, "0");
-
-    return `${year}-${month}-01`;
   };
 
   const [list, setList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
-
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState(getBDDate());
 
   const [loading, setLoading] = useState(true);
-
   const [filterLoading, setFilterLoading] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -80,7 +70,6 @@ const Reports = () => {
     return Array.from(s).sort();
   }, [list]);
 
-  // Reapply filters when date range or selected company changes
   useEffect(() => {
     const filtered = list.filter((item) => {
       const itemDateStr = formatDateString(item.createdAt || item.date);
@@ -89,20 +78,17 @@ const Reports = () => {
         selectedCompany === "All" || item.stockName === selectedCompany;
       return inRange && matchCompany;
     });
-
     setFilteredList(filtered);
   }, [list, fromDate, toDate, selectedCompany]);
 
   const getEarliestDate = (items) => {
     let earliest = null;
-
     items.forEach((item) => {
       const dateStr = formatDateString(item.createdAt || item.date);
       if (!earliest || dateStr < earliest) {
         earliest = dateStr;
       }
     });
-
     return earliest || getBDDate();
   };
 
@@ -122,7 +108,6 @@ const Reports = () => {
       ];
 
       setList(merged);
-
       const earliestDate = getEarliestDate(merged);
       setFromDate(earliestDate);
 
@@ -130,7 +115,6 @@ const Reports = () => {
         const itemDateStr = formatDateString(item.createdAt || item.date);
         return itemDateStr >= earliestDate && itemDateStr <= toDate;
       });
-
       setFilteredList(filtered);
     } catch (err) {
       console.log("Fetch error:", err);
@@ -141,7 +125,6 @@ const Reports = () => {
 
   const handleView = async () => {
     setFilterLoading(true);
-
     try {
       const filtered = list.filter((item) => {
         const itemDateStr = formatDateString(item.createdAt || item.date);
@@ -150,7 +133,6 @@ const Reports = () => {
           selectedCompany === "All" || item.stockName === selectedCompany;
         return inRange && matchCompany;
       });
-
       setFilteredList(filtered);
       setShowReport(true);
     } finally {
@@ -160,7 +142,6 @@ const Reports = () => {
 
   const handleReset = async () => {
     setResetLoading(true);
-
     try {
       const newFromDate = list.length ? getEarliestDate(list) : getBDDate();
       const newToDate = getBDDate();
@@ -173,31 +154,10 @@ const Reports = () => {
         const itemDateStr = formatDateString(item.createdAt || item.date);
         return itemDateStr >= newFromDate && itemDateStr <= newToDate;
       });
-
       setFilteredList(filtered);
       setShowReport(false);
     } finally {
       setResetLoading(false);
-    }
-  };
-
-  const handleDelete = async (item) => {
-    const confirmDelete = await confirm(
-      `Delete ${item.type} record for ${item.stockName}?`,
-    );
-    if (!confirmDelete) {
-      return;
-    }
-
-    setActionLoading(item._id);
-    try {
-      await api.delete(`/${item.type}/delete/${item._id}`);
-      await fetchReports();
-    } catch (err) {
-      console.log("Delete error:", err);
-      showErrorAlert("Unable to delete record. Please try again.");
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -211,29 +171,22 @@ const Reports = () => {
     return Number(item.buyQuantity ?? item.saleQuantity ?? item.quantity ?? 0);
   };
 
-  const handleEdit = async (item) => {
-    const stockName = window.prompt("Stock name", item.stockName);
-    if (stockName === null) return;
+  const startInlineEdit = (item) => {
+    setEditingRowId(item._id);
+    setEditStockName(item.stockName);
+    setEditQuantity(getRecordQuantity(item));
+    setEditPrice(item.perShareValue ?? item.price ?? 0);
+  };
 
-    const currentQuantity = getRecordQuantity(item);
-    const currentPrice = item.perShareValue ?? item.price ?? 0;
+  const handleInlineSave = async (item) => {
+    const quantity = Number(editQuantity);
+    const price = Number(editPrice);
 
-    const quantityInput = window.prompt("Quantity", currentQuantity);
-    if (quantityInput === null) return;
-
-    const priceInput = window.prompt("Price", currentPrice);
-    if (priceInput === null) return;
-
-    const quantity = Number(quantityInput);
-    const price = Number(priceInput);
-
-    if (!stockName.trim() || !quantity || !price) {
+    if (!editStockName.trim() || !quantity || !price) {
       return showAlert("Please provide valid stock, quantity, and price.");
     }
 
-    const updatePayload = {
-      stockName: stockName.trim(),
-    };
+    const updatePayload = { stockName: editStockName.trim() };
 
     if (item.type === "buy") {
       const buyQuantity = quantity;
@@ -272,58 +225,12 @@ const Reports = () => {
     try {
       await api.put(`/${item.type}/update/${item._id}`, updatePayload);
       await fetchReports();
+      setEditingRowId(null);
+      setExpandedEditCompany(null);
+      showSuccessAlert("Record updated successfully!");
     } catch (err) {
       console.log("Update error:", err);
       showErrorAlert("Unable to update record. Please try again.");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleEditCompany = async (stockName) => {
-    const newName = window.prompt("New company name", stockName);
-    if (newName === null || !newName.trim() || newName.trim() === stockName)
-      return;
-
-    const updates = filteredList
-      .filter((item) => item.stockName === stockName)
-      .map((item) =>
-        api.put(`/${item.type}/update/${item._id}`, {
-          stockName: newName.trim(),
-        }),
-      );
-
-    if (updates.length === 0) {
-      return showAlert("No matching records found to update.");
-    }
-
-    setActionLoading(stockName);
-    try {
-      await Promise.all(updates);
-      await fetchReports();
-    } catch (err) {
-      console.log("Company edit error:", err);
-      showErrorAlert("Unable to rename company records. Please try again.");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleDeleteCompany = async (stockName) => {
-    const confirmDelete = await confirm(`Delete all records for ${stockName}?`);
-    if (!confirmDelete) return;
-
-    const deletes = filteredList
-      .filter((item) => item.stockName === stockName)
-      .map((item) => api.delete(`/${item.type}/delete/${item._id}`));
-
-    setActionLoading(stockName);
-    try {
-      await Promise.all(deletes);
-      await fetchReports();
-    } catch (err) {
-      console.log("Company delete error:", err);
-      showErrorAlert("Unable to delete company records. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -345,8 +252,11 @@ const Reports = () => {
           saleTotalValue: 0,
           saleCommission: 0,
           saleNet: 0,
+          rawItems: [],
         };
       }
+
+      groups[stockName].rawItems.push(item);
 
       const qty = getRecordQuantity(item);
       const price = Number(item.perShareValue ?? item.price ?? 0);
@@ -408,7 +318,6 @@ const Reports = () => {
     }
 
     setReportLoading(true);
-
     try {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Company Report");
@@ -456,9 +365,7 @@ const Reports = () => {
         "Net Profit/Loss",
       ]);
 
-      // CHANGE HEADER HEIGHT HERE
       sheet.getRow(1).height = 80;
-
       sheet.getRow(1).eachCell((cell) => {
         Object.assign(cell, headerStyle);
         cell.fill = {
@@ -513,7 +420,6 @@ const Reports = () => {
               wrapText: true,
             };
           }
-          // Add different colors for column 7 (Buy Per Share) and column 8 (Sell Per Share)
           if (colNumber === 7) {
             cell.fill = {
               type: "pattern",
@@ -567,7 +473,6 @@ const Reports = () => {
           cell.numFmt = numberFormat;
         }
 
-        // Add different colors for column 7 (Buy Per Share) and column 8 (Sell Per Share) in total row
         if (colNumber === 7) {
           cell.fill = {
             type: "pattern",
@@ -646,7 +551,7 @@ const Reports = () => {
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div className="text-center sm:text-left">
-            <h1 className="text-4xl font-bold mb-2">📈 Company Wise Summary</h1>
+            <h1 className="text-4xl font-bold mb-2">📈 Company Wise Report</h1>
             <p className="text-gray-400">Buy & Sale Performance Summary</p>
           </div>
           <button
@@ -696,74 +601,205 @@ const Reports = () => {
                     <th className="p-4 border">Remain Qtn Value</th>
                     <th className="p-4 border">PER SHARE Profit/Loss</th>
                     <th className="p-4 border">Net Profit/Loss</th>
-                    <th className="p-4 border">Action</th>
+                    <th className="p-4 border">Actions</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {companyReports.map((item, index) => (
-                    <tr
-                      key={index}
-                      className="font-semibold border hover:bg-gray-800"
-                    >
-                      <td className="p-4 border text-cyan-300 text-left">
-                        {item.stockName}
-                      </td>
-                      <td className="p-4 border text-green-300">
-                        {item.buyQty || "-"}
-                      </td>
-                      <td className="p-4 border text-green-300">
-                        ৳ {item.buyNet.toFixed(2)}
-                      </td>
-                      <td className="p-4 border text-red-300">
-                        {item.saleQty || "-"}
-                      </td>
-                      <td className="p-4 border text-red-300">
-                        ৳ {item.saleNet.toFixed(2)}
-                      </td>
-                      <td className="p-4 border text-yellow-300">
-                        {item.remainQty}
-                      </td>
-                      <td className="p-4 border text-blue-300">
-                        ৳ {item.buyEffective.toFixed(2)}
-                      </td>
-                      <td className="p-4 border text-blue-300">
-                        {item.saleQty
-                          ? `৳ ${item.sellEffective.toFixed(2)}`
-                          : "-"}
-                      </td>
-                      <td className="p-4 border text-emerald-300">
-                        ৳ {item.remainQtyValue.toFixed(2)}
-                      </td>
-                      <td className="p-4 border text-pink-300">
-                        {item.saleQty
-                          ? `৳ ${item.perShareProfitLoss.toFixed(2)}`
-                          : "-"}
-                      </td>
-                      <td className="p-4 border text-pink-300">
-                        {item.saleQty
-                          ? `৳ ${item.netProfitLoss.toFixed(2)}`
-                          : "-"}
-                      </td>
-                      <td className="p-4 border">
-                        <div className="flex items-center justify-center gap-2">
+                    <React.Fragment key={index}>
+                      <tr className="font-semibold border hover:bg-gray-800/50 transition-colors">
+                        <td className="p-4 border text-cyan-300 text-left">
+                          {item.stockName}
+                        </td>
+                        <td className="p-4 border text-green-300">
+                          {item.buyQty || "-"}
+                        </td>
+                        <td className="p-4 border text-green-300">
+                          ৳ {item.buyNet.toFixed(2)}
+                        </td>
+                        <td className="p-4 border text-red-300">
+                          {item.saleQty || "-"}
+                        </td>
+                        <td className="p-4 border text-red-300">
+                          ৳ {item.saleNet.toFixed(2)}
+                        </td>
+                        <td className="p-4 border text-yellow-300">
+                          {item.remainQty}
+                        </td>
+                        <td className="p-4 border text-blue-300">
+                          ৳ {item.buyEffective.toFixed(2)}
+                        </td>
+                        <td className="p-4 border text-blue-300">
+                          {item.saleQty
+                            ? `৳ ${item.sellEffective.toFixed(2)}`
+                            : "-"}
+                        </td>
+                        <td className="p-4 border text-emerald-300">
+                          ৳ {item.remainQtyValue.toFixed(2)}
+                        </td>
+                        <td className="p-4 border text-pink-300">
+                          {item.saleQty
+                            ? `৳ ${item.perShareProfitLoss.toFixed(2)}`
+                            : "-"}
+                        </td>
+                        <td className="p-4 border text-pink-300">
+                          {item.saleQty
+                            ? `৳ ${item.netProfitLoss.toFixed(2)}`
+                            : "-"}
+                        </td>
+                        <td className="p-4 border">
                           <button
-                            onClick={() => handleEditCompany(item.stockName)}
-                            disabled={actionLoading === item.stockName}
-                            className={`px-3 py-1 rounded text-xs ${actionLoading === item.stockName ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+                            onClick={() => {
+                              setExpandedEditCompany(
+                                expandedEditCompany === index ? null : index,
+                              );
+                              setEditingRowId(null);
+                            }}
+                            className="rounded bg-blue-600 px-3 py-1 text-xs font-bold text-white hover:bg-blue-500 shadow-sm"
                           >
                             Edit
                           </button>
-                          <button
-                            onClick={() => handleDeleteCompany(item.stockName)}
-                            disabled={actionLoading === item.stockName}
-                            className={`px-3 py-1 rounded text-xs ${actionLoading === item.stockName ? "bg-red-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
+
+                      {/* INLINE TABLE EXPANSE FOR TRANSACTION BREAKDOWN AND FORM EDITING */}
+                      {expandedEditCompany === index && (
+                        <tr className="bg-gray-950 border-x">
+                          <td colSpan="12" className="p-4">
+                            <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 shadow-inner max-w-4xl mx-auto">
+                              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 text-left">
+                                Individual Transactions for {item.stockName}
+                              </h3>
+                              <table className="w-full text-left text-xs border border-gray-800">
+                                <thead className="bg-gray-800 text-gray-300 font-semibold">
+                                  <tr>
+                                    <th className="p-2 border border-gray-800">
+                                      Type
+                                    </th>
+                                    <th className="p-2 border border-gray-800">
+                                      Stock Name
+                                    </th>
+                                    <th className="p-2 border border-gray-800">
+                                      Quantity
+                                    </th>
+                                    <th className="p-2 border border-gray-800">
+                                      Price (৳)
+                                    </th>
+                                    <th className="p-2 border border-gray-800 text-center">
+                                      Actions
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {item.rawItems.map((raw) => (
+                                    <tr
+                                      key={raw._id}
+                                      className="border-b border-gray-800 hover:bg-gray-850"
+                                    >
+                                      {editingRowId === raw._id ? (
+                                        <>
+                                          {/* Form Edit Option Fields Right on Table */}
+                                          <td className="p-2 border border-gray-800 font-bold capitalize text-amber-400">
+                                            {raw.type}
+                                          </td>
+                                          <td className="p-2 border border-gray-800">
+                                            <input
+                                              type="text"
+                                              value={editStockName}
+                                              onChange={(e) =>
+                                                setEditStockName(e.target.value)
+                                              }
+                                              className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-full focus:outline-none focus:border-blue-500"
+                                            />
+                                          </td>
+                                          <td className="p-2 border border-gray-800">
+                                            <input
+                                              type="number"
+                                              value={editQuantity}
+                                              onChange={(e) =>
+                                                setEditQuantity(e.target.value)
+                                              }
+                                              className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-24 focus:outline-none focus:border-blue-500"
+                                            />
+                                          </td>
+                                          <td className="p-2 border border-gray-800">
+                                            <input
+                                              type="number"
+                                              step="any"
+                                              value={editPrice}
+                                              onChange={(e) =>
+                                                setEditPrice(e.target.value)
+                                              }
+                                              className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-24 focus:outline-none focus:border-blue-500"
+                                            />
+                                          </td>
+                                          <td className="p-2 border border-gray-800 text-center">
+                                            <div className="flex justify-center gap-2">
+                                              <button
+                                                disabled={
+                                                  actionLoading === raw._id
+                                                }
+                                                onClick={() =>
+                                                  handleInlineSave(raw)
+                                                }
+                                                className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-500 font-semibold"
+                                              >
+                                                {actionLoading === raw._id
+                                                  ? "Saving..."
+                                                  : "Save"}
+                                              </button>
+                                              <button
+                                                onClick={() =>
+                                                  setEditingRowId(null)
+                                                }
+                                                className="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 font-semibold"
+                                              >
+                                                Cancel
+                                              </button>
+                                            </div>
+                                          </td>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <td
+                                            className={`p-2 border border-gray-800 font-bold capitalize ${raw.type === "buy" ? "text-green-400" : "text-red-400"}`}
+                                          >
+                                            {raw.type}
+                                          </td>
+                                          <td className="p-2 border border-gray-800 font-medium text-gray-200">
+                                            {raw.stockName}
+                                          </td>
+                                          <td className="p-2 border border-gray-800 text-gray-300">
+                                            {getRecordQuantity(raw)}
+                                          </td>
+                                          <td className="p-2 border border-gray-800 font-mono text-gray-300">
+                                            ৳
+                                            {raw.perShareValue ??
+                                              raw.price ??
+                                              0}
+                                          </td>
+                                          <td className="p-2 border border-gray-800 text-center">
+                                            <button
+                                              onClick={() =>
+                                                startInlineEdit(raw)
+                                              }
+                                              className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-600 font-medium transition-colors"
+                                            >
+                                              Edit
+                                            </button>
+                                          </td>
+                                        </>
+                                      )}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
 
                   {companyReports.length > 0 && (

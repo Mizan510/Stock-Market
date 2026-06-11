@@ -17,8 +17,6 @@ const Dashboard = () => {
   // =========================
   const [showRulesPopup, setShowRulesPopup] = useState(true);
 
-  // Back-button behavior is handled globally in ProtectedRoute.
-
   // =========================
   // STATES
   // =========================
@@ -60,11 +58,10 @@ const Dashboard = () => {
       const userId = getCurrentUserId();
       if (!userId) {
         navigate("/login", { replace: true });
-        setSummaryLoading(false);
         return;
       }
 
-      // Fetch all transaction data in parallel (including monthly expense)
+      // Fetch all transaction data in parallel with inline catch fallbacks
       const [
         investRes,
         buyRes,
@@ -78,32 +75,26 @@ const Dashboard = () => {
         api.get(`/sale/${userId}`).catch(() => ({ data: [] })),
         api.get(`/dividend/${userId}`).catch(() => ({ data: [] })),
         api.get(`/lbsl/${userId}`).catch(() => ({ data: null })),
-        api
-          .get(`/expense/monthly/${userId}`)
-          .catch(() => ({ data: { total: 0 } })),
+        api.get(`/expense/monthly/${userId}`).catch(() => ({ data: { total: 0 } })),
       ]);
 
-      const investmentData = investRes.data?.data || investRes.data || [];
-      const buyData = buyRes.data?.data || buyRes.data || [];
-      const saleData = saleRes.data?.data || saleRes.data || [];
-      const dividendData = dividendRes.data?.data || dividendRes.data || [];
-      const lbslData = lbslRes.data?.data || null;
-      const monthlyTotal =
-        expenseMonthRes?.data?.total ?? expenseMonthRes?.data ?? 0;
+      const investmentData = investRes?.data?.data ?? investRes?.data ?? [];
+      const buyData = buyRes?.data?.data ?? buyRes?.data ?? [];
+      const saleData = saleRes?.data?.data ?? saleRes?.data ?? [];
+      const dividendData = dividendRes?.data?.data ?? dividendRes?.data ?? [];
+      const lbslData = lbslRes?.data?.data ?? lbslRes?.data ?? null;
+      const monthlyTotal = expenseMonthRes?.data?.total ?? expenseMonthRes?.data ?? 0;
 
       setMonthlyExpense(Number(monthlyTotal || 0));
 
       if (lbslData) {
         setLbslReport({
-          costAmount:
-            lbslData.costAmount !== undefined && lbslData.costAmount !== null
-              ? Number(lbslData.costAmount)
-              : null,
-          currentAssetsPP:
-            lbslData.currentAssetsPP !== undefined &&
-            lbslData.currentAssetsPP !== null
-              ? Number(lbslData.currentAssetsPP)
-              : null,
+          costAmount: lbslData.costAmount !== undefined && lbslData.costAmount !== null
+            ? Number(lbslData.costAmount)
+            : null,
+          currentAssetsPP: lbslData.currentAssetsPP !== undefined && lbslData.currentAssetsPP !== null
+            ? Number(lbslData.currentAssetsPP)
+            : null,
         });
       }
 
@@ -117,34 +108,54 @@ const Dashboard = () => {
 
       setPortfolioMetrics(metrics);
     } catch (err) {
-      console.log("Portfolio data fetch failed:", err);
+      console.error("Portfolio data fetch failed:", err);
     } finally {
       setSummaryLoading(false);
     }
   }, [navigate]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPortfolioData();
   }, [fetchPortfolioData]);
 
-  // =========================
+// =========================
   // LOGOUT
   // =========================
   const logout = async () => {
-    const confirmed = await confirm("Are you sure you want to log out?");
-
+    const confirmed = await confirm("Are you sure you want to close the app?");
     if (!confirmed) return;
 
     try {
       setLogoutLoading(true);
 
+      // 1. Clear session tokens
       localStorage.removeItem("auth");
       localStorage.removeItem("token");
+      sessionStorage.clear();
 
-      navigate("/login", { replace: true });
+      // 2. Check if running inside an Electron desktop app wrapper
+      if (window.electron && window.electron.closeApp) {
+        window.electron.closeApp();
+        return;
+      }
+      
+      if (window.process && window.process.type === "renderer" && window.require) {
+        const electron = window.require("electron");
+        electron.remote.getCurrentWindow().close();
+        return;
+      }
+
+      // 3. Web Browser App Fallback Strategy
+      // Try to close the tab directly
+      window.close();
+
+      // If the browser blocks window.close(), redirect them to a clean, un-backable exit state
+      if (!window.closed) {
+        // Replaces history state so clicking 'Back' won't re-expose information
+        window.location.replace("about:blank");
+      }
     } catch (err) {
-      console.log(err);
+      console.error("App closure sequence failed:", err);
     } finally {
       setLogoutLoading(false);
     }
@@ -155,7 +166,7 @@ const Dashboard = () => {
   // =========================
   const handleNavigate = (route) => {
     setLoadingRoute(route);
-
+    // Mimics route loading state transition smoothly
     setTimeout(() => {
       navigate(route);
       setLoadingRoute("");
@@ -163,12 +174,13 @@ const Dashboard = () => {
   };
 
   const menuItems = [
-    { icon: "🟡", title: "Trade Zones", route: "/zone" },
-    { icon: "📊", title: "Risk/Benefit", route: "/risk-benefit" },
+    { icon: "💲", title: "Update Price", route: "/update-price" },
+    { icon: "🔍", title: "Buy Zone", route: "/zone" },
+    { icon: "🟠", title: "Sale Zone", route: "/sale-zone" },
     { icon: "💼", title: "Investment", route: "/investment" },
     { icon: "🟢", title: "Buy", route: "/buy" },
     { icon: "🔴", title: "Sale", route: "/sale" },
-    { icon: "💎", title: "Dividend", route: "/Dividend" },
+    { icon: "💎", title: "Dividend", route: "/dividend" },
     { icon: "📈", title: "Reports", route: "/reports" },
     { icon: "💰", title: "Expense", route: "/expense" },
     { icon: "📄", title: "LBSL Report", route: "/lbsl-report" },
@@ -176,18 +188,12 @@ const Dashboard = () => {
 
   return (
     <>
-      {/* ========================= */}
       {/* RULES POPUP */}
-      {/* ========================= */}
-
       {showRulesPopup && (
         <RulesPopup onClose={() => setShowRulesPopup(false)} />
       )}
 
-      {/* ========================= */}
       {/* MAIN DASHBOARD */}
-      {/* ========================= */}
-
       <div className="min-h-screen bg-gray-950 text-white">
         <div className="flex h-full">
           {/* SIDEBAR */}
@@ -215,9 +221,7 @@ const Dashboard = () => {
               totalAssets={portfolioMetrics.totalAssets}
               totalBuyQty={portfolioMetrics.totalBuyQty}
               totalSaleQty={portfolioMetrics.totalSaleQty}
-              totalSaleValueWithCommission={
-                portfolioMetrics.totalSaleValueWithCommission
-              }
+              totalSaleValueWithCommission={portfolioMetrics.totalSaleValueWithCommission}
               totalRemainQty={portfolioMetrics.totalRemainQty}
               tillNowProfitLoss={portfolioMetrics.totalProfit}
               tillNowCurrentAssets={portfolioMetrics.totalAssets}

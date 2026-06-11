@@ -66,6 +66,14 @@ const Investment = () => {
   const [showReport, setShowReport] = useState(false);
   const confirm = useConfirm();
 
+  // =====================
+  // EDIT STATE (for input fields instead of prompt)
+  // =====================
+  const [editingId, setEditingId] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+
   useEffect(() => {
     if (!userId) return navigate("/login", { replace: true });
     fetchData();
@@ -345,23 +353,32 @@ const Investment = () => {
   };
 
   // =====================
-  // EDIT ROW (simple inline edit using prompt)
+  // EDIT ROW (with input fields instead of prompt)
   // =====================
-  const handleEdit = async (index, item) => {
-    const newAmount = prompt("Enter new amount", item.amount);
-    const newNote = prompt("Enter new note", item.note || "");
+  const handleEditStart = (item) => {
+    setEditingId(item._id);
+    setEditAmount(item.amount);
+    setEditNote(item.note || "");
+  };
 
-    if (newAmount === null) return;
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditAmount("");
+    setEditNote("");
+  };
 
-    if (isNaN(Number(newAmount))) {
+  const handleEditSave = async (item) => {
+    if (isNaN(Number(editAmount))) {
       showAlert("Amount must be a number");
       return;
     }
 
     try {
+      setEditLoading(true);
+
       const res = await api.put(`/investment/update/${item._id}`, {
-        amount: Number(newAmount),
-        note: newNote,
+        amount: Number(editAmount),
+        note: editNote,
       });
 
       const updatedItem = res.data.data;
@@ -373,8 +390,15 @@ const Investment = () => {
 
       setList(updatedList);
       setFilteredList(updatedList);
+
+      setEditingId(null);
+      setEditAmount("");
+      setEditNote("");
+      showSuccessAlert("Updated successfully");
     } catch (err) {
       showErrorAlert("Update failed");
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -518,6 +542,7 @@ const Investment = () => {
                   <th className="p-2 border">Withdraw</th>
                   <th className="p-2 border">Balance</th>
                   <th className="p-2 border">Remarks</th>
+                  <th className="p-2 border">Action</th>
                 </tr>
               </thead>
 
@@ -528,40 +553,85 @@ const Investment = () => {
                       {formatDate(item.date)}
                     </td>
 
-                    <td className="p-2 border text-green-400">
-                      {item.type === "deposit" ? item.amount : ""}
-                    </td>
+                    {editingId === item._id ? (
+                      <>
+                        <td colSpan="4" className="p-2 border">
+                          <div className="space-y-2">
+                            <input
+                              type="number"
+                              value={editAmount}
+                              onChange={(e) => setEditAmount(e.target.value)}
+                              placeholder="Amount"
+                              className="w-full p-2 bg-gray-800 rounded text-white border border-gray-600"
+                            />
+                            <input
+                              type="text"
+                              value={editNote}
+                              onChange={(e) => setEditNote(e.target.value)}
+                              placeholder="Note"
+                              className="w-full p-2 bg-gray-800 rounded text-white border border-gray-600"
+                            />
+                          </div>
+                        </td>
+                        <td className="p-2 border">
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              onClick={() => handleEditSave(item)}
+                              disabled={editLoading}
+                              className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs disabled:opacity-60"
+                            >
+                              {editLoading ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              onClick={handleEditCancel}
+                              disabled={editLoading}
+                              className="bg-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-xs disabled:opacity-60"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td className="p-2 border text-green-400">
+                          {item.type === "deposit" ? item.amount : ""}
+                        </td>
 
-                    <td className="p-2 border text-red-400">
-                      {item.type === "withdraw" ? item.amount : ""}
-                    </td>
+                        <td className="p-2 border text-red-400">
+                          {item.type === "withdraw" ? item.amount : ""}
+                        </td>
 
-                    <td className="p-2 border text-yellow-300">
-                      {item.type === "deposit"
-                        ? `+${item.amount}`
-                        : `-${item.amount}`}
-                    </td>
+                        <td className="p-2 border text-yellow-300">
+                          {item.type === "deposit"
+                            ? `+${item.amount}`
+                            : `-${item.amount}`}
+                        </td>
 
-                    <td className="p-2 border text-gray-300">{item.note}</td>
+                        <td className="p-2 border text-gray-300">
+                          {item.note}
+                        </td>
 
-                    {/* ACTION BUTTONS */}
-                    <td className="p-2 border">
-                      <div className="flex gap-2 justify-center">
-                        <button
-                          onClick={() => handleEdit(i, item)}
-                          className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
-                        >
-                          Edit
-                        </button>
+                        {/* ACTION BUTTONS */}
+                        <td className="p-2 border">
+                          <div className="flex gap-2 justify-center">
+                            <button
+                              onClick={() => handleEditStart(item)}
+                              className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
+                            >
+                              Edit
+                            </button>
 
-                        <button
-                          onClick={() => handleDelete(i, item)}
-                          className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+                            <button
+                              onClick={() => handleDelete(i, item)}
+                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </>
+                    )}
                   </tr>
                 ))}
 

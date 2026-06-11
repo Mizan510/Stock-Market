@@ -7,10 +7,10 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserManager from "./pages/UserManager";
-import RiskBenefitAnalysis from "./pages/RiskBenefitAnalysis";
+import SaleZone from "./pages/SaleZone";
 import Dashboard from "./pages/Dashboard";
 
-import Zone from "./pages/Zone";
+import BuyZone from "./pages/BuyZone";
 import Investment from "./pages/Investment";
 import Buy from "./pages/Buy";
 import Sale from "./pages/Sale";
@@ -18,6 +18,7 @@ import Dividend from "./pages/Dividend";
 import Reports from "./pages/Reports";
 import Expense from "./pages/Expense";
 import LBSLReport from "./pages/LBSLReport";
+import UpdatePrice from "./pages/UpdatePrice";
 
 const App = () => {
   return (
@@ -43,7 +44,7 @@ const App = () => {
           path="/zone"
           element={
             <ProtectedRoute>
-              <Zone />
+              <BuyZone />
             </ProtectedRoute>
           }
         />
@@ -112,13 +113,15 @@ const App = () => {
         />
 
         <Route
-          path="/risk-benefit"
+          path="/sale-zone"
           element={
             <ProtectedRoute>
-              <RiskBenefitAnalysis />
+              <SaleZone />
             </ProtectedRoute>
           }
         />
+
+        <Route path="/update-price" element={<UpdatePrice />} />
 
         {/* ================= FALLBACK ROUTE ================= */}
         <Route path="*" element={<Navigate to="/" replace />} />
