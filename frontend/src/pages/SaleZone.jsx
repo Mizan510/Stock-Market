@@ -65,6 +65,7 @@ const SaleZone = () => {
               item.company ||
               item.companyName ||
               item.Company ||
+              item.symbol ||
               "";
 
             const qty = Number(
@@ -75,16 +76,31 @@ const SaleZone = () => {
               item.sharePrice ?? item.buyPerShareValue ?? item.price ?? 0,
             );
 
-            const matchedZone = rawZones.find(
-              (z) =>
-                z.company?.trim().toLowerCase() ===
-                company?.trim().toLowerCase(),
-            );
+            // FIXED: Resilient matching scheme to handle varied backend naming patterns
+            const tradeCompanyClean = company?.trim().toLowerCase();
+            const matchedZone = rawZones.find((z) => {
+              const zoneCompanyClean = (
+                z.company ?? 
+                z.companyName ?? 
+                z.stockName ?? 
+                z.symbol ?? 
+                z.ticker ?? 
+                ""
+              ).trim().toLowerCase();
+
+              if (!zoneCompanyClean || !tradeCompanyClean) return false;
+              return (
+                zoneCompanyClean === tradeCompanyClean ||
+                zoneCompanyClean.includes(tradeCompanyClean) ||
+                tradeCompanyClean.includes(zoneCompanyClean)
+              );
+            });
 
             const rawClosingPrice = matchedZone
               ? (matchedZone.closingPrice ??
                 matchedZone.close ??
-                matchedZone.sessionClose)
+                matchedZone.sessionClose ??
+                matchedZone.price) // Fallback to current asset price in zone metric if named uniquely
               : (item.closingPrice ?? item.close ?? item.sessionClose);
 
             const closingPrice =
@@ -131,7 +147,6 @@ const SaleZone = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
-      {/* Dynamic Style Injection for aggressive "Hard Blink" */}
       <style>
         {`
           @keyframes strongBlink {
@@ -228,7 +243,6 @@ const SaleZone = () => {
 
               <tbody className="divide-y divide-gray-800">
                 {trades.map((t, i) => {
-                  // Applies the strong high-frequency blink layout structure
                   let companyColorClass = "text-white bg-gray-900/30";
                   if (t.closingPrice !== null) {
                     if (t.closingPrice <= t.slPrice) {
@@ -247,7 +261,6 @@ const SaleZone = () => {
                       <td className="p-3 bg-gray-900/30 border-r border-gray-800">
                         {t.date ? formatDateValue(t.date) : "-"}
                       </td>
-                      {/* High visibility cell implementation */}
                       <td
                         className={`p-3 border-r border-gray-800 font-bold tracking-wide ${companyColorClass}`}
                       >
