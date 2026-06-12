@@ -231,10 +231,10 @@ const BuyZone = () => {
       <div className="flex flex-row items-center justify-between gap-4 mb-6 border-b border-gray-900 pb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            Buy Zone 
+            Buy Zone
           </h1>
           <p className="mt-1 text-lg font-semibold tracking-wide bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent inline-block">
-           Smart Buy Zones 
+            Green = Buy | Red = Sell | White = Middle Range
           </p>
         </div>
 
@@ -259,28 +259,60 @@ const BuyZone = () => {
             <thead>
               {/* Top Header Grouping */}
               <tr className="bg-blue-950 text-xs font-bold uppercase tracking-wider text-blue-200 border-b border-gray-800">
-                <th className="p-3 border-r border-gray-800">Asset</th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">1 Year Range</th>
-                <th className="p-3 border-r border-gray-800" colSpan="3">Today's Session Data</th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">Predictive Metrics</th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">Target Configurations</th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">Execution Thresholds</th>
+                <th className="p-3 border-r border-gray-800 sticky left-0 bg-blue-950 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">Asset</th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">
+                  1 Year Range
+                </th>
+                <th className="p-3 border-r border-gray-800" colSpan="3">
+                  Today's Session Data
+                </th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">
+                  Predictive Metrics
+                </th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">
+                  Target Configurations
+                </th>
+                <th className="p-3 border-r border-gray-800" colSpan="2">
+                  Execution Thresholds
+                </th>
                 <th className="p-3">Operations</th>
               </tr>
               {/* Detailed Multi-Color Subheaders */}
               <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold">
-                <th className="p-3 border-r border-gray-800">Company Name</th>
-                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">1Y Low</th>
-                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">1Y High</th>
-                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">Session Low</th>
-                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">Session High</th>
-                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">Session Close</th>
-                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">Pivot Point</th>
-                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">Forecast Matrix</th>
-                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">Buy % Target</th>
-                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">Sell % Target</th>
-                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">Buy Action Entry</th>
-                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">Sell Action Target</th>
+                <th className="p-3 border-r border-gray-800 sticky left-0 bg-gray-900 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">Company Name</th>
+                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">
+                  1Y Low
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">
+                  1Y High
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                  Session Low
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                  Session High
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                  Session Close
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">
+                  Pivot Point
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">
+                  Forecast Matrix
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">
+                  Buy % Target
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">
+                  Sell % Target
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">
+                  Buy Action Entry
+                </th>
+                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">
+                  Sell Action Target
+                </th>
                 <th className="p-2">Action Control</th>
               </tr>
             </thead>
@@ -294,38 +326,46 @@ const BuyZone = () => {
 
                 // Precise inline-styles targeting real-time evaluations
                 let inlineBlinkStyle = {};
-                
+
                 if (closePriceNum !== undefined) {
-                  // Updated logic to catch equal values (<= and >=)
                   if (typeof buyZone === "number" && closePriceNum <= buyZone) {
                     // Less than or equal to Buy Action Entry -> High-Intensity Blinking Green
                     inlineBlinkStyle = {
-                      animation: "strongBlinkGreen 0.9s infinite steps(1, start)",
+                      animation: "strongBlinkGreen 1s infinite steps(1, start)",
                       fontWeight: "700",
                     };
-                  } else if (typeof sellZone === "number" && closePriceNum >= sellZone) {
-                    // Greater than or equal to Sell Action Target -> High-Intensity Blinking Red
+                  } else if (
+                    typeof sellZone === "number" &&
+                    closePriceNum >= sellZone
+                  ) {
+                    // Greater than or equal to Sell Action Target -> No blink, static Red color with text shadow
                     inlineBlinkStyle = {
-                      animation: "strongBlinkRed 0.9s infinite steps(1, start)",
+                      color: "#f43f5e",
+                      textShadow: "0 0 10px rgba(244,63,94,0.4)",
                       fontWeight: "700",
                     };
                   }
                 }
 
                 return (
-                  <tr key={row._id || index} className="hover:bg-gray-900/50 transition-colors">
-                    {/* Company */}
-                    <td className="p-2 bg-gray-900/30 border-r border-gray-800 font-medium">
+                  <tr
+                    key={row._id || index}
+                    className="group hover:bg-gray-900/50 transition-colors"
+                  >
+                    {/* Company (Frozen Column Layout) */}
+                    <td className="p-2 bg-gray-950 border-r border-gray-800 font-medium sticky left-0 z-10 group-hover:bg-gray-900 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
                       {row.isEditing ? (
                         <input
                           type="text"
                           value={formatValue(row.company)}
-                          onChange={(e) => handleChange(index, "company", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "company", e.target.value)
+                          }
                           className="w-full max-w-180px bg-gray-800 border border-gray-700 p-1.5 rounded text-center text-sm font-semibold focus:outline-hidden focus:border-blue-500 text-white"
                           placeholder="e.g. AAPL"
                         />
                       ) : (
-                        <div 
+                        <div
                           style={inlineBlinkStyle}
                           className="py-1.5 px-2 truncate max-w-180px inline-block w-full text-center text-white text-base transition-all"
                         >
@@ -340,7 +380,9 @@ const BuyZone = () => {
                         <input
                           type="number"
                           value={formatValue(row.low)}
-                          onChange={(e) => handleChange(index, "low", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "low", e.target.value)
+                          }
                           className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
@@ -354,7 +396,9 @@ const BuyZone = () => {
                         <input
                           type="number"
                           value={formatValue(row.high)}
-                          onChange={(e) => handleChange(index, "high", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "high", e.target.value)
+                          }
                           className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
@@ -368,7 +412,9 @@ const BuyZone = () => {
                         <input
                           type="number"
                           value={formatValue(row.todaysLow)}
-                          onChange={(e) => handleChange(index, "todaysLow", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "todaysLow", e.target.value)
+                          }
                           className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
@@ -382,25 +428,33 @@ const BuyZone = () => {
                         <input
                           type="number"
                           value={formatValue(row.todaysHigh)}
-                          onChange={(e) => handleChange(index, "todaysHigh", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "todaysHigh", e.target.value)
+                          }
                           className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1">{formatValue(row.todaysHigh)}</div>
+                        <div className="py-1">
+                          {formatValue(row.todaysHigh)}
+                        </div>
                       )}
                     </td>
 
-                    {/* Today's Close */}
+                    {/* Today's Close (With Active Highlight & Blink Styles) */}
                     <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
                           value={formatValue(row.closingPrice)}
-                          onChange={(e) => handleChange(index, "closingPrice", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "closingPrice", e.target.value)
+                          }
                           className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1">{formatValue(row.closingPrice)}</div>
+                        <div style={inlineBlinkStyle} className="py-1 transition-all">
+                          {formatValue(row.closingPrice)}
+                        </div>
                       )}
                     </td>
 
@@ -413,11 +467,17 @@ const BuyZone = () => {
                     <td className="p-2 bg-amber-950/10 border-r border-gray-800">
                       <div className="text-xs font-bold tracking-wider uppercase">
                         {nextDayPlan === "Bullish" ? (
-                          <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-sm">{nextDayPlan}</span>
+                          <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-sm">
+                            {nextDayPlan}
+                          </span>
                         ) : nextDayPlan === "Bearish" ? (
-                          <span className="bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-sm">{nextDayPlan}</span>
+                          <span className="bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-sm">
+                            {nextDayPlan}
+                          </span>
                         ) : nextDayPlan === "Neutral" ? (
-                          <span className="bg-gray-500/20 text-gray-300 px-2 py-0.5 rounded-sm">{nextDayPlan}</span>
+                          <span className="bg-gray-500/20 text-gray-300 px-2 py-0.5 rounded-sm">
+                            {nextDayPlan}
+                          </span>
                         ) : (
                           ""
                         )}
@@ -430,11 +490,15 @@ const BuyZone = () => {
                         <input
                           type="number"
                           value={formatValue(row.buyPercent)}
-                          onChange={(e) => handleChange(index, "buyPercent", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "buyPercent", e.target.value)
+                          }
                           className="w-16 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1 text-purple-300 font-medium">{formatValue(row.buyPercent)}%</div>
+                        <div className="py-1 text-purple-300 font-medium">
+                          {formatValue(row.buyPercent)}%
+                        </div>
                       )}
                     </td>
 
@@ -444,11 +508,15 @@ const BuyZone = () => {
                         <input
                           type="number"
                           value={formatValue(row.sellPercent)}
-                          onChange={(e) => handleChange(index, "sellPercent", e.target.value)}
+                          onChange={(e) =>
+                            handleChange(index, "sellPercent", e.target.value)
+                          }
                           className="w-16 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1 text-purple-300 font-medium">{formatValue(row.sellPercent)}%</div>
+                        <div className="py-1 text-purple-300 font-medium">
+                          {formatValue(row.sellPercent)}%
+                        </div>
                       )}
                     </td>
 
