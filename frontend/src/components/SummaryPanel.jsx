@@ -30,8 +30,8 @@ const SummaryPanel = ({
     if (loading) return "Loading...";
     const numericValue = Number(amount || 0);
     return `৳ ${numericValue.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0, // Automatically removes .00 from whole numbers
+      maximumFractionDigits: 2, // Retains decimal values only if they exist (up to 2 places)
     })}`;
   };
 
@@ -112,7 +112,7 @@ const SummaryPanel = ({
         <Card
           title="ROI (Return on Investment)"
           subtitle="(Profit / Deposit) * 100"
-          value={deposit > 0 ? `${((profit / deposit) * 100).toFixed(2)}%` : "0.00%"}
+          value={deposit > 0 ? `${Number(((profit / deposit) * 100).toFixed(2))}%` : "0%"}
           bgColor="bg-amber-400"
           borderColor="border-amber-500"
           accent="text-slate-950"

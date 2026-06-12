@@ -216,7 +216,7 @@ const Sale = () => {
           <h1 className="text-3xl font-bold">🔴 Sale Stocks</h1>
 
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate(-1)}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back

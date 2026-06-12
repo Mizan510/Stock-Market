@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
+import { useNavigate } from "react-router-dom"; // Imported to handle clean routing redirection
 
 const Sidebar = ({
   isOpen = false,
@@ -11,6 +12,7 @@ const Sidebar = ({
   handleNavigate,
 }) => {
   const [displayName, setDisplayName] = useState("");
+  const navigate = useNavigate(); // Hook initialized to handle programmatic navigation
 
   useEffect(() => {
     let name = "";
@@ -96,7 +98,24 @@ const Sidebar = ({
       {/* Logout */}
       <div className="mt-auto">
         <button
-          onClick={logout}
+          onClick={async () => {
+            // 1. Instantly collapse the sidebar layout view cleanly
+            if (isOpen && typeof onToggle === "function") {
+              onToggle();
+            }
+
+            try {
+              // 2. Run your application's state cleanups (clearing storage, tokens, contexts)
+              if (typeof logout === "function") {
+                await logout();
+              }
+            } catch (err) {
+              console.error("Logout routing sequence error:", err);
+            } finally {
+              // 3. Force-route back to login page so the app doesn't freeze on an empty black layout
+              navigate("/login", { replace: true });
+            }
+          }}
           disabled={logoutLoading}
           className={`w-full rounded-2xl text-sm font-medium transition-all duration-200 disabled:opacity-60 ${
             isOpen

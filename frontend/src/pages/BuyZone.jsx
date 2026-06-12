@@ -215,20 +215,34 @@ const BuyZone = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
-      <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+      {/* Dynamic Global Style Injection for Strict High-Intensity Blinking */}
+      <style>{`
+        @keyframes strongBlinkGreen {
+          0%, 100% { color: #10b981; opacity: 1; text-shadow: 0 0 10px rgba(16,185,129,0.4); }
+          50% { color: transparent; opacity: 0.2; }
+        }
+        @keyframes strongBlinkRed {
+          0%, 100% { color: #f43f5e; opacity: 1; text-shadow: 0 0 10px rgba(244,63,94,0.4); }
+          50% { color: transparent; opacity: 0.2; }
+        }
+      `}</style>
+
+      {/* Header layout aligned for side-by-side distribution */}
+      <div className="flex flex-row items-center justify-between gap-4 mb-6 border-b border-gray-900 pb-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-white">
-            Buy Zone
+            Buy Zone 
           </h1>
           <p className="mt-1 text-lg font-semibold tracking-wide bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent inline-block">
-            Smart Buy & Sell Zones Based on Pivot Analysis
+           Smart Buy Zones 
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        {/* Action Container aligned strictly to the right side */}
+        <div className="flex items-center shrink-0">
           <button
-            onClick={() => navigate("/dashboard")}
-            className="bg-gray-700 hover:bg-gray-600 transition px-3 py-2 rounded-lg text-sm font-medium"
+            onClick={() => navigate(-1)}
+            className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
           >
             Back
           </button>
@@ -276,10 +290,31 @@ const BuyZone = () => {
                 const nextDayPlan = computeNextDayPlan(pivotPoint, row);
                 const buyZone = calcZone(row.low, row.high, row.buyPercent);
                 const sellZone = calcZone(row.low, row.high, row.sellPercent);
+                const closePriceNum = parseNumber(row.closingPrice);
+
+                // Precise inline-styles targeting real-time evaluations
+                let inlineBlinkStyle = {};
+                
+                if (closePriceNum !== undefined) {
+                  // Updated logic to catch equal values (<= and >=)
+                  if (typeof buyZone === "number" && closePriceNum <= buyZone) {
+                    // Less than or equal to Buy Action Entry -> High-Intensity Blinking Green
+                    inlineBlinkStyle = {
+                      animation: "strongBlinkGreen 0.9s infinite steps(1, start)",
+                      fontWeight: "700",
+                    };
+                  } else if (typeof sellZone === "number" && closePriceNum >= sellZone) {
+                    // Greater than or equal to Sell Action Target -> High-Intensity Blinking Red
+                    inlineBlinkStyle = {
+                      animation: "strongBlinkRed 0.9s infinite steps(1, start)",
+                      fontWeight: "700",
+                    };
+                  }
+                }
 
                 return (
                   <tr key={row._id || index} className="hover:bg-gray-900/50 transition-colors">
-                    {/* Company (Gray Base) */}
+                    {/* Company */}
                     <td className="p-2 bg-gray-900/30 border-r border-gray-800 font-medium">
                       {row.isEditing ? (
                         <input
@@ -290,13 +325,16 @@ const BuyZone = () => {
                           placeholder="e.g. AAPL"
                         />
                       ) : (
-                        <div className="py-1.5 px-2 truncate max-w-180px  text-align: left inline-block w-full text-center">
+                        <div 
+                          style={inlineBlinkStyle}
+                          className="py-1.5 px-2 truncate max-w-180px inline-block w-full text-center text-white text-base transition-all"
+                        >
                           {formatValue(row.company)}
                         </div>
                       )}
                     </td>
 
-                    {/* 1Y Low (Blue Panel) */}
+                    {/* 1Y Low */}
                     <td className="p-2 bg-blue-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -310,7 +348,7 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* 1Y High (Blue Panel) */}
+                    {/* 1Y High */}
                     <td className="p-2 bg-blue-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -324,7 +362,7 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* Today's Low (Green Panel) */}
+                    {/* Today's Low */}
                     <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -338,7 +376,7 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* Today's High (Green Panel) */}
+                    {/* Today's High */}
                     <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -352,7 +390,7 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* Today's Close (Green Panel) */}
+                    {/* Today's Close */}
                     <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -366,12 +404,12 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* Pivot Point (Yellow Panel) */}
+                    {/* Pivot Point */}
                     <td className="p-2 bg-amber-950/10 border-r border-gray-800 text-amber-400 font-bold">
                       {pivotPoint !== undefined ? pivotPoint.toFixed(2) : ""}
                     </td>
 
-                    {/* Forecast (Yellow Panel) */}
+                    {/* Forecast */}
                     <td className="p-2 bg-amber-950/10 border-r border-gray-800">
                       <div className="text-xs font-bold tracking-wider uppercase">
                         {nextDayPlan === "Bullish" ? (
@@ -386,7 +424,7 @@ const BuyZone = () => {
                       </div>
                     </td>
 
-                    {/* Buy % (Purple Panel) */}
+                    {/* Buy % */}
                     <td className="p-2 bg-purple-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -400,7 +438,7 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* Sell % (Purple Panel) */}
+                    {/* Sell % */}
                     <td className="p-2 bg-purple-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -414,17 +452,17 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* Buy Zone (Orange Panel) */}
+                    {/* Buy Zone */}
                     <td className="p-2 bg-orange-950/10 border-r border-gray-800 text-emerald-400 font-bold">
                       {buyZone !== "" ? `≤ ${buyZone.toFixed(2)}` : ""}
                     </td>
 
-                    {/* Sell Zone (Orange Panel) */}
+                    {/* Sell Zone */}
                     <td className="p-2 bg-orange-950/10 border-r border-gray-800 text-rose-400 font-bold">
                       {sellZone !== "" ? `≥ ${sellZone.toFixed(2)}` : ""}
                     </td>
 
-                    {/* Actions (Cyan Operations) */}
+                    {/* Actions */}
                     <td className="p-2 bg-slate-900/40">
                       <div className="flex gap-1.5 justify-center items-center min-h-32px">
                         {row.isEditing ? (

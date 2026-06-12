@@ -555,7 +555,7 @@ const Reports = () => {
             <p className="text-gray-400">Buy & Sale Performance Summary</p>
           </div>
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate(-1)}
             className="self-end rounded bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-600"
           >
             Back

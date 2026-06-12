@@ -187,19 +187,20 @@ const UpdatePrice = () => {
   return (
     <div className="min-h-screen bg-gray-950 text-white p-2 sm:p-6">
       <div className="w-full max-w-6xl mx-auto">
-        {/* HEADER */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        
+        {/* MODIFIED HEADER: RIGHT-ALIGNED SIMPLE TEXT BACK BUTTON */}
+        <div className="flex flex-row justify-between items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-emerald-400">
-              📊 Trading Forecast Matrix
+              🔄 Update Actual Price
             </h1>
-            <p className="text-gray-400 mt-1 text-xs sm:text-sm">
-              Manage technical analytics data, high/low histories, and tracking pivots.
+            <p className="text-gray-400 mt-1 text-xs sm:text-sm hidden sm:block">
+              Update share price information for selected companies.
             </p>
           </div>
           <button
             onClick={() => navigate(-1)}
-            className="bg-gray-800 hover:bg-gray-700 border border-gray-700 px-4 py-2 rounded-lg font-semibold text-xs sm:text-sm tracking-wide transition-all"
+            className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back
           </button>
@@ -220,7 +221,7 @@ const UpdatePrice = () => {
                 }}
                 className="text-xs text-blue-400 hover:text-blue-300 font-medium transition-all"
               >
-                {isNewCompany ? "📋 Choose Existing Entry" : "➕ Setup Brand New Target"}
+                {isNewCompany ? "📋 Choose Existing Company" : "➕ Add New Company"}
               </button>
             </div>
 
@@ -228,7 +229,7 @@ const UpdatePrice = () => {
               <input
                 type="text"
                 name="company"
-                placeholder="Enter company ticker symbol/name..."
+                placeholder="Enter New company name..."
                 value={formData.company}
                 onChange={handleChange}
                 className="w-full p-2.5 bg-gray-950 border border-gray-800 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none"
@@ -241,7 +242,7 @@ const UpdatePrice = () => {
                 disabled={loading}
                 className="w-full p-2.5 bg-gray-950 border border-gray-800 rounded-lg text-white text-sm focus:border-blue-500 focus:outline-none cursor-pointer"
               >
-                <option value="">-- Select Existing Target Asset --</option>
+                <option value="">-- Select Company --</option>
                 {companies.map((company) => (
                   <option key={company} value={company}>{company}</option>
                 ))}
@@ -316,21 +317,21 @@ const UpdatePrice = () => {
             <button
               onClick={handleSubmit}
               disabled={submitLoading || loading}
-              className="flex-1 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all"
+              className="flex-1 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer"
             >
-              {submitLoading ? "Processing Variables..." : formData._id ? "Update Target Metrics" : "Generate Forecast Entry"}
+              {submitLoading ? "Processing Variables..." : formData._id ? "Update Data" : "Submit Data"}
             </button>
             <button
               onClick={() => setShowReport(true)}
               disabled={submitLoading || loading}
-              className="flex-1 bg-purple-900/40 hover:bg-purple-900/60 border border-purple-700 text-purple-300 py-2.5 rounded-lg font-semibold text-sm tracking-wide transition-all"
+              className="flex-1 bg-purple-900/40 hover:bg-purple-900/60 border border-purple-700 text-purple-300 py-2.5 rounded-lg font-semibold text-sm tracking-wide transition-all cursor-pointer"
             >
-              View Full Forecast Matrix
+              View Summary Report
             </button>
             <button
               onClick={() => { setShowReport(false); handleReset(); }}
               disabled={submitLoading}
-              className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-6 py-2.5 rounded-lg font-medium text-sm transition-all"
+              className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-6 py-2.5 rounded-lg font-medium text-sm transition-all cursor-pointer"
             >
               Reset
             </button>
@@ -362,7 +363,6 @@ const UpdatePrice = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-800 text-xs">
                   {zoneData.map((item, index) => {
-                    // Quick inline trend evaluation calculation checks
                     let sentiment = "NEUTRAL";
                     let sentimentStyle = "bg-gray-800/60 text-gray-400";
                     if (item.closingPrice && item.pivotPoint) {
@@ -405,13 +405,13 @@ const UpdatePrice = () => {
                           <div className="flex gap-1.5 justify-center">
                             <button
                               onClick={() => handleEdit(item)}
-                              className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-700/50 px-2 py-1 rounded text-[11px] font-semibold transition-all"
+                              className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-700/50 px-2 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(item)}
-                              className="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-700/50 px-2 py-1 rounded text-[11px] font-semibold transition-all"
+                              className="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-700/50 px-2 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer"
                             >
                               Delete
                             </button>

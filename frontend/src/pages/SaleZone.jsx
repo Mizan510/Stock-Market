@@ -42,10 +42,9 @@ const SaleZone = () => {
         }
 
         if (userId) {
-          // Fetch both user purchase data and live zone pricing metrics collectively
           const [buyResponse, zoneResponse] = await Promise.all([
             api.get(`/buy/${userId}`).catch(() => ({ data: [] })),
-            api.get("/zone").catch(() => ({ data: [] }))
+            api.get("/zone").catch(() => ({ data: [] })),
           ]);
 
           const rawTrades = buyResponse.data?.data || buyResponse.data || [];
@@ -76,19 +75,22 @@ const SaleZone = () => {
               item.sharePrice ?? item.buyPerShareValue ?? item.price ?? 0,
             );
 
-            // Cross-reference up-to-date data properties inside the zone dataset arrays
             const matchedZone = rawZones.find(
-              (z) => z.company?.trim().toLowerCase() === company?.trim().toLowerCase()
+              (z) =>
+                z.company?.trim().toLowerCase() ===
+                company?.trim().toLowerCase(),
             );
 
-            // Access the true stored document variable cleanly
             const rawClosingPrice = matchedZone
-              ? (matchedZone.closingPrice ?? matchedZone.close ?? matchedZone.sessionClose)
+              ? (matchedZone.closingPrice ??
+                matchedZone.close ??
+                matchedZone.sessionClose)
               : (item.closingPrice ?? item.close ?? item.sessionClose);
 
-            const closingPrice = rawClosingPrice !== undefined && rawClosingPrice !== null 
-              ? Number(rawClosingPrice) 
-              : null;
+            const closingPrice =
+              rawClosingPrice !== undefined && rawClosingPrice !== null
+                ? Number(rawClosingPrice)
+                : null;
 
             const priceWithCommission = price * 1.004;
 
@@ -129,22 +131,35 @@ const SaleZone = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      {/* Dynamic Style Injection for aggressive "Hard Blink" */}
+      <style>
+        {`
+          @keyframes strongBlink {
+            0%, 100% { opacity: 1; background-color: rgba(239, 68, 68, 0.25); }
+            50% { opacity: 0.1; background-color: transparent; }
+          }
+          .animate-strong-blink {
+            animation: strongBlink 0.8s steps(1, start) infinite;
+          }
+        `}
+      </style>
+
       <div className="mx-auto max-w-7xl">
         {/* HEADER */}
-        <div className="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-row items-center justify-between gap-4 mb-6 border-b border-gray-900 pb-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-white">
-              Sale Zone Analysis
+              Sale Zone
             </h1>
             <p className="mt-1 text-lg font-semibold tracking-wide bg-linear-to-r from-cyan-400 via-blue-400 to-indigo-500 bg-clip-text text-transparent inline-block">
-              Risk Management & Automated Target Matrices
+              Risk Management
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center shrink-0">
             <button
-              onClick={() => navigate("/dashboard")}
-              className="bg-gray-700 hover:bg-gray-600 transition px-4 py-2 rounded-lg text-sm font-medium border border-gray-600"
+              onClick={() => navigate(-1)}
+              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
             >
               Back
             </button>
@@ -153,7 +168,9 @@ const SaleZone = () => {
 
         {/* TABLE */}
         {loading ? (
-          <p className="text-center text-gray-400 py-20 text-base">Loading trading profiles...</p>
+          <p className="text-center text-gray-400 py-20 text-base">
+            Loading trading profiles...
+          </p>
         ) : trades.length === 0 ? (
           <div className="text-center text-gray-500 mt-20">
             No active trades available for analysis.
@@ -163,34 +180,77 @@ const SaleZone = () => {
             <table className="w-full text-sm text-center border-collapse">
               <thead>
                 <tr className="bg-slate-900 text-xs font-bold uppercase tracking-wider text-slate-200 border-b border-gray-800">
-                  <th className="p-3 border-r border-gray-800" colSpan="2">Asset Info</th>
-                  <th className="p-3 border-r border-gray-800" colSpan="4">Entry Metrics</th>
-                  <th className="p-3 border-r border-gray-800" colSpan="3">Risk Mitigation</th>
-                  <th className="p-3" colSpan="2">Profit Targets</th>
+                  <th className="p-3 border-r border-gray-800" colSpan="2">
+                    Asset Info
+                  </th>
+                  <th className="p-3 border-r border-gray-800" colSpan="4">
+                    Entry Metrics
+                  </th>
+                  <th className="p-3 border-r border-gray-800" colSpan="3">
+                    Risk Mitigation
+                  </th>
+                  <th className="p-3" colSpan="2">
+                    Profit Targets
+                  </th>
                 </tr>
                 <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold">
                   <th className="p-3 border-r border-gray-800">Date</th>
                   <th className="p-3 border-r border-gray-800">Company</th>
-                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-sky-300">Buy Qtn</th>
-                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-sky-300">Base Price</th>
-                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-teal-300">Session Close</th>
-                  <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">With Comm. (0.4%)</th>
-                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">Stop Loss %</th>
-                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">Exit Floor Price</th>
-                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">Max Risk Capital</th>
-                  <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">Target %</th>
-                  <th className="p-2 bg-emerald-950/40 text-emerald-300">Target Price</th>
+                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-sky-300">
+                    Buy Qtn
+                  </th>
+                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-sky-300">
+                    Base Price
+                  </th>
+                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-teal-300">
+                    Session Close
+                  </th>
+                  <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">
+                    With Comm. (0.4%)
+                  </th>
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
+                    Stop Loss %
+                  </th>
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
+                    Exit Floor Price
+                  </th>
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
+                    Max Risk Capital
+                  </th>
+                  <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                    Target %
+                  </th>
+                  <th className="p-2 bg-emerald-950/40 text-emerald-300">
+                    Target Price
+                  </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-800">
                 {trades.map((t, i) => {
+                  // Applies the strong high-frequency blink layout structure
+                  let companyColorClass = "text-white bg-gray-900/30";
+                  if (t.closingPrice !== null) {
+                    if (t.closingPrice <= t.slPrice) {
+                      companyColorClass =
+                        "text-red-500 font-black animate-strong-blink";
+                    } else {
+                      companyColorClass = "text-emerald-400";
+                    }
+                  }
+
                   return (
-                    <tr key={i} className="hover:bg-gray-900/50 transition-colors">
+                    <tr
+                      key={i}
+                      className="hover:bg-gray-900/50 transition-colors"
+                    >
                       <td className="p-3 bg-gray-900/30 border-r border-gray-800">
                         {t.date ? formatDateValue(t.date) : "-"}
                       </td>
-                      <td className="p-3 bg-gray-900/30 border-r border-gray-800 font-bold tracking-wide">
+                      {/* High visibility cell implementation */}
+                      <td
+                        className={`p-3 border-r border-gray-800 font-bold tracking-wide ${companyColorClass}`}
+                      >
                         {t.company || "-"}
                       </td>
                       <td className="p-3 bg-sky-950/10 border-r border-gray-800 text-sky-300 font-semibold">
@@ -199,9 +259,11 @@ const SaleZone = () => {
                       <td className="p-3 bg-sky-950/10 border-r border-gray-800 text-sky-300 font-semibold">
                         {formatCurrency(t.price)}
                       </td>
-                    <td className="p-3 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10">
-  {t.closingPrice !== null ? formatCurrency(t.closingPrice) : "-"}
-</td>
+                      <td className="p-3 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10">
+                        {t.closingPrice !== null
+                          ? formatCurrency(t.closingPrice)
+                          : "-"}
+                      </td>
                       <td className="p-3 bg-blue-950/10 border-r border-gray-800 text-blue-400 font-semibold">
                         {formatCurrency(t.priceWithCommission)}
                       </td>

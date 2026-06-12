@@ -402,7 +402,7 @@ const Dividend = () => {
           <h1 className="text-2xl font-bold">Dividend</h1>
 
           <button
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate(-1)}
             className="bg-gray-700 px-4 py-2 rounded-lg"
           >
             Back

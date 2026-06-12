@@ -410,17 +410,10 @@ const Investment = () => {
           <h1 className="text-3xl font-bold">💼 Investment</h1>
 
           <button
-            onClick={() => {
-              setBackLoading(true);
-              setTimeout(() => {
-                navigate("/dashboard");
-                setBackLoading(false);
-              }, 300);
-            }}
-            disabled={backLoading}
-            className="bg-gray-700 px-4 py-2 rounded-lg disabled:opacity-60"
+            onClick={() => navigate(-1)}
+            className="bg-gray-700 px-4 py-2 rounded-lg"
           >
-            {backLoading ? "Loading..." : "Back"}
+            Back
           </button>
         </div>
 
