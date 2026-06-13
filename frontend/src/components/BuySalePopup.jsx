@@ -187,7 +187,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
         onClick={onClose}
       >
         <div
-          className="relative w-screen bg-gray-950 border-y border-gray-900 rounded-none text-white min-h-[50vh] max-h-[85vh] flex flex-col justify-between shadow-2xl overflow-hidden"
+          className="relative w-screen bg-gray-950 border-y border-gray-900 rounded-none text-white min-h-[70vh] max-h-[90vh] flex flex-col justify-between shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ক্লোজ বাটন */}
@@ -211,10 +211,10 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                 {/* 🟢 LEFT SIDE: BUY ZONE (হালকা গ্রিন টিন্ট ব্যাকগ্রাউন্ড) */}
                 <div className="p-4 pr-3 bg-emerald-950/30 flex flex-col overflow-hidden">
                   <div className="mb-2 pb-1 border-b border-emerald-900/30">
-                    <h2 className="text-sm font-bold text-emerald-400 font-mono tracking-wide flex items-center gap-1.5">
+                    <h2 className="text-xl font-bold text-emerald-400 font-mono tracking-wide flex items-center gap-1.5">
                       <span className="text-xs">🟢</span> Buy Zone
                     </h2>
-                    <span className="block text-[10px] font-bold text-emerald-500/90 font-mono tracking-wider mt-0.5 pl-5 uppercase animate-strong-green-blink">
+                    <span className="block text-[12px] font-bold text-emerald-500/90 font-mono tracking-wider mt-0.5 pl-5 uppercase animate-strong-green-blink">
                       Ready for Buy
                     </span>
                   </div>
@@ -229,7 +229,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                         {greenBuyList.map((row, index) => (
                           <li
                             key={index}
-                            className="font-mono text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors tracking-normal"
+                            className="font-mono text-[14px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors tracking-normal"
                           >
                             {row.company}
                           </li>
@@ -242,10 +242,10 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                 {/* 🔴 RIGHT SIDE: SALE ZONE (হালকা রেড টিন্ট ব্যাকগ্রাউন্ড) */}
                 <div className="p-4 pl-3 bg-rose-950/30 flex flex-col overflow-hidden gap-3">
                   <div className="mb-2 pb-1 border-b border-rose-900/30">
-                    <h2 className="text-sm font-bold text-rose-400 font-mono tracking-wide flex items-center gap-1.5 shrink-0">
+                    <h2 className="text-xl font-bold text-rose-400 font-mono tracking-wide flex items-center gap-1.5 shrink-0">
                       <span className="text-xs">🔴</span> Sale Zone
                     </h2>
-                    <span className="block text-[10px] font-bold text-rose-400/90 font-mono tracking-wider mt-0.5 pl-5 uppercase animate-strong-rose-blink">
+                    <span className="block text-[12px] font-bold text-rose-400/90 font-mono tracking-wider mt-0.5 pl-5 uppercase animate-strong-rose-blink">
                       Ready for Sale
                     </span>
                   </div>
@@ -265,7 +265,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                           {saleExitFloorList.map((row, index) => (
                             <li
                               key={index}
-                              className="font-mono text-[11px] font-medium text-red-400 hover:text-red-300 transition-colors tracking-normal"
+                              className="font-mono text-[14px] font-medium text-red-400 hover:text-red-300 transition-colors tracking-normal"
                             >
                               {row.company}
                             </li>
@@ -276,7 +276,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
 
                     {/* SUBSECTION 2: TARGET PROFIT */}
                     <div>
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-1.5 py-0.5 rounded mb-1.5 inline-block font-mono">
+                      <h3 className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-1.5 py-0.5 rounded mb-1.5 inline-block font-mono">
                         🏆 Target Price Reached
                       </h3>
                       {saleTargetProfitList.length === 0 ? (

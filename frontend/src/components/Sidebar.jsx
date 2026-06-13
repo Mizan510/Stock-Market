@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FiChevronLeft } from "react-icons/fi";
-import { useNavigate } from "react-router-dom"; // Imported to handle clean routing redirection
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({
-  isOpen = false,
-  onToggle,
+  isOpen, // প্যারেন্ট থেকে আসা স্টেট
+  onToggle, // স্টেট চেঞ্জ করার ফাংশন (isOpen সেট করার জন্য)
   menuItems = [],
   logout,
   logoutLoading,
@@ -12,8 +12,34 @@ const Sidebar = ({
   handleNavigate,
 }) => {
   const [displayName, setDisplayName] = useState("");
-  const navigate = useNavigate(); // Hook initialized to handle programmatic navigation
+  const navigate = useNavigate();
 
+  // 🖥️ স্ক্রিন সাইজের ওপর ভিত্তি করে অটো ওপেন/ক্লোজ কন্ট্রোল
+  useEffect(() => {
+    const handleResize = () => {
+      // যদি স্ক্রিন উইডথ ৭৬৮ পিক্সেল (md breakpoint) বা তার বেশি হয়, তবে ওপেন হবে
+      if (window.innerWidth >= 768) {
+        if (!isOpen && typeof onToggle === "function") {
+          // জোর করে ওপেন করানোর জন্য প্যারেন্ট ফাংশনকে ট্রিপ করা (যদি অলরেডি ক্লোজ থাকে)
+          onToggle(true); 
+        }
+      } else {
+        // মোবাইল স্ক্রিনে বাই-ডিফল্ট ক্লোজ থাকবে
+        if (isOpen && typeof onToggle === "function") {
+          onToggle(false);
+        }
+      }
+    };
+
+    // প্রথমবার লোড হওয়ার সময় একবার রান হবে
+    handleResize();
+
+    // স্ক্রিন রিসাইজ লিসেনার অ্যাড
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [onToggle]);
+
+  // 👤 ইউজার নেম এক্সট্রাকশন লজিক
   useEffect(() => {
     let name = "";
     const authStr = localStorage.getItem("auth");
@@ -48,7 +74,7 @@ const Sidebar = ({
 
   return (
     <div
-      className={`relative h-screen flex flex-col bg-gray-950 border-gray-800 md:border-r transition-all duration-300 overflow-visible ${
+      className={`relative h-screen flex flex-col bg-gray-950 border-gray-800 md:border-r transition-all duration-300 overflow-visible shrink-0 ${
         isOpen ? "w-60 p-5" : "w-14 p-2"
       }`}
     >
@@ -58,7 +84,6 @@ const Sidebar = ({
       >
         {isOpen ? (
           <div className="w-full text-center">
-            {/* Added 🎛️ icon with flex layout alignment */}
             <h1 className="text-xl font-bold mb-1 text-white flex items-center justify-center gap-2">
               🎛️ Dashboard
             </h1>
@@ -67,12 +92,11 @@ const Sidebar = ({
             </p>
           </div>
         ) : (
-          /* Small indicator icon when sidebar is collapsed to keep spacing clean */
           <div className="text-xl mb-4 py-1">🎛️</div>
         )}
       </div>
 
-      {/* MIDDLE MENU SECTION: Flex container shifts links into the exact middle of the sidebar layout */}
+      {/* MIDDLE MENU SECTION */}
       <div className="flex-1 flex flex-col justify-center overflow-y-auto no-scrollbar">
         <nav className="space-y-2">
           {menuItems.map((item) => {
@@ -107,20 +131,17 @@ const Sidebar = ({
       <div className="mt-auto pt-4">
         <button
           onClick={async () => {
-            // 1. Instantly collapse the sidebar layout view cleanly
             if (isOpen && typeof onToggle === "function") {
-              onToggle();
+              onToggle(false);
             }
 
             try {
-              // 2. Run your application's state cleanups (clearing storage, tokens, contexts)
               if (typeof logout === "function") {
                 await logout();
               }
             } catch (err) {
               console.error("Logout routing sequence error:", err);
             } finally {
-              // 3. Force-route back to login page so the app doesn't freeze on an empty black layout
               navigate("/login", { replace: true });
             }
           }}
@@ -137,14 +158,14 @@ const Sidebar = ({
 
       {/* Toggle Button */}
       <div
-        onClick={onToggle}
+        onClick={() => onToggle(!isOpen)}
         className={`absolute top-1/2 right-0 z-20 flex h-12 w-6 -translate-y-1/2 translate-x-1/2 cursor-pointer items-center justify-center rounded-l-full
         bg-blue-500/80 backdrop-blur-md border border-white/20 text-white shadow-lg
         hover:bg-blue-500 transition-all duration-200 ${
           isOpen ? "rotate-180" : ""
         }`}
       >
-        <FiChevronLeft size={80} />
+        <FiChevronLeft size={16} /> {/* এখানে আইকন সাইজ ৮০ থেকে কমিয়ে ১৬ করা হলো যাতে ঠিকঠাক ফিট হয় */}
       </div>
     </div>
   );
