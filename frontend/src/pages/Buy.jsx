@@ -66,17 +66,18 @@ const Buy = () => {
     fetchBuyRecords();
   }, []);
 
+  // 🛠️ Fixed: Numbers are now strictly rounded to 2 decimal places during calculation
   useEffect(() => {
     const qty = parseFloat(buyQuantity) || 0;
     const perShare = parseFloat(perShareValue) || 0;
 
-    const totalShareValue = qty * perShare;
+    const totalShareValue = parseFloat((qty * perShare).toFixed(2));
     setBuyingTotalShareValue(totalShareValue);
 
-    const commissionAmount = totalShareValue * 0.004; // 0.4%
+    const commissionAmount = parseFloat((totalShareValue * 0.004).toFixed(2)); // 0.4%
     setCommission(commissionAmount);
 
-    const finalValue = totalShareValue + commissionAmount;
+    const finalValue = parseFloat((totalShareValue + commissionAmount).toFixed(2));
     setTotalValueWithCommission(finalValue);
   }, [buyQuantity, perShareValue]);
 
@@ -147,7 +148,7 @@ const Buy = () => {
       }
     } catch (err) {
       showErrorAlert(err.response?.data?.message || "Error saving buy");
-    } division: {
+    } finally { // 🛠️ Fixed: Changed 'division:' typo to 'finally'
       setLoading(false);
     }
   };
