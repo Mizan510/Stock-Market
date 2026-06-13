@@ -182,8 +182,8 @@ const Dashboard = () => {
 
   const menuItems = [
     { icon: "🔄", title: "Update Price", route: "/update-price" },
-    { icon: "🟩", title: "Buy", route: "/buy" },
-    { icon: "🟥", title: "Sale", route: "/sale" },
+    { icon: "🟩", title: "Buy Zone", route: "/buy-zone" },
+    { icon: "🟥", title: "Sale Zone", route: "/sale-zone" },
     { icon: "💼", title: "Investment", route: "/investment" },
     { icon: "🟢", title: "Buy", route: "/buy" },
     { icon: "🔴", title: "Sale", route: "/sale" },

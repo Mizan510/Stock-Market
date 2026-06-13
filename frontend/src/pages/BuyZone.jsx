@@ -254,66 +254,70 @@ const BuyZone = () => {
           No companies available.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-800">
+        /* Added max-height and overflow-auto to enable self-contained vertical scrolling */
+        <div className="overflow-auto max-h-[calc(100vh-180px)] rounded-xl border border-gray-800">
           <table className="w-full text-sm text-center border-collapse">
             <thead>
-              {/* Top Header Grouping */}
-              <tr className="bg-blue-950 text-xs font-bold uppercase tracking-wider text-blue-200 border-b border-gray-800">
-                <th className="p-3 border-r border-gray-800 sticky left-0 bg-blue-950 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">Asset</th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">
+              {/* Top Header Grouping (Forced explicit h-11 height layer) */}
+              <tr className="bg-blue-950 text-xs font-bold uppercase tracking-wider text-blue-200 border-b border-gray-800 h-11">
+                {/* Intersection Cell: Stays locked at top-0 and left-0 with elevated z-30 index */}
+                <th className="p-3 border-r border-gray-800 sticky top-0 left-0 bg-blue-950 z-30 shadow-[2px_2px_5px_rgba(0,0,0,0.4)]">Asset</th>
+                <th className="p-3 border-r border-gray-800 sticky top-0 bg-blue-950 z-20" colSpan="2">
                   1 Year Range
                 </th>
-                <th className="p-3 border-r border-gray-800" colSpan="3">
+                <th className="p-3 border-r border-gray-800 sticky top-0 bg-blue-950 z-20" colSpan="3">
                   Today's Session Data
                 </th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">
+                <th className="p-3 border-r border-gray-800 sticky top-0 bg-blue-950 z-20" colSpan="2">
                   Predictive Metrics
                 </th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">
+                <th className="p-3 border-r border-gray-800 sticky top-0 bg-blue-950 z-20" colSpan="2">
                   Target Configurations
                 </th>
-                <th className="p-3 border-r border-gray-800" colSpan="2">
+                <th className="p-3 border-r border-gray-800 sticky top-0 bg-blue-950 z-20" colSpan="2">
                   Execution Thresholds
                 </th>
-                <th className="p-3">Operations</th>
+                <th className="p-3 sticky top-0 bg-blue-950 z-20">Operations</th>
               </tr>
-              {/* Detailed Multi-Color Subheaders */}
+              {/* Detailed Subheaders (Sticks at top-11 directly beneath Row 1) */}
               <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold">
-                <th className="p-3 border-r border-gray-800 sticky left-0 bg-gray-900 z-20 shadow-[2px_0_5px_rgba(0,0,0,0.3)]">Company Name</th>
-                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">
+                {/* Intersection Cell: Stays locked at top-11 and left-0 with elevated z-30 index */}
+                <th className="p-3 border-r border-gray-800 sticky top-11 left-0 bg-gray-900 z-30 shadow-[2px_2px_5px_rgba(0,0,0,0.4)]">Company Name</th>
+                {/* Swapped translucent opacities for solid Hex composites to avoid scroll-bleed artifacts */}
+                <th className="p-2 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-11 z-20">
                   1Y Low
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">
+                <th className="p-2 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-11 z-20">
                   1Y High
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                <th className="p-2 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-11 z-20">
                   Session Low
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                <th className="p-2 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-11 z-20">
                   Session High
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                <th className="p-2 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-11 z-20">
                   Session Close
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">
+                <th className="p-2 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-11 z-20">
                   Pivot Point
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-amber-950/40 text-amber-300">
+                <th className="p-2 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-11 z-20">
                   Forecast Matrix
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">
+                <th className="p-2 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-11 z-20">
                   Buy % Target
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-purple-950/40 text-purple-300">
+                <th className="p-2 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-11 z-20">
                   Sell % Target
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">
+                <th className="p-2 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-11 z-20">
                   Buy Action Entry
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-orange-950/40 text-orange-300">
+                <th className="p-2 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-11 z-20">
                   Sell Action Target
                 </th>
-                <th className="p-2">Action Control</th>
+                <th className="p-2 bg-gray-900 sticky top-11 z-20">Action Control</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
@@ -352,7 +356,7 @@ const BuyZone = () => {
                     key={row._id || index}
                     className="group hover:bg-gray-900/50 transition-colors"
                   >
-                    {/* Company (Frozen Column Layout) */}
+                    {/* Company (Frozen Column Layout - Kept z-10 below header layer) */}
                     <td className="p-2 bg-gray-950 border-r border-gray-800 font-medium sticky left-0 z-10 group-hover:bg-gray-900 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.3)]">
                       {row.isEditing ? (
                         <input

@@ -41,7 +41,7 @@ const App = () => {
         />
 
         <Route
-          path="/zone"
+          path="/buy-zone"
           element={
             <ProtectedRoute>
               <BuyZone />
