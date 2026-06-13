@@ -33,7 +33,6 @@ const BuySalePopup = ({ isOpen, onClose }) => {
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        // ১. লোকাল স্টোরেজ থেকে User ID গেট করা
         let userId = null;
         const authStr = localStorage.getItem("auth");
         if (authStr) {
@@ -41,7 +40,6 @@ const BuySalePopup = ({ isOpen, onClose }) => {
           userId = auth?.id || null;
         }
 
-        // ২. সমস্ত API রিকোয়েস্ট প্যারালালে কল করা
         const [zoneResponse, buyResponse] = await Promise.all([
           api.get("/zone").catch(() => ({ data: [] })),
           userId
@@ -70,7 +68,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
 
         setBuyRows(mappedBuyData);
 
-        // 🔴 [PROCESSING FOR SALE ZONE (হুবহু SaleZone.jsx এর লজিক)]
+        // 🔴 [PROCESSING FOR SALE ZONE]
         const normalizedSaleData = rawTrades
           .map((item) => {
             const company =
@@ -84,7 +82,6 @@ const BuySalePopup = ({ isOpen, onClose }) => {
               item.sharePrice ?? item.buyPerShareValue ?? item.price ?? 0,
             );
 
-            // কোম্পানির নাম ক্লিন করে ম্যাচিং করা
             const tradeCompanyClean = company?.trim().toLowerCase();
             const matchedZone = rawZones.find((z) => {
               const zoneCompanyClean = (
@@ -141,12 +138,13 @@ const BuySalePopup = ({ isOpen, onClose }) => {
       }
     };
 
+    const fetchInterval = setInterval(fetchAllData, 300000);
     fetchAllData();
+    return () => clearInterval(fetchInterval);
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  // 🟢 ফিল্টার: Buy Zone
   const greenBuyList = buyRows.filter((row) => {
     const closePriceNum = parseNumber(row.closingPrice);
     const buyZone = calcZone(row.low, row.high, row.buyPercent);
@@ -157,27 +155,24 @@ const BuySalePopup = ({ isOpen, onClose }) => {
     );
   });
 
-  // 🔴 ফিল্টার ১: Sale - Exit Floor Price reached
   const saleExitFloorList = saleRows.filter(
     (t) => t.closingPrice !== null && t.closingPrice <= t.slPrice,
   );
 
-  // 🍏 ফিল্টার ২: Sale - Target Profit reached
   const saleTargetProfitList = saleRows.filter(
     (t) => t.closingPrice !== null && t.closingPrice >= t.tpPrice,
   );
 
   return (
     <>
-      {/* ⚡ স্ট্রং ব্লিংক এবং গ্লো অ্যানিমেশনের জন্য ইনলাইন স্টাইল */}
       <style>{`
         @keyframes strongGreenBlink {
-          0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
-          50% { opacity: 0.15; text-shadow: none; }
+          0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+          50% { opacity: 0.3; text-shadow: none; }
         }
         @keyframes strongRoseBlink {
-          0%, 100% { opacity: 1; text-shadow: 0 0 10px rgba(244, 63, 94, 0.6); }
-          50% { opacity: 0.15; text-shadow: none; }
+          0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(244, 63, 94, 0.6); }
+          50% { opacity: 0.3; text-shadow: none; }
         }
         .animate-strong-green-blink {
           animation: strongGreenBlink 1.2s ease-in-out infinite;
@@ -188,53 +183,53 @@ const BuySalePopup = ({ isOpen, onClose }) => {
       `}</style>
 
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/85 backdrop-blur-md"
+        className="fixed inset-0 z-50 flex items-center justify-center p-0 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       >
         <div
-          className="relative w-full max-w-5xl bg-gray-950 border-2 border-gray-800 rounded-2xl p-8 text-white min-h-[75vh] max-h-[90vh] flex flex-col justify-between gap-6 shadow-2xl"
+          className="relative w-screen bg-gray-950 border-y border-gray-900 rounded-none text-white min-h-[50vh] max-h-[85vh] flex flex-col justify-between shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* ক্লোজ বাটন */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors text-xl font-bold"
+            className="absolute top-3 right-4 text-gray-500 hover:text-white transition-colors text-base font-bold z-20"
           >
             ✕
           </button>
 
           {loading ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 gap-2">
-              <span className="w-6 h-6 border-2 border-emerald-500 border-r-transparent rounded-full animate-spin" />
-              <p className="text-xs font-mono">Syncing Portfolio Matrices...</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 gap-1.5 py-6">
+              <span className="w-5 h-5 border-2 border-emerald-500 border-r-transparent rounded-full animate-spin" />
+              <p className="text-[10px] font-mono tracking-wider">Syncing Portfolio Matrices...</p>
             </div>
           ) : (
             <>
-              {/* মেইন গ্রিড লেআউট */}
-              <div className="grid grid-cols-2 divide-x-2 divide-gray-900 flex-1 overflow-hidden">
+              {/* মেইন গ্রিড লেআউট: ২ পাশে গ্রিন ও রেড ব্যাকগ্রাউন্ড মিক্স */}
+              <div className="grid grid-cols-2 divide-x divide-gray-900 flex-1 overflow-hidden">
                 
-                {/* LEFT SIDE: BUY ZONE */}
-                <div className="pr-6 flex flex-col overflow-hidden">
-                  <div className="mb-4 pb-2 border-b border-gray-900">
-                    <h2 className="text-2xl font-extrabold text-emerald-400 font-mono tracking-wider flex items-center gap-2">
-                      <span>🟢</span> Buy Zone
+                {/* 🟢 LEFT SIDE: BUY ZONE (হালকা গ্রিন টিন্ট ব্যাকগ্রাউন্ড) */}
+                <div className="p-4 pr-3 bg-emerald-950/30 flex flex-col overflow-hidden">
+                  <div className="mb-2 pb-1 border-b border-emerald-900/30">
+                    <h2 className="text-sm font-bold text-emerald-400 font-mono tracking-wide flex items-center gap-1.5">
+                      <span className="text-xs">🟢</span> Buy Zone
                     </h2>
-                    <span className="block text-xs font-black text-emerald-400 font-mono tracking-wide mt-1 pl-7 uppercase animate-strong-green-blink">
+                    <span className="block text-[10px] font-bold text-emerald-500/90 font-mono tracking-wider mt-0.5 pl-5 uppercase animate-strong-green-blink">
                       Ready for Buy
                     </span>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto max-h-[58vh] pr-2">
+                  <div className="flex-1 overflow-y-auto pr-1">
                     {greenBuyList.length === 0 ? (
-                      <p className="text-xs text-gray-600 italic pl-7">
+                      <p className="text-[11px] text-gray-600 italic pl-5">
                         No assets detected in buy zone
                       </p>
                     ) : (
-                      <ul className="space-y-2.5 pl-7 list-disc marker:text-emerald-500">
+                      <ul className="space-y-1 pl-5 list-disc marker:text-emerald-500 marker:text-[10px]">
                         {greenBuyList.map((row, index) => (
                           <li
                             key={index}
-                            className="font-mono text-base font-bold text-emerald-400 hover:text-emerald-300 transition-colors tracking-wide"
+                            className="font-mono text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors tracking-normal"
                           >
                             {row.company}
                           </li>
@@ -244,33 +239,33 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                {/* RIGHT SIDE: SALE ZONE (Subdivided into 2 Sections) */}
-                <div className="pl-6 flex flex-col overflow-hidden gap-4">
-                  <div className="mb-4 pb-2 border-b border-gray-900">
-                    <h2 className="text-2xl font-extrabold text-rose-600 font-mono tracking-wider flex items-center gap-2 shrink-0">
-                      <span>🔴</span> Sale Zone
+                {/* 🔴 RIGHT SIDE: SALE ZONE (হালকা রেড টিন্ট ব্যাকগ্রাউন্ড) */}
+                <div className="p-4 pl-3 bg-rose-950/30 flex flex-col overflow-hidden gap-3">
+                  <div className="mb-2 pb-1 border-b border-rose-900/30">
+                    <h2 className="text-sm font-bold text-rose-400 font-mono tracking-wide flex items-center gap-1.5 shrink-0">
+                      <span className="text-xs">🔴</span> Sale Zone
                     </h2>
-                    <span className="block text-xs font-black text-rose-500 font-mono tracking-wide mt-1 pl-7 uppercase animate-strong-rose-blink">
-                    Ready for Sale
+                    <span className="block text-[10px] font-bold text-rose-400/90 font-mono tracking-wider mt-0.5 pl-5 uppercase animate-strong-rose-blink">
+                      Ready for Sale
                     </span>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto max-h-[58vh] pr-2 space-y-6">
-                    {/* SUBSECTION 1: EXIT FLOOR PRICE REACHED */}
+                  <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+                    {/* SUBSECTION 1: STOP LOSS */}
                     <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-red-500 bg-red-950/30 border border-red-900/50 px-2 py-1 rounded mb-3 inline-block font-mono">
-                        🚨 Exit Floor Price Reached
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-red-400 bg-red-950/30 border border-red-900/40 px-1.5 py-0.5 rounded mb-1.5 inline-block font-mono">
+                        🚨 3% Price Reached
                       </h3>
                       {saleExitFloorList.length === 0 ? (
-                        <p className="text-xs text-gray-600 italic pl-4">
+                        <p className="text-[11px] text-gray-600 italic pl-2">
                           No assets reached stop-loss floor
                         </p>
                       ) : (
-                        <ul className="space-y-2 pl-4 list-disc marker:text-red-500">
+                        <ul className="space-y-1 pl-4 list-disc marker:text-red-500 marker:text-[10px]">
                           {saleExitFloorList.map((row, index) => (
                             <li
                               key={index}
-                              className="font-mono text-base font-bold text-red-500 hover:text-red-400 transition-colors tracking-wide"
+                              className="font-mono text-[11px] font-medium text-red-400 hover:text-red-300 transition-colors tracking-normal"
                             >
                               {row.company}
                             </li>
@@ -279,21 +274,21 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                       )}
                     </div>
 
-                    {/* SUBSECTION 2: TARGET PRICE REACHED */}
+                    {/* SUBSECTION 2: TARGET PROFIT */}
                     <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/30 border border-emerald-900/50 px-2 py-1 rounded mb-3 inline-block font-mono">
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/30 border border-emerald-900/40 px-1.5 py-0.5 rounded mb-1.5 inline-block font-mono">
                         🏆 Target Price Reached
                       </h3>
                       {saleTargetProfitList.length === 0 ? (
-                        <p className="text-xs text-gray-600 italic pl-4">
+                        <p className="text-[11px] text-gray-600 italic pl-2">
                           No assets reached profit target
                         </p>
                       ) : (
-                        <ul className="space-y-2 pl-4 list-disc marker:text-emerald-400">
+                        <ul className="space-y-1 pl-4 list-disc marker:text-emerald-400 marker:text-[10px]">
                           {saleTargetProfitList.map((row, index) => (
                             <li
                               key={index}
-                              className="font-mono text-base font-bold text-emerald-400 hover:text-emerald-300 transition-colors tracking-wide"
+                              className="font-mono text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors tracking-normal"
                             >
                               {row.company}
                             </li>
@@ -307,10 +302,10 @@ const BuySalePopup = ({ isOpen, onClose }) => {
               </div>
 
               {/* BOTTOM BUTTON */}
-              <div className="flex justify-center pt-2 border-t border-gray-900 shrink-0">
+              <div className="flex justify-center p-2 bg-gray-950 border-t border-gray-900 shrink-0">
                 <button
                   onClick={onClose}
-                  className="px-8 py-2.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 text-gray-300 hover:text-white font-mono text-base font-bold rounded-xl transition-all duration-200"
+                  className="w-full max-w-xs py-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white font-mono text-xs font-semibold rounded-lg transition-all duration-200"
                 >
                   Dismiss Profile
                 </button>
