@@ -7,7 +7,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
   try {
     const data = filteredList.length ? filteredList : list;
 
-    // সর্টিং লজিক থেকে documentationDate বাদ দিয়ে declarationDate বা recordDate ব্যবহার করা হয়েছে
     const sorted = [...data].sort((a, b) => {
       const getPrimaryDate = (item) => item.declarationDate || item.recordDate;
       const dateA = getPrimaryDate(a) ? new Date(getPrimaryDate(a)) : new Date(0);
@@ -64,7 +63,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       };
     };
 
-    // Header Row থেকে "Documentation Date" কলামটি বাদ দেওয়া হয়েছে
     const headerRow = sheet.addRow([
       "Declaration Date",
       "Record Date",
@@ -87,9 +85,11 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       "Net Dividend after Purification",
     ]);
 
+    // হেডার রো এর হাইট বাড়ানো হলো যাতে ফুল টেক্সট দেখা যায়
+    headerRow.height = 35;
+
     headerRow.eachCell((cell, colNumber) => {
       let fillColor = "FF1F4E79";
-      // কলাম সরানোর কারণে ইনডেক্স পরিবর্তন হয়েছে (১২ নম্বর কলাম এখন ১১, ২০ নম্বর কলাম এখন ১৯)
       if (colNumber === 11) {
         fillColor = "FF70AD47";
       } else if (colNumber === 19) {
@@ -182,7 +182,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
           ? parseNumber(item.netDividendAfterPurification)
           : netDividend - rowPurificationAmount;
 
-      // ডাটা রো থেকে documentationDate বাদ দেওয়া হয়েছে
       const row = sheet.addRow([
         parseDate(item.declarationDate),
         parseDate(item.recordDate),
@@ -205,10 +204,12 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
         rowNetDividendAfterPurification || "",
       ]);
 
+      // ডেটা রো গুলোর হাইটও কিছুটা স্ট্যান্ডার্ড (২০) করে দেওয়া হলো যাতে দেখতে সুন্দর লাগে
+      row.height = 20;
+
       row.eachCell((cell, colNumber) => {
         cell.alignment = { ...centerStyle, wrapText: true };
         cell.border = borderStyle;
-        // ১১ নম্বর কলাম (Net Dividend send in bank) গ্রিন হাইলাইট
         if (colNumber === 11) {
           cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
           cell.fill = {
@@ -216,7 +217,7 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
             pattern: "solid",
             fgColor: { argb: "FF70AD47" },
           };
-        } else if (colNumber === 19) { // ১৯ নম্বর কলাম (Net Dividend after Purification)
+        } else if (colNumber === 19) {
           const style = getNetAfterPurificationStyle(
             rowNetDividendAfterPurification,
           );
@@ -242,7 +243,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       totals.netDividendAfterPurification += rowNetDividendAfterPurification;
     });
 
-    // Total Row থেকে প্রথম ফাকা সেলটি একটি কমানো হয়েছে
     const totalRow = sheet.addRow([
       "",
       "",
@@ -264,6 +264,8 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       totals.purificationAmount,
       totals.netDividendAfterPurification,
     ]);
+
+    totalRow.height = 22;
 
     totalRow.eachCell((cell, colNumber) => {
       cell.font = { bold: true };
@@ -292,27 +294,26 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       }
     });
 
-    // ১টি কলাম কমে যাওয়ার কারণে কলামের উইডথ সেটিংস ১৯টি কলামের জন্য রি-অ্যারেঞ্জ করা হয়েছে
     sheet.columns = [
-      { width: 14 }, // Declaration Date
-      { width: 12 }, // Record Date
-      { width: 20 }, // Company Name
-      { width: 10 }, // Shares
-      { width: 10 }, // Dividend %
-      { width: 10 }, // Face Value
-      { width: 10 }, // Per Share Dividend
-      { width: 12 }, // Gross Dividend
-      { width: 8 },  // Tax %
-      { width: 12 }, // Tax Amount
-      { width: 12 }, // Net Dividend send in bank
-      { width: 14 }, // Bank Payment Date
-      { width: 12 }, // Cost/Share
-      { width: 14 }, // Dividend per 100 tk
-      { width: 14 }, // Non Shariah Income
+      { width: 15 }, // Declaration Date
+      { width: 13 }, // Record Date
+      { width: 22 }, // Company Name
+      { width: 11 }, // Shares
+      { width: 12 }, // Dividend %
+      { width: 11 }, // Face Value
+      { width: 15 }, // Per Share Dividend
+      { width: 14 }, // Gross Dividend
+      { width: 9 },  // Tax %
+      { width: 13 }, // Tax Amount
+      { width: 18 }, // Net Dividend send in bank (উইডথ একটু বাড়ানো হলো)
+      { width: 15 }, // Bank Payment Date
+      { width: 13 }, // Cost/Share
+      { width: 16 }, // Dividend per 100 tk
+      { width: 16 }, // Non Shariah Income
       { width: 14 }, // Total Income
-      { width: 12 }, // Purification Rate
-      { width: 12 }, // Purification Amount
-      { width: 16 }, // Net Dividend after Purification
+      { width: 14 }, // Purification Rate
+      { width: 15 }, // Purification Amount
+      { width: 22 }, // Net Dividend after Purification (উইডথ একটু বাড়ানো হলো)
     ];
 
     const buffer = await workbook.xlsx.writeBuffer();
