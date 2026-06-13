@@ -17,7 +17,6 @@ const Buy = () => {
   // ✅ Get clean local Bangladesh Date formatted for native input element (YYYY-MM-DD)
   const getInitialBDDate = () => {
     const d = new Date();
-    // Offset correction to safely extract Asia/Dhaka string pieces
     const localizedStr = d.toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
     const localizedDate = new Date(localizedStr);
     
@@ -32,7 +31,7 @@ const Buy = () => {
   const [stockName, setStockName] = useState("");
   const [buyQuantity, setBuyQuantity] = useState("");
   const [perShareValue, setPerShareValue] = useState("");
-  const [buyDate, setBuyDate] = useState(getInitialBDDate()); // ✅ NEW: State for customizable entry date
+  const [buyDate, setBuyDate] = useState(getInitialBDDate()); 
   const [loading, setLoading] = useState(false);
 
   // Auto-calculated fields
@@ -62,7 +61,6 @@ const Buy = () => {
     }
   };
 
-  // AUTO-CALCULATE FIELDS
   useEffect(() => {
     if (!userId) return navigate("/login", { replace: true });
     fetchBuyRecords();
@@ -101,10 +99,15 @@ const Buy = () => {
           quantity: parseFloat(buyQuantity),
           price: parseFloat(perShareValue),
           total: totalValueWithCommission,
-          date: buyDate, // ✅ Passes the edited date on update adjustments
+          date: buyDate,     // Key Option 1
+          buyDate: buyDate,  // Key Option 2 (Matches backend fallback names if required)
         });
 
-        const updated = res.data.data || res.data || {};
+        let updated = res.data.data || res.data || {};
+        
+        // 🛠️ Force the user-selected date into state to stop server timestamps overwriting it
+        updated = { ...updated, date: buyDate, buyDate: buyDate };
+
         setBuyList((prev) =>
           prev.map((b) => (b._id === editingId ? updated : b)),
         );
@@ -123,11 +126,18 @@ const Buy = () => {
           buyingTotalShareValue,
           commission,
           totalValueWithCommission,
-          date: buyDate, // ✅ UPDATED: Dynamic state input string instead of static function execution
+          date: buyDate,     // Key Option 1
+          buyDate: buyDate,  // Key Option 2 (Matches backend fallback names if required)
         });
 
-        const saved = res.data?.buy || res.data?.data || res.data;
-        if (saved) setBuyList((prev) => [saved, ...prev]);
+        let saved = res.data?.buy || res.data?.data || res.data;
+        
+        if (saved) {
+          // 🛠️ Force the user-selected date into state to stop server timestamps overwriting it
+          saved = { ...saved, date: buyDate, buyDate: buyDate };
+          setBuyList((prev) => [saved, ...prev]);
+        }
+        
         showSuccessAlert(res.data.message || "Buy saved successfully!");
 
         setStockName("");
@@ -137,7 +147,7 @@ const Buy = () => {
       }
     } catch (err) {
       showErrorAlert(err.response?.data?.message || "Error saving buy");
-    } finally {
+    } division: {
       setLoading(false);
     }
   };
@@ -148,9 +158,10 @@ const Buy = () => {
     setBuyQuantity(item.buyQuantity ?? item.quantity ?? "");
     setPerShareValue(item.perShareValue ?? item.price ?? "");
     
-    // Format the incoming entry date cleanly to set the input value correctly
-    if (item.date) {
-      setBuyDate(formatDateString(item.date));
+    // Check both potential key naming choices coming down from database
+    const rawTargetDate = item.date || item.buyDate;
+    if (rawTargetDate) {
+      setBuyDate(formatDateString(rawTargetDate));
     }
   };
 
@@ -173,22 +184,19 @@ const Buy = () => {
     }
   };
 
-  // RESET FORM
   const handleReset = () => {
     setStockName("");
     setBuyQuantity("");
     setPerShareValue("");
-    setBuyDate(getInitialBDDate()); // ✅ Resets to current date configuration cleanly
+    setBuyDate(getInitialBDDate()); 
     setEditingId(null);
   };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">🟢 Buy Stocks</h1>
-
           <button
             onClick={() => navigate(-1)}
             className="bg-gray-700 px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors"
@@ -197,24 +205,20 @@ const Buy = () => {
           </button>
         </div>
 
-        {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-3">
-          
-          {/* ✅ TRANSACTION ENTRY DATE - MOVED AND RENDERED AS EDITABLE INPUT */}
           <div>
             <label className="text-gray-400 text-sm">
               Transaction Date <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
-              className="w-full p-3 bg-gray-800 rounded border border-gray-700 text-white font-semibold focus:outline-hidden focus:border-green-500 color-scheme-dark"
+              className="w-full p-3 bg-gray-800 rounded border border-gray-700 text-white font-semibold focus:outline-hidden focus:border-green-500"
               value={buyDate}
               onChange={(e) => setBuyDate(e.target.value)}
-              style={{ colorScheme: "dark" }} // Forces modern dark theme for browser picker dropdowns
+              style={{ colorScheme: "dark" }} 
             />
           </div>
 
-          {/* STOCK NAME */}
           <div>
             <label className="text-gray-400 text-sm">Stock Name</label>
             <input
@@ -225,7 +229,6 @@ const Buy = () => {
             />
           </div>
 
-          {/* BUY QUANTITY - EDITABLE (REQUIRED) */}
           <div>
             <label className="text-gray-400 text-sm">
               Buy Quantity <span className="text-red-500">*</span>
@@ -242,7 +245,6 @@ const Buy = () => {
             />
           </div>
 
-          {/* PER SHARE VALUE - EDITABLE (REQUIRED) */}
           <div>
             <label className="text-gray-400 text-sm">
               Per Share Value <span className="text-red-500">*</span>
@@ -259,7 +261,6 @@ const Buy = () => {
             />
           </div>
 
-          {/* BUYING TOTAL SHARE VALUE - READ-ONLY */}
           <div>
             <label className="text-gray-400 text-sm">
               Buying Total Share Value
@@ -269,7 +270,6 @@ const Buy = () => {
             </div>
           </div>
 
-          {/* COMMISSION - READ-ONLY */}
           <div>
             <label className="text-gray-400 text-sm">Commission (0.4%)</label>
             <div className="w-full p-3 bg-gray-800 rounded border border-gray-700 text-white font-semibold">
@@ -277,7 +277,6 @@ const Buy = () => {
             </div>
           </div>
 
-          {/* TOTAL VALUE WITH COMMISSION - READ-ONLY */}
           <div>
             <label className="text-gray-400 text-sm">
               Total Value with Commission
@@ -287,7 +286,6 @@ const Buy = () => {
             </div>
           </div>
 
-          {/* BUTTONS */}
           <div className="flex gap-3 pt-2">
             <button
               onClick={handleSave}

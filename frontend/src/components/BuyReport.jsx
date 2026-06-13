@@ -86,7 +86,8 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
   // sync filtered list when buyList or filters change
   useEffect(() => {
     const filtered = (buyList || []).filter((item) => {
-      const itemDate = formatDateString(item.createdAt || item.date);
+      // 🛠️ FIX: Priority changed to item.date first
+      const itemDate = formatDateString(item.date || item.createdAt);
       const inRange = itemDate >= fromDate && itemDate <= toDate;
       const matchCompany =
         selectedCompany === "All" || item.stockName === selectedCompany;
@@ -101,7 +102,8 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
 
     try {
       const filtered = (buyList || []).filter((item) => {
-        const itemDate = formatDateString(item.createdAt || item.date);
+        // 🛠️ FIX: Priority changed to item.date first
+        const itemDate = formatDateString(item.date || item.createdAt);
         const inRange = itemDate >= fromDate && itemDate <= toDate;
         const matchCompany =
           selectedCompany === "All" || item.stockName === selectedCompany;
@@ -140,8 +142,9 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
 
     try {
       const sorted = [...data].sort(
+        // 🛠️ FIX: Sorting priority changed to item.date first
         (a, b) =>
-          new Date(a.createdAt || a.date) - new Date(b.createdAt || b.date),
+          new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt),
       );
 
       let totalQty = 0;
@@ -203,7 +206,8 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
         totalWithCommission += tot;
 
         const row = sheet.addRow([
-          formatDateDisplay(item.createdAt || item.date),
+          // 🛠️ FIX: Excel Export tracking changed to item.date first
+          formatDateDisplay(item.date || item.createdAt),
           item.stockName || "",
           qty,
           perShare,
@@ -328,7 +332,8 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
                   className="border-b border-gray-800 hover:bg-gray-900"
                 >
                   <td className="p-3 whitespace-nowrap min-w-120px">
-                    {formatDateDisplay(item.createdAt || item.date)}
+                    {/* 🛠️ FIX: Direct UI Table layout changed to item.date first */}
+                    {formatDateDisplay(item.date || item.createdAt)}
                   </td>
                   <td className="p-3">{item.stockName}</td>
                   <td className="p-3">

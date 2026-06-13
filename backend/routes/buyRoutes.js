@@ -9,7 +9,7 @@ router.post("/add", async (req, res) => {
     const {
       userId,
       stockName,
-      date,
+      date, // Safely captured as a string (e.g., "2026-03-09")
       buyQuantity,
       perShareValue,
       buyingTotalShareValue,
@@ -20,7 +20,7 @@ router.post("/add", async (req, res) => {
     const buy = new Buy({
       userId,
       stockName,
-      date,
+      date: date || new Date().toISOString().split("T")[0], // Fallback to current date string if empty
       buyQuantity: Number(buyQuantity),
       perShareValue: Number(perShareValue),
       buyingTotalShareValue: Number(buyingTotalShareValue),
@@ -43,36 +43,12 @@ router.post("/add", async (req, res) => {
   }
 });
 
-// GET ALL BUYS
-router.get("/names/:userId", async (req, res) => {
-  try {
-    const buys = await Buy.find({ userId: req.params.userId });
-
-    const uniqueNames = [...new Set(buys.map((b) => b.stockName))];
-
-    res.json(uniqueNames);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// GET ALL BUYS FOR USER
-router.get("/:userId", async (req, res) => {
-  try {
-    const buys = await Buy.find({ userId: req.params.userId }).sort({
-      createdAt: -1,
-    });
-    res.json(buys);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 // UPDATE BUY
 router.put("/update/:id", async (req, res) => {
   try {
     const {
       stockName,
+      date, // ✅ FIX: Extract the modified date string from the body
       buyQuantity,
       perShareValue,
       buyingTotalShareValue,
@@ -87,6 +63,7 @@ router.put("/update/:id", async (req, res) => {
       req.params.id,
       {
         ...(stockName !== undefined && { stockName }),
+        ...(date !== undefined && { date }), // ✅ FIX: Save the updated date string directly
         ...(buyQuantity !== undefined && { buyQuantity }),
         ...(perShareValue !== undefined && { perShareValue }),
         ...(buyingTotalShareValue !== undefined && { buyingTotalShareValue }),
@@ -106,6 +83,29 @@ router.put("/update/:id", async (req, res) => {
       message: "Buy updated successfully",
       data: updatedBuy,
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET ALL BUYS
+router.get("/names/:userId", async (req, res) => {
+  try {
+    const buys = await Buy.find({ userId: req.params.userId });
+    const uniqueNames = [...new Set(buys.map((b) => b.stockName))];
+    res.json(uniqueNames);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET ALL BUYS FOR USER
+router.get("/:userId", async (req, res) => {
+  try {
+    const buys = await Buy.find({ userId: req.params.userId }).sort({
+      createdAt: -1,
+    });
+    res.json(buys);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
