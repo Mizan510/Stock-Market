@@ -27,18 +27,8 @@ const Investment = () => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
     const day = date.getDate();
     const month = monthNames[date.getMonth()];
@@ -69,6 +59,7 @@ const Investment = () => {
   // EDIT STATE
   // =====================
   const [editingId, setEditingId] = useState(null);
+  const [editDate, setEditDate] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editNote, setEditNote] = useState("");
   const [editLoading, setEditLoading] = useState(false);
@@ -132,7 +123,6 @@ const Investment = () => {
       setNote("");
       setDate(getBDDate());
       
-      // 🎉 সফলভাবে সেভ হওয়ার অ্যালার্ট যুক্ত করা হয়েছে
       showSuccessAlert("Transaction saved successfully!");
     } catch (err) {
       showErrorAlert("Error saving transaction");
@@ -182,7 +172,6 @@ const Investment = () => {
 
     try {
       const data = filteredList.length ? filteredList : list;
-
       const sorted = [...data].sort(
         (a, b) => new Date(a.date) - new Date(b.date),
       );
@@ -193,11 +182,7 @@ const Investment = () => {
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Investment Report");
 
-      const centerStyle = {
-        vertical: "middle",
-        horizontal: "center",
-      };
-
+      const centerStyle = { vertical: "middle", horizontal: "center" };
       const borderStyle = {
         top: { style: "thin" },
         left: { style: "thin" },
@@ -205,7 +190,6 @@ const Investment = () => {
         right: { style: "thin" },
       };
 
-      // ================= HEADER =================
       const headerRow = sheet.addRow([
         "Date",
         "Deposit",
@@ -225,10 +209,8 @@ const Investment = () => {
         cell.border = borderStyle;
       });
 
-      // ================= DATA =================
       sorted.forEach((item) => {
         const amt = Number(item.amount);
-
         let depositCell = "";
         let withdrawCell = "";
         let balanceCell = "";
@@ -257,9 +239,7 @@ const Investment = () => {
         });
       });
 
-      // ================= TOTAL ROW =================
       const totalBalance = totalDeposit - totalWithdraw;
-
       const totalRow = sheet.addRow([
         "TOTAL",
         totalDeposit,
@@ -293,13 +273,11 @@ const Investment = () => {
       ];
 
       const buffer = await workbook.xlsx.writeBuffer();
-
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
 
       saveAs(blob, "investment_report.xlsx");
-      showSuccessAlert("Report exported successfully!");
     } catch (err) {
       showErrorAlert("Export failed");
     } finally {
@@ -318,7 +296,6 @@ const Investment = () => {
 
   reportData.forEach((item) => {
     const amt = Number(item.amount);
-
     if (item.type === "deposit") {
       totalDeposit += amt;
       balance += amt;
@@ -331,7 +308,7 @@ const Investment = () => {
   // =====================
   // DELETE ROW
   // =====================
-  const handleDelete = async (index, item) => {
+  const handleDelete = async (item) => {
     const confirmDelete = await confirm(
       "Are you sure you want to delete this transaction?",
     );
@@ -340,16 +317,12 @@ const Investment = () => {
 
     try {
       setLoading(true);
-
       await api.delete(`/investment/delete/${item._id}`);
 
-      const updated = reportData.filter((_, i) => i !== index);
-      setFilteredList(updated);
+      // Filter based on database matching _id instead of using UI indexes
+      setFilteredList((prev) => prev.filter((x) => x._id !== item._id));
+      setList((prev) => prev.filter((x) => x._id !== item._id));
 
-      const mainUpdated = list.filter((x) => x._id !== item._id);
-      setList(mainUpdated);
-
-      // 🎉 সফলভাবে ডিলিট হওয়ার অ্যালার্ট যুক্ত করা হয়েছে
       showSuccessAlert("Transaction deleted successfully!");
     } catch (err) {
       showErrorAlert("Delete failed");
@@ -359,21 +332,27 @@ const Investment = () => {
   };
 
   // =====================
-  // EDIT ROW
+  // EDIT ROW ACTIONS
   // =====================
   const handleEditStart = (item) => {
     setEditingId(item._id);
+    setEditDate(item.date.split("T")[0]);
     setEditAmount(item.amount);
     setEditNote(item.note || "");
   };
 
   const handleEditCancel = () => {
     setEditingId(null);
+    setEditDate("");
     setEditAmount("");
     setEditNote("");
   };
 
   const handleEditSave = async (item) => {
+    if (!editDate) {
+      showAlert("Date is required");
+      return;
+    }
     if (isNaN(Number(editAmount))) {
       showAlert("Amount must be a number");
       return;
@@ -385,18 +364,20 @@ const Investment = () => {
       const res = await api.put(`/investment/update/${item._id}`, {
         amount: Number(editAmount),
         note: editNote,
+        date: editDate, 
       });
 
       const updatedItem = res.data.data;
 
       const updatedList = list.map((x) =>
-        x._id === item._id ? updatedItem : x,
+        x._id === item._id ? updatedItem : x
       );
 
       setList(updatedList);
       setFilteredList(updatedList);
 
       setEditingId(null);
+      setEditDate("");
       setEditAmount("");
       setEditNote("");
       showSuccessAlert("Updated successfully");
@@ -408,223 +389,252 @@ const Investment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-3xl font-bold">💼 Investment</h1>
-
-          <button
-            onClick={() => navigate(-1)}
-            className="bg-gray-700 px-4 py-2 rounded-lg"
-          >
-            Back
-          </button>
-        </div>
-
-        {/* FORM */}
-        <div className="bg-gray-900 p-4 rounded-xl space-y-3">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full p-3 bg-gray-800 rounded"
-          />
-
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="w-full p-3 bg-gray-800 rounded"
-          >
-            <option value="deposit">Deposit</option>
-            <option value="withdraw">Withdraw</option>
-          </select>
-
-          <input
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full p-3 bg-gray-800 rounded"
-          />
-
-          <input
-            type="text"
-            placeholder="Note"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="w-full p-3 bg-gray-800 rounded"
-          />
-
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className={`w-full p-3 rounded font-bold ${
-              type === "deposit"
-                ? "bg-green-600 hover:bg-green-700"
-                : "bg-red-600 hover:bg-red-700"
-            } ${loading ? "opacity-60" : ""}`}
-          >
-            {loading ? "Saving..." : "Save Transaction"}
-          </button>
-        </div>
-
-        {/* FILTER */}
-        <div className="bg-gray-900 p-3 rounded-xl mt-4 space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="p-2 sm:p-3 bg-gray-800 rounded appearance-none text-sm sm:text-base"
-              style={{ backgroundImage: "none" }}
-            />
-
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="w-full sm:w-auto px-3 py-2 sm:px-2 sm:py-1 bg-gray-800 text-white text-sm sm:text-base rounded-md border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-              style={{ backgroundImage: "none" }}
-            />
+    <div className="flex min-h-screen flex-col items-center justify-start bg-gray-950 p-4 text-gray-100 sm:p-6">
+      <div className={`w-full space-y-6 transition-all duration-300 ${showReport ? "max-w-5xl" : "max-w-md"}`}>
+        
+        {/* Form Container */}
+        <div className="mx-auto w-full max-w-md space-y-4">
+          {/* HEADER */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">💼 Investment</h1>
+            <button
+              onClick={() => navigate(-1)}
+              className="rounded-lg bg-gray-800 px-4 py-2 font-medium transition duration-200 hover:bg-gray-700 active:bg-gray-600"
+            >
+              Back
+            </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={handleView}
-              disabled={viewLoading}
-              className="bg-blue-600 hover:bg-blue-700 p-2 rounded disabled:opacity-60"
+          {/* FORM */}
+          <div className="space-y-3 rounded-xl border border-gray-800 bg-gray-900 p-4 shadow-xl">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white transition focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            />
+
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white transition focus:outline-none focus:ring-2 focus:ring-blue-500/50"
             >
-              {viewLoading ? "Loading..." : "View"}
-            </button>
+              <option value="deposit">Deposit</option>
+              <option value="withdraw">Withdraw</option>
+            </select>
+
+            <input
+              type="number"
+              placeholder="Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white placeholder-gray-500 transition focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            />
+
+            <input
+              type="text"
+              placeholder="Note"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="w-full rounded-lg border border-gray-700 bg-gray-800 p-3 text-white placeholder-gray-500 transition focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            />
 
             <button
-              onClick={handleExport}
-              disabled={exportLoading}
-              className="bg-green-600 hover:bg-green-700 p-2 rounded disabled:opacity-60"
+              onClick={handleSave}
+              disabled={loading}
+              className={`w-full rounded-lg p-3 font-bold text-white shadow-md transition duration-200 ${
+                type === "deposit"
+                  ? "bg-green-600 hover:bg-green-700 active:bg-green-800"
+                  : "bg-red-600 hover:bg-red-700 active:bg-red-800"
+              } ${loading ? "cursor-not-allowed opacity-60" : ""}`}
             >
-              {exportLoading ? "Exporting..." : "Report"}
+              {loading ? "Saving..." : "Save Transaction"}
             </button>
+          </div>
 
-            <button
-              onClick={handleReset}
-              disabled={resetLoading}
-              className="bg-gray-600 hover:bg-gray-700 p-2 rounded disabled:opacity-60"
-            >
-              {resetLoading ? "Resetting..." : "Reset"}
-            </button>
+          {/* FILTER */}
+          <div className="space-y-3 rounded-xl border border-gray-800 bg-gray-900 p-4 shadow-xl">
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="rounded-lg border border-gray-700 bg-gray-800 p-3 text-sm text-white transition focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="rounded-lg border border-gray-700 bg-gray-800 p-3 text-sm text-white transition focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-sm font-semibold">
+              <button
+                onClick={handleView}
+                disabled={viewLoading}
+                className="rounded-lg bg-blue-600 p-2.5 transition hover:bg-blue-700 active:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {viewLoading ? "Loading..." : "View"}
+              </button>
+              <button
+                onClick={handleExport}
+                disabled={exportLoading}
+                className="rounded-lg bg-emerald-600 p-2.5 transition hover:bg-emerald-700 active:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {exportLoading ? "Exporting..." : "Report"}
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={resetLoading}
+                className="rounded-lg bg-gray-700 p-2.5 transition hover:bg-gray-600 active:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {resetLoading ? "Resetting..." : "Reset"}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* REPORT TABLE */}
         {showReport && (
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full text-sm border border-gray-700 text-center">
-              <thead className="bg-gray-800 font-bold text-center">
+          <div className="w-full overflow-x-auto rounded-xl border border-gray-800 bg-gray-900 shadow-xl">
+            <table className="w-full table-auto border-collapse text-center text-sm">
+              <thead className="border-b border-gray-700 bg-gray-800 font-bold text-gray-300">
                 <tr>
-                  <th className="p-2 border whitespace-nowrap min-w-[80px]">Date</th>
-                  <th className="p-2 border">Deposit</th>
-                  <th className="p-2 border">Withdraw</th>
-                  <th className="p-2 border">Balance</th>
-                  <th className="p-2 border">Remarks</th>
-                  <th className="p-2 border">Action</th>
+                  <th className="whitespace-nowrap border-r border-gray-700 p-3">Date</th>
+                  <th className="border-r border-gray-700 p-3">Deposit</th>
+                  <th className="border-r border-gray-700 p-3">Withdraw</th>
+                  <th className="border-r border-gray-700 p-3">Balance</th>
+                  <th className="border-r border-gray-700 p-3">Remarks</th>
+                  <th className="whitespace-nowrap p-3">Action</th>
                 </tr>
               </thead>
 
-              <tbody>
-                {reportData.map((item, i) => (
-                  <tr key={i} className="border border-gray-700">
-                    <td className="p-2 border whitespace-nowrap min-w-[80px]">
-                      {formatDate(item.date)}
-                    </td>
+              <tbody className="divide-y divide-gray-800 bg-gray-900/40">
+                {reportData.map((item, i) => {
+                  const isEditing = editingId === item._id;
+                  return (
+                    <tr key={item._id || i} className="transition duration-150 hover:bg-gray-800/30">
+                      
+                      {/* Date Column */}
+                      <td className="whitespace-nowrap border-r border-gray-800 p-3">
+                        {isEditing ? (
+                          <input
+                            type="date"
+                            value={editDate}
+                            onChange={(e) => setEditDate(e.target.value)}
+                            className="rounded border border-gray-700 bg-gray-800 p-1.5 text-xs text-white focus:outline-none"
+                          />
+                        ) : (
+                          formatDate(item.date)
+                        )}
+                      </td>
 
-                    {editingId === item._id ? (
-                      <>
-                        <td colSpan="4" className="p-2 border">
-                          <div className="space-y-2">
+                      {/* Deposit Column */}
+                      <td className="border-r border-gray-800 p-3 text-green-400 font-medium">
+                        {isEditing ? (
+                          item.type === "deposit" ? (
                             <input
                               type="number"
                               value={editAmount}
                               onChange={(e) => setEditAmount(e.target.value)}
-                              placeholder="Amount"
-                              className="w-full p-2 bg-gray-800 rounded text-white border border-gray-600"
+                              className="w-24 rounded border border-gray-700 bg-gray-800 p-1 text-center text-xs text-white focus:outline-none"
                             />
+                          ) : "-"
+                        ) : (
+                          item.type === "deposit" ? item.amount : ""
+                        )}
+                      </td>
+
+                      {/* Withdraw Column */}
+                      <td className="border-r border-gray-800 p-3 text-red-400 font-medium">
+                        {isEditing ? (
+                          item.type === "withdraw" ? (
                             <input
-                              type="text"
-                              value={editNote}
-                              onChange={(e) => setEditNote(e.target.value)}
-                              placeholder="Note"
-                              className="w-full p-2 bg-gray-800 rounded text-white border border-gray-600"
+                              type="number"
+                              value={editAmount}
+                              onChange={(e) => setEditAmount(e.target.value)}
+                              className="w-24 rounded border border-gray-700 bg-gray-800 p-1 text-center text-xs text-white focus:outline-none"
                             />
-                          </div>
-                        </td>
-                        <td className="p-2 border">
-                          <div className="flex gap-2 justify-center">
+                          ) : "-"
+                        ) : (
+                          item.type === "withdraw" ? item.amount : ""
+                        )}
+                      </td>
+
+                      {/* Balance Status Column */}
+                      <td className="border-r border-gray-800 p-3 font-semibold text-yellow-400">
+                        {isEditing ? (
+                          item.type === "deposit" ? `+${editAmount || 0}` : `-${editAmount || 0}`
+                        ) : (
+                          item.type === "deposit" ? `+${item.amount}` : `-${item.amount}`
+                        )}
+                      </td>
+
+                      {/* Remarks/Notes Column */}
+                      <td className="max-w-xs break-all border-r border-gray-800 p-3 text-center text-gray-300">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={editNote}
+                            onChange={(e) => setEditNote(e.target.value)}
+                            placeholder="Note description..."
+                            className="w-full rounded border border-gray-700 bg-gray-800 p-1 text-xs text-white focus:outline-none"
+                          />
+                        ) : (
+                          item.note || "-"
+                        )}
+                      </td>
+
+                      {/* Action Triggers Column */}
+                      <td className="p-3">
+                        {isEditing ? (
+                          <div className="flex justify-center gap-2">
                             <button
                               onClick={() => handleEditSave(item)}
                               disabled={editLoading}
-                              className="bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs disabled:opacity-60"
+                              className="rounded-md bg-green-600 px-2.5 py-1 text-xs font-semibold shadow transition hover:bg-green-700"
                             >
                               {editLoading ? "Saving..." : "Save"}
                             </button>
                             <button
                               onClick={handleEditCancel}
                               disabled={editLoading}
-                              className="bg-gray-600 hover:bg-gray-700 px-2 py-1 rounded text-xs disabled:opacity-60"
+                              className="rounded-md bg-gray-700 px-2.5 py-1 text-xs font-semibold shadow transition hover:bg-gray-600"
                             >
                               Cancel
                             </button>
                           </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="p-2 border text-green-400">
-                          {item.type === "deposit" ? item.amount : ""}
-                        </td>
-
-                        <td className="p-2 border text-red-400">
-                          {item.type === "withdraw" ? item.amount : ""}
-                        </td>
-
-                        <td className="p-2 border text-yellow-300">
-                          {item.type === "deposit" ? `+${item.amount}` : `-${item.amount}`}
-                        </td>
-
-                        <td className="p-2 border text-gray-300">
-                          {item.note}
-                        </td>
-
-                        {/* ACTION BUTTONS */}
-                        <td className="p-2 border">
-                          <div className="flex gap-2 justify-center">
+                        ) : (
+                          <div className="flex justify-center gap-1.5">
                             <button
                               onClick={() => handleEditStart(item)}
-                              className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
+                              className="rounded bg-blue-600/90 px-2.5 py-1 text-xs font-medium transition hover:bg-blue-600"
                             >
                               Edit
                             </button>
-
                             <button
-                              onClick={() => handleDelete(i, item)}
-                              className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
+                              onClick={() => handleDelete(item)}
+                              className="rounded bg-red-600/90 px-2.5 py-1 text-xs font-medium transition hover:bg-red-600"
                             >
                               Delete
                             </button>
                           </div>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                ))}
+                        )}
+                      </td>
 
-                <tr className="bg-yellow-900 font-bold">
-                  <td className="p-2 border whitespace-nowrap min-w-[80px]">TOTAL</td>
-                  <td className="p-2 border text-green-400">{totalDeposit}</td>
-                  <td className="p-2 border text-red-400">{totalWithdraw}</td>
-                  <td className="p-2 border text-yellow-300">{balance}</td>
-                  <td className="p-2 border">-</td>
-                  <td className="p-2 border">-</td>
+                    </tr>
+                  );
+                })}
+
+                {/* TOTAL SUMMARY ROW */}
+                <tr className="border-t border-gray-700 bg-yellow-950/30 font-bold text-yellow-400">
+                  <td className="whitespace-nowrap border-r border-gray-800 p-3">TOTAL</td>
+                  <td className="border-r border-gray-800 p-3 text-green-400">{totalDeposit}</td>
+                  <td className="border-r border-gray-800 p-3 text-red-400">{totalWithdraw}</td>
+                  <td className="border-r border-gray-800 p-3 text-yellow-400">{balance}</td>
+                  <td className="border-r border-gray-800 p-3 text-gray-500">-</td>
+                  <td className="p-3 text-gray-500">-</td>
                 </tr>
               </tbody>
             </table>
