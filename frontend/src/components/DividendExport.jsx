@@ -189,7 +189,7 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
         rowNetDividendAfterPurification || "",
       ]);
 
-      row.height = 20;
+      row.height = 30;
 
       row.eachCell((cell, colNumber) => {
         cell.alignment = { ...centerStyle, wrapText: true };
@@ -239,7 +239,7 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       { formula: `SUM(S${startRow}:S${endRow})` }, // Net Dividend after Purification (Col S)
     ]);
 
-    totalRow.height = 22;
+    totalRow.height = 25;
 
     totalRow.eachCell((cell, colNumber) => {
       cell.font = { bold: true };

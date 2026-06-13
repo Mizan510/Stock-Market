@@ -682,7 +682,7 @@ const Dividend = () => {
         {/* FILTER SECTION */}
         <div className="bg-gray-900 p-4 rounded space-y-2 mb-4">
           <label className="block text-sm text-gray-300 mb-2">
-            Filter by Date (Fiscal Year Default)
+            Filter by Date 
           </label>
           <div className="flex gap-2">
             <div className="flex-1">
@@ -735,117 +735,120 @@ const Dividend = () => {
 
         {/* REPORT TABLE */}
         {showReport && (
-          <div className="overflow-x-auto bg-gray-900 p-4 rounded border border-gray-800">
-            <h2 className="text-xl font-semibold mb-3">Dividend Report</h2>
-            {filteredList.length === 0 ? (
-              <p className="text-gray-400">No dividend records found for the selected date range.</p>
-            ) : (
-              <table className="min-w-full text-sm text-left border-collapse">
-                <thead className="bg-gray-800 text-gray-200">
-                  <tr>
-                    <th className="p-2 border border-gray-700">Declaration Date</th>
-                    <th className="p-2 border border-gray-700">Record Date</th>
-                    <th className="p-2 border border-gray-700">Company Name</th>
-                    <th className="p-2 border border-gray-700">Shares</th>
-                    <th className="p-2 border border-gray-700">Dividend %</th>
-                    <th className="p-2 border border-gray-700">Face Value</th>
-                    <th className="p-2 border border-gray-700">Per Share Dividend</th>
-                    <th className="p-2 border border-gray-700">Gross Dividend</th>
-                    <th className="p-2 border border-gray-700">Tax %</th>
-                    <th className="p-2 border border-gray-700">Tax Amount</th>
-                    <th className="p-2 border border-gray-700">Net Dividend send in bank</th>
-                    <th className="p-2 border border-gray-700">Bank Payment Date</th>
-                    <th className="p-2 border border-gray-700">Cost/Share</th>
-                    <th className="p-2 border border-gray-700">Dividend per 100 tk</th>
-                    <th className="p-2 border border-gray-700">Non Shariah Income</th>
-                    <th className="p-2 border border-gray-700">Total Income</th>
-                    <th className="p-2 border border-gray-700">Purification Rate</th>
-                    <th className="p-2 border border-gray-700">Purification Amount</th>
-                    <th className="p-2 border border-gray-700">Net Dividend after Purification</th>
-                    <th className="p-2 border border-gray-700">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredList.map((item) => (
-                    <tr key={item._id} className="odd:bg-gray-950 even:bg-gray-900">
-                      <td className="p-2 border border-gray-700">
-                        {item.declarationDate ? new Date(item.declarationDate).toLocaleDateString("en-GB") : "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.recordDate ? new Date(item.recordDate).toLocaleDateString("en-GB") : "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">{item.companyName || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.shares || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.dividendPercent || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.faceValue || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.perShareDividend || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.grossDividend || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.taxPercent || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.taxAmount || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.netDividendSendInBank || "-"}</td>
-                      <td className="p-2 border border-gray-700">
-                        {item.bankPaymentDate ? new Date(item.bankPaymentDate).toLocaleDateString("en-GB") : "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">{item.costPerShare || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.dividendPer100tk || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.nonShariahIncome || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.totalIncome || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.purificationRate || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.purificationAmount || "-"}</td>
-                      <td className="p-2 border border-gray-700">{item.netDividendAfterPurification || "-"}</td>
-                      <td className="p-2 border border-gray-700">
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(item)}
-                            className="bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(item._id)}
-                            className="bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+  <div className="bg-gray-900 p-4 rounded border border-gray-800">
+    <h2 className="text-xl font-semibold mb-3">Dividend Report</h2>
+    {filteredList.length === 0 ? (
+      <p className="text-gray-400">No dividend records found for the selected date range.</p>
+    ) : (
+      <div className="overflow-auto max-h-[450px] custom-scrollbar">
+        {/* 📝 টেক্সট সাইজ বাড়িয়ে text-sm করা হয়েছে */}
+        <table className="min-w-full text-sm text-left border-collapse relative">
+          <thead className="bg-gray-800 text-gray-200 sticky top-0 z-10 shadow-[0_1px_0_rgba(55,65,81,1)] font-mono">
+            <tr>
+              {/* ↕️ py-2 দিয়ে হেডারের স্পেসিং ব্যালেন্স করা হয়েছে */}
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Declaration Date</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Record Date</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Company Name</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Shares</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Dividend %</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Face Value</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Per Share Dividend</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Gross Dividend</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Tax %</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Tax Amount</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Net Dividend send in bank</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Bank Payment Date</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Cost/Share</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Dividend per 100 tk</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Non Shariah Income</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Total Income</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Purification Rate</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Purification Amount</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Net Dividend after Purification</th>
+              <th className="py-2 px-3 border border-gray-700 bg-gray-800">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredList.map((item) => (
+              <tr key={item._id} className="odd:bg-gray-950 even:bg-gray-900 hover:bg-gray-800/40 transition-colors">
+                {/* ↕️ py-1.5 এবং px-3 দিয়ে রো-এর হাইট পারফেক্টলি বাড়ানো হয়েছে */}
+                <td className="py-1.5 px-3 border border-gray-700 whitespace-nowrap">
+                  {item.declarationDate ? new Date(item.declarationDate).toLocaleDateString("en-GB") : "-"}
+                </td>
+                <td className="py-1.5 px-3 border border-gray-700 whitespace-nowrap">
+                  {item.recordDate ? new Date(item.recordDate).toLocaleDateString("en-GB") : "-"}
+                </td>
+                <td className="py-1.5 px-3 border border-gray-700 font-medium">{item.companyName || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.shares || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.dividendPercent || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.faceValue || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.perShareDividend || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.grossDividend || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.taxPercent || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.taxAmount || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.netDividendSendInBank || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 whitespace-nowrap">
+                  {item.bankPaymentDate ? new Date(item.bankPaymentDate).toLocaleDateString("en-GB") : "-"}
+                </td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.costPerShare || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.dividendPer100tk || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.nonShariahIncome || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.totalIncome || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.purificationRate || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.purificationAmount || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700 font-mono text-right">{item.netDividendAfterPurification || "-"}</td>
+                <td className="py-1.5 px-3 border border-gray-700">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(item)}
+                      className="bg-blue-600 hover:bg-blue-700 px-2 py-0.5 rounded text-xs font-medium transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(item._id)}
+                      className="bg-red-600 hover:bg-red-700 px-2 py-0.5 rounded text-xs font-medium transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
 
-                  {/* যোগ করা নতুন SUM / টোটাল রো */}
-                  <tr className="bg-gray-800 font-bold border-t-2 border-gray-600 text-yellow-500">
-                    <td className="p-2 border border-gray-700"></td>
-                    <td className="p-2 border border-gray-700"></td>
-                    <td className="p-2 border border-gray-700 text-center font-extrabold text-yellow-400">SUM</td>
-                    <td className="p-2 border border-gray-700 text-white">{computeColumnSum("shares")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("dividendPercent")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("faceValue")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("perShareDividend")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("grossDividend")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("taxPercent")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("taxAmount")}</td>
-                    {/* Net Dividend Send in Bank কলামটি গ্রিন হাইলাইট করা হয়েছে */}
-                    <td className="p-2 border border-gray-700 bg-green-700 text-white font-extrabold">{computeColumnSum("netDividendSendInBank")}</td>
-                    <td className="p-2 border border-gray-700"></td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("costPerShare")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("dividendPer100tk")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("nonShariahIncome")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("totalIncome")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("purificationRate")}</td>
-                    <td className="p-2 border border-gray-700">{computeColumnSum("purificationAmount")}</td>
-                    {/* Net Dividend After Purification কলামটি ডাইনামিকলি কালার হবে */}
-                    <td className={`p-2 border border-gray-700 ${getPurificationBgClass(totalNetAfterPurification)}`}>
-                      {totalNetAfterPurification === 0 ? "0.00" : totalNetAfterPurification.toFixed(2)}
-                    </td>
-                    <td className="p-2 border border-gray-700"></td>
-                  </tr>
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
+            {/* 📌 SUM ROW (টেক্সট সাইজ text-sm এর সাথে ম্যাচ করে প্যাডিং অ্যাডজাস্টেড) */}
+            <tr className="bg-gray-800 font-bold border-t-2 border-gray-600 text-yellow-500 sticky bottom-0 z-10 shadow-[0_-1px_0_rgba(75,85,99,1)] font-mono">
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800"></td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800"></td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-center font-extrabold text-yellow-400">SUM</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-white text-right">{computeColumnSum("shares")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("dividendPercent")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("faceValue")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("perShareDividend")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("grossDividend")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("taxPercent")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("taxAmount")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-green-700 text-white font-extrabold text-right">{computeColumnSum("netDividendSendInBank")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800"></td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("costPerShare")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("dividendPer100tk")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("nonShariahIncome")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("totalIncome")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("purificationRate")}</td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800 text-right">{computeColumnSum("purificationAmount")}</td>
+              <td className={`py-2 px-3 border border-gray-700 text-right ${getPurificationBgClass(totalNetAfterPurification)}`}>
+                {totalNetAfterPurification === 0 ? "0.00" : totalNetAfterPurification.toFixed(2)}
+              </td>
+              <td className="py-2 px-3 border border-gray-700 bg-gray-800"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+)}
       </div>
     </div>
   );
