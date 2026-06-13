@@ -551,7 +551,7 @@ const Reports = () => {
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
           <div className="text-center sm:text-left">
-            <h1 className="text-4xl font-bold mb-2">📈 Company Wise Report</h1>
+            <h1 className="text-2xl font-bold mb-2">📈 Company Wise Report</h1>
             <p className="text-gray-400">Buy & Sale Performance Summary</p>
           </div>
           <button
