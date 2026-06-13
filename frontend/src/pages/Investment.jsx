@@ -61,13 +61,12 @@ const Investment = () => {
   const [viewLoading, setViewLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
-  const [backLoading, setBackLoading] = useState(false);
 
   const [showReport, setShowReport] = useState(false);
   const confirm = useConfirm();
 
   // =====================
-  // EDIT STATE (for input fields instead of prompt)
+  // EDIT STATE
   // =====================
   const [editingId, setEditingId] = useState(null);
   const [editAmount, setEditAmount] = useState("");
@@ -79,7 +78,6 @@ const Investment = () => {
     fetchData();
   }, []);
 
-  // Set fromDate to first data entry date
   useEffect(() => {
     if (list.length > 0) {
       const sortedByDate = [...list].sort(
@@ -133,6 +131,9 @@ const Investment = () => {
       setAmount("");
       setNote("");
       setDate(getBDDate());
+      
+      // 🎉 সফলভাবে সেভ হওয়ার অ্যালার্ট যুক্ত করা হয়েছে
+      showSuccessAlert("Transaction saved successfully!");
     } catch (err) {
       showErrorAlert("Error saving transaction");
     } finally {
@@ -279,17 +280,16 @@ const Investment = () => {
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "FFFFD966" }, // highlight yellow
+          fgColor: { argb: "FFFFD966" },
         };
       });
 
-      // ================= COLUMN WIDTH (TABLE STYLE) =================
       sheet.columns = [
-        { width: 14 }, // Date
-        { width: 12 }, // Deposit
-        { width: 12 }, // Withdraw
-        { width: 14 }, // Balance
-        { width: 25 }, // Remarks
+        { width: 14 },
+        { width: 12 },
+        { width: 12 },
+        { width: 14 },
+        { width: 25 },
       ];
 
       const buffer = await workbook.xlsx.writeBuffer();
@@ -299,6 +299,9 @@ const Investment = () => {
       });
 
       saveAs(blob, "investment_report.xlsx");
+      showSuccessAlert("Report exported successfully!");
+    } catch (err) {
+      showErrorAlert("Export failed");
     } finally {
       setExportLoading(false);
     }
@@ -324,6 +327,7 @@ const Investment = () => {
       balance -= amt;
     }
   });
+
   // =====================
   // DELETE ROW
   // =====================
@@ -332,19 +336,21 @@ const Investment = () => {
       "Are you sure you want to delete this transaction?",
     );
 
-    if (!confirmDelete) return; // stop if user clicks Cancel
+    if (!confirmDelete) return;
 
     try {
       setLoading(true);
 
       await api.delete(`/investment/delete/${item._id}`);
 
-      // remove from UI after DB delete
       const updated = reportData.filter((_, i) => i !== index);
       setFilteredList(updated);
 
       const mainUpdated = list.filter((x) => x._id !== item._id);
       setList(mainUpdated);
+
+      // 🎉 সফলভাবে ডিলিট হওয়ার অ্যালার্ট যুক্ত করা হয়েছে
+      showSuccessAlert("Transaction deleted successfully!");
     } catch (err) {
       showErrorAlert("Delete failed");
     } finally {
@@ -353,7 +359,7 @@ const Investment = () => {
   };
 
   // =====================
-  // EDIT ROW (with input fields instead of prompt)
+  // EDIT ROW
   // =====================
   const handleEditStart = (item) => {
     setEditingId(item._id);
@@ -383,7 +389,6 @@ const Investment = () => {
 
       const updatedItem = res.data.data;
 
-      // update UI
       const updatedList = list.map((x) =>
         x._id === item._id ? updatedItem : x,
       );
@@ -472,25 +477,14 @@ const Investment = () => {
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
               className="p-2 sm:p-3 bg-gray-800 rounded appearance-none text-sm sm:text-base"
-              style={{
-                backgroundImage: "none",
-              }}
+              style={{ backgroundImage: "none" }}
             />
 
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="
-    w-full sm:w-auto
-    px-3 py-2 sm:px-2 sm:py-1
-    bg-gray-800
-    text-white text-sm sm:text-base
-    rounded-md
-    border border-gray-700
-    focus:outline-none focus:ring-2 focus:ring-blue-500
-    appearance-none
-  "
+              className="w-full sm:w-auto px-3 py-2 sm:px-2 sm:py-1 bg-gray-800 text-white text-sm sm:text-base rounded-md border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
               style={{ backgroundImage: "none" }}
             />
           </div>
@@ -528,9 +522,7 @@ const Investment = () => {
             <table className="w-full text-sm border border-gray-700 text-center">
               <thead className="bg-gray-800 font-bold text-center">
                 <tr>
-                  <th className="p-2 border whitespace-nowrap min-w-80px">
-                    Date
-                  </th>
+                  <th className="p-2 border whitespace-nowrap min-w-[80px]">Date</th>
                   <th className="p-2 border">Deposit</th>
                   <th className="p-2 border">Withdraw</th>
                   <th className="p-2 border">Balance</th>
@@ -542,7 +534,7 @@ const Investment = () => {
               <tbody>
                 {reportData.map((item, i) => (
                   <tr key={i} className="border border-gray-700">
-                    <td className="p-2 border whitespace-nowrap min-w-80px">
+                    <td className="p-2 border whitespace-nowrap min-w-[80px]">
                       {formatDate(item.date)}
                     </td>
 
@@ -596,9 +588,7 @@ const Investment = () => {
                         </td>
 
                         <td className="p-2 border text-yellow-300">
-                          {item.type === "deposit"
-                            ? `+${item.amount}`
-                            : `-${item.amount}`}
+                          {item.type === "deposit" ? `+${item.amount}` : `-${item.amount}`}
                         </td>
 
                         <td className="p-2 border text-gray-300">
@@ -629,9 +619,7 @@ const Investment = () => {
                 ))}
 
                 <tr className="bg-yellow-900 font-bold">
-                  <td className="p-2 border whitespace-nowrap min-w-80px">
-                    TOTAL
-                  </td>
+                  <td className="p-2 border whitespace-nowrap min-w-[80px]">TOTAL</td>
                   <td className="p-2 border text-green-400">{totalDeposit}</td>
                   <td className="p-2 border text-red-400">{totalWithdraw}</td>
                   <td className="p-2 border text-yellow-300">{balance}</td>
