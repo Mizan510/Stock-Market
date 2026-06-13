@@ -740,7 +740,7 @@ const Dividend = () => {
     {filteredList.length === 0 ? (
       <p className="text-gray-400">No dividend records found for the selected date range.</p>
     ) : (
-      <div className="overflow-auto max-h-[450px] custom-scrollbar">
+      <div className="overflow-auto custom-scrollbar" style={{ maxHeight: '450px' }}>
         {/* 📝 টেক্সট সাইজ বাড়িয়ে text-sm করা হয়েছে */}
         <table className="min-w-full text-sm text-left border-collapse relative">
           <thead className="bg-gray-800 text-gray-200 sticky top-0 z-10 shadow-[0_1px_0_rgba(55,65,81,1)] font-mono">
