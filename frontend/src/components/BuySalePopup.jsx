@@ -201,13 +201,14 @@ const BuySalePopup = ({ isOpen, onClose }) => {
           {loading ? (
             <div className="flex-1 flex flex-col items-center justify-center text-gray-500 gap-1.5 py-6">
               <span className="w-5 h-5 border-2 border-emerald-500 border-r-transparent rounded-full animate-spin" />
-              <p className="text-[10px] font-mono tracking-wider">Syncing Portfolio Matrices...</p>
+              <p className="text-[10px] font-mono tracking-wider">
+                Syncing Portfolio Matrices...
+              </p>
             </div>
           ) : (
             <>
               {/* মেইন গ্রিড লেআউট: ২ পাশে গ্রিন ও রেড ব্যাকগ্রাউন্ড মিক্স */}
               <div className="grid grid-cols-2 divide-x divide-gray-900 flex-1 overflow-hidden">
-                
                 {/* 🟢 LEFT SIDE: BUY ZONE (হালকা গ্রিন টিন্ট ব্যাকগ্রাউন্ড) */}
                 <div className="p-4 pr-3 bg-emerald-950/30 flex flex-col overflow-hidden">
                   <div className="mb-2 pb-1 border-b border-emerald-600/90">
@@ -298,18 +299,18 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                     </div>
                   </div>
                 </div>
-
               </div>
 
               {/* BOTTOM BUTTON */}
-              <div className="flex justify-center p-2 bg-gray-950 border-t border-gray-900 shrink-0">
-               <button
-  onClick={onClose}
-  className="w-full max-w-xs py-2 px-4 bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-emerald-500 text-emerald-400 hover:text-white font-mono text-xs font-medium rounded-xl shadow-lg shadow-emerald-950/20 transition-all duration-300 tracking-wide"
->
-  Dismiss Profile
-</button>
-              </div>
+             {/* BOTTOM BUTTON CONTAINER */}
+<div className="flex justify-center p-3 bg-gray-950/40 backdrop-blur-md border-t border-gray-900/60 shrink-0">
+  <button
+    onClick={onClose}
+    className="w-full max-w-xs py-2 px-4 bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-emerald-500 text-emerald-400 hover:text-white font-mono text-xs font-medium rounded-xl shadow-lg shadow-emerald-950/20 transition-all duration-300 tracking-wide"
+  >
+    Dismiss Profile
+  </button>
+</div>
             </>
           )}
         </div>
