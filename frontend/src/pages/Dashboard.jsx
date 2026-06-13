@@ -13,9 +13,10 @@ const Dashboard = () => {
   const confirm = useConfirm();
 
   // =========================
-  // POPUP STATE
+  // POPUP & PENDING NAVIGATION STATE
   // =========================
-  const [showRulesPopup, setShowRulesPopup] = useState(true);
+  const [showRulesPopup, setShowRulesPopup] = useState(false);
+  const [pendingRoute, setPendingRoute] = useState(""); // ✅ Stores the destination while popup is open
 
   // =========================
   // STATES
@@ -61,7 +62,6 @@ const Dashboard = () => {
         return;
       }
 
-      // Fetch all transaction data in parallel with inline catch fallbacks
       const [
         investRes,
         buyRes,
@@ -88,7 +88,6 @@ const Dashboard = () => {
       const monthlyTotal =
         expenseMonthRes?.data?.total ?? expenseMonthRes?.data ?? 0;
 
-      // Wrapping inside Number() clean-parses the value, dropping trailing zeros (e.g., 1200.00 -> 1200)
       setMonthlyExpense(Number(monthlyTotal || 0));
 
       if (lbslData) {
@@ -105,7 +104,6 @@ const Dashboard = () => {
         });
       }
 
-      // Calculate comprehensive portfolio metrics
       const metrics = calculatePortfolioMetrics(
         buyData,
         saleData,
@@ -126,7 +124,7 @@ const Dashboard = () => {
   }, [fetchPortfolioData]);
 
   // =========================
-  // LOGOUT (FIXED: Clean routing without about:blank)
+  // LOGOUT
   // =========================
   const logout = async () => {
     const confirmed = await confirm("Are you sure you want to close the app?");
@@ -134,14 +132,12 @@ const Dashboard = () => {
 
     try {
       setLogoutLoading(true);
-      setSidebarOpen(false); // Instantly snap close sidebar elements
+      setSidebarOpen(false);
 
-      // 1. Flush active access vectors immediately
       localStorage.removeItem("auth");
       localStorage.removeItem("token");
       sessionStorage.clear();
 
-      // 2. Desktop Environment Evaluation (Electron Framework Interceptor)
       if (window.electron && window.electron.closeApp) {
         window.electron.closeApp();
         return;
@@ -157,8 +153,6 @@ const Dashboard = () => {
         return;
       }
 
-      // 3. Web Browser Handling Environment
-      // Erase backward browsing memory logs and switch tracking directly back to login scene
       navigate("/login", { replace: true });
     } catch (err) {
       console.error("App closure sequence failed:", err);
@@ -169,15 +163,38 @@ const Dashboard = () => {
   };
 
   // =========================
-  // NAVIGATION
+  // INTERCEPTIVE NAVIGATION
   // =========================
   const handleNavigate = (route) => {
+    // ✅ Check if the target route is Buy or Sale
+    if (route === "/buy" || route === "/sale") {
+      setPendingRoute(route);  // Hold onto the target path
+      setShowRulesPopup(true); // Pop open the rules card
+      return;                  // Stop early to prevent immediate navigation
+    }
+
+    // Normal navigation for all other components
     setLoadingRoute(route);
-    // Mimics route loading state transition smoothly
     setTimeout(() => {
       navigate(route);
       setLoadingRoute("");
     }, 300);
+  };
+
+  // ✅ Triggered when user dismisses/acknowledges the popup
+  const handleClosePopup = () => {
+    setShowRulesPopup(false);
+
+    if (pendingRoute) {
+      setLoadingRoute(pendingRoute);
+      
+      // Execute delayed transition smoothly using the stored route path
+      setTimeout(() => {
+        navigate(pendingRoute);
+        setLoadingRoute("");
+        setPendingRoute(""); // Reset tracking state
+      }, 300);
+    }
   };
 
   const menuItems = [
@@ -197,7 +214,7 @@ const Dashboard = () => {
     <>
       {/* RULES POPUP */}
       {showRulesPopup && (
-        <RulesPopup onClose={() => setShowRulesPopup(false)} />
+        <RulesPopup onClose={handleClosePopup} />
       )}
 
       {/* MAIN DASHBOARD */}
