@@ -210,12 +210,12 @@ const BuyZone = () => {
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#e11d48", // Dark-mode premium rose/red
-      cancelButtonColor: "#374151",  // Slate gray cancel button
+      cancelButtonColor: "#374151", // Slate gray cancel button
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "Cancel",
-      background: "#030712",         // Anchored to your exact bg-gray-950 hex code
-      color: "#ffffff",              // White text matching the dashboard
-      iconColor: "#f43f5e",          // Warning icon customized to match system red
+      background: "#030712", // Anchored to your exact bg-gray-950 hex code
+      color: "#ffffff", // White text matching the dashboard
+      iconColor: "#f43f5e", // Warning icon customized to match system red
     });
 
     // Terminate if the user closes modal or hits cancel
@@ -225,7 +225,7 @@ const BuyZone = () => {
       try {
         await api.delete(`/zone/${row._id}`);
         setRows((prev) => prev.filter((_, i) => i !== index));
-        
+
         // Success notification popup toast
         Swal.fire({
           title: "Deleted!",
@@ -291,7 +291,7 @@ const BuyZone = () => {
                 <th className="p-1.5 border-r border-gray-800 sticky top-0 left-0 bg-gray-900 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.5)] w-[130px] truncate">
                   Company Name
                 </th>
-                
+
                 {/* Compressed Middle Columns */}
                 <th className="p-1.5 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
                   1Y Low
@@ -429,7 +429,9 @@ const BuyZone = () => {
                           className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[13px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-0.5">{formatValue(row.todaysLow)}</div>
+                        <div className="py-0.5">
+                          {formatValue(row.todaysLow)}
+                        </div>
                       )}
                     </td>
 
@@ -444,7 +446,9 @@ const BuyZone = () => {
                           className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[13px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-0.5">{formatValue(row.todaysHigh)}</div>
+                        <div className="py-0.5">
+                          {formatValue(row.todaysHigh)}
+                        </div>
                       )}
                     </td>
 
@@ -459,7 +463,10 @@ const BuyZone = () => {
                           className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[13px] focus:outline-hidden"
                         />
                       ) : (
-                        <div style={inlineBlinkStyle} className="py-0.5 transition-all">
+                        <div
+                          style={inlineBlinkStyle}
+                          className="py-0.5 transition-all"
+                        >
                           {formatValue(row.closingPrice)}
                         </div>
                       )}
@@ -472,7 +479,9 @@ const BuyZone = () => {
                     <td className="p-1 bg-amber-950/10 border-r border-gray-800">
                       <div className="text-[10px] font-bold tracking-tighter uppercase">
                         {nextDayPlan === "Bullish" ? (
-                          <span className="text-emerald-400">{nextDayPlan}</span>
+                          <span className="text-emerald-400">
+                            {nextDayPlan}
+                          </span>
                         ) : nextDayPlan === "Bearish" ? (
                           <span className="text-rose-400">{nextDayPlan}</span>
                         ) : nextDayPlan === "Neutral" ? (
