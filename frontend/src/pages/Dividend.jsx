@@ -15,27 +15,52 @@ const Dividend = () => {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
+  // বাংলাদেশ টাইমজোনে সঠিক কারেন্ট ডেট পাওয়ার ফাংশন
   const getBDDate = () => {
     const now = new Date();
     const bd = new Date(
       now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
     );
-    return bd.toISOString().split("T")[0];
+    return bd.getFullYear() + 
+      "-" + String(bd.getMonth() + 1).padStart(2, "0") + 
+      "-" + String(bd.getDate()).padStart(2, "0");
   };
 
-  const getMonthDates = () => {
+  // ডাইনামিক অর্থবছর (জুলাই ১ থেকে জুন ৩০) নির্ধারণের লজিক
+  const getFiscalYearDates = () => {
     const now = new Date();
     const bd = new Date(
       now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
     );
-    const year = bd.getFullYear();
-    const month = bd.getMonth();
+    const currentYear = bd.getFullYear();
+    const currentMonth = bd.getMonth() + 1; // JS-এ মাস 0-11 হয়, তাই +1 করা হয়েছে
 
-    const fromDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    const toDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    let fromYear, toYear;
+
+    // যদি মাস জুলাই (৭) বা তার পরে হয়, তবে চলতি বছরের জুলাই থেকে আগামী বছরের জুন
+    if (currentMonth >= 7) {
+      fromYear = currentYear;
+      toYear = currentYear + 1;
+    } else {
+      // যদি মাস জুন বা তার আগে হয়, তবে গত বছরের জুলাই থেকে চলতি বছরের জুন
+      fromYear = currentYear - 1;
+      toYear = currentYear;
+    }
+
+    const fromDate = `${fromYear}-07-01`;
+    const toDate = `${toYear}-06-30`;
 
     return { fromDate, toDate };
+  };
+
+  // ডেটাবেজ থেকে আসা ডেটকে ইনপুট ফিল্ডের উপযোগী (YYYY-MM-DD) করার সেফ ফাংশন
+  const formatBackendDate = (dateString) => {
+    if (!dateString) return "";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "";
+    return d.getFullYear() + 
+      "-" + String(d.getMonth() + 1).padStart(2, "0") + 
+      "-" + String(d.getDate()).padStart(2, "0");
   };
 
   const defaultForm = {
@@ -63,11 +88,11 @@ const Dividend = () => {
   };
 
   const [form, setForm] = useState(defaultForm);
-
   const [list, setList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
 
-  const { fromDate: initialFromDate, toDate: initialToDate } = getMonthDates();
+  // অর্থবছরের ডিফল্ট ফিল্টার সেটআপ
+  const { fromDate: initialFromDate, toDate: initialToDate } = getFiscalYearDates();
   const [fromDate, setFromDate] = useState(initialFromDate);
   const [toDate, setToDate] = useState(initialToDate);
 
@@ -88,22 +113,12 @@ const Dividend = () => {
     try {
       const res = await api.get(`/dividend/${userId}`);
       setList(res.data);
+      // শুরুতে ইউজারকে ফিল্টার করা ডাটা দেখানোর জন্য সরাসরি ফিল্টার কল করা যেতে পারে
       setFilteredList(res.data);
     } catch (err) {
       console.log(err);
     }
   };
-
-  const formulaFields = new Set([
-    "perShareDividend",
-    "grossDividend",
-    "taxAmount",
-    "netDividend",
-    "dividendPer100tk",
-    "purificationRate",
-    "purificationAmount",
-    "netDividendAfterPurification",
-  ]);
 
   const inputClass = (name) => {
     return `w-full p-2 rounded ${form[name] ? "bg-cyan-600 text-slate-100" : "bg-gray-800"}`;
@@ -114,7 +129,6 @@ const Dividend = () => {
     return value.toFixed(2);
   };
 
-  // ================= HANDLE INPUT =================
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -122,13 +136,13 @@ const Dividend = () => {
     });
   };
 
+  // ক্যালকুলেশন হ্যান্ডলার
   useEffect(() => {
     const dividendPercent = Number(form.dividendPercent || 0);
     const faceValue = Number(form.faceValue || 0);
     const shares = Number(form.shares || 0);
     const taxPercent = Number(form.taxPercent || 0);
     const costPerShare = Number(form.costPerShare || 0);
-
     const nonShariahIncome = Number(form.nonShariahIncome || 0);
     const totalIncome = Number(form.totalIncome || 0);
 
@@ -152,27 +166,13 @@ const Dividend = () => {
         ? (perShareDividend / costPerShare) * 100
         : "";
 
-    /* ===============================
-   15. Purification Rate
-   = Non-Shariah Income / Total Income * 100
-================================ */
-
     const purificationRate =
       totalIncome > 0 ? (nonShariahIncome / totalIncome) * 100 : "";
-
-    /* ===============================
-   16. Purification Amount
-   = Gross Dividend * Purification Rate / 100
-      ================================ */
 
     const purificationAmount =
       grossDividend !== "" && purificationRate !== ""
         ? (grossDividend * purificationRate) / 100
         : "";
-
-    /* ===============================
-   17. Net Dividend after Purification
-      ================================ */
 
     const netDividendAfterPurification =
       netDividend !== "" && purificationAmount !== ""
@@ -181,32 +181,15 @@ const Dividend = () => {
 
     const updatedForm = {
       ...form,
-
-      perShareDividend:
-        perShareDividend !== "" ? formatNumber(perShareDividend) : "",
-
+      perShareDividend: perShareDividend !== "" ? formatNumber(perShareDividend) : "",
       grossDividend: grossDividend !== "" ? formatNumber(grossDividend) : "",
-
       taxAmount: taxAmount !== "" ? formatNumber(taxAmount) : "",
-
       netDividend: netDividend !== "" ? formatNumber(netDividend) : "",
-
-      netDividendSendInBank:
-        netDividend !== "" ? formatNumber(netDividend) : "",
-
-      dividendPer100tk:
-        dividendPer100tk !== "" ? formatNumber(dividendPer100tk) : "",
-
-      purificationRate:
-        purificationRate !== "" ? formatNumber(purificationRate) : "",
-
-      purificationAmount:
-        purificationAmount !== "" ? formatNumber(purificationAmount) : "",
-
-      netDividendAfterPurification:
-        netDividendAfterPurification !== ""
-          ? formatNumber(netDividendAfterPurification)
-          : "",
+      netDividendSendInBank: netDividend !== "" ? formatNumber(netDividend) : "",
+      dividendPer100tk: dividendPer100tk !== "" ? formatNumber(dividendPer100tk) : "",
+      purificationRate: purificationRate !== "" ? formatNumber(purificationRate) : "",
+      purificationAmount: purificationAmount !== "" ? formatNumber(purificationAmount) : "",
+      netDividendAfterPurification: netDividendAfterPurification !== "" ? formatNumber(netDividendAfterPurification) : "",
     };
 
     if (
@@ -217,8 +200,7 @@ const Dividend = () => {
       updatedForm.dividendPer100tk !== form.dividendPer100tk ||
       updatedForm.purificationRate !== form.purificationRate ||
       updatedForm.purificationAmount !== form.purificationAmount ||
-      updatedForm.netDividendAfterPurification !==
-        form.netDividendAfterPurification
+      updatedForm.netDividendAfterPurification !== form.netDividendAfterPurification
     ) {
       setForm(updatedForm);
     }
@@ -232,7 +214,7 @@ const Dividend = () => {
     form.totalIncome,
   ]);
 
-  // ================= SAVE =================
+  // সেভ বা আপডেট লজিক
   const handleSave = async () => {
     if (
       !form.companyName ||
@@ -248,35 +230,27 @@ const Dividend = () => {
       setLoading(true);
 
       if (editingId) {
-        const res = await api.put(`/dividend/update/${editingId}`, {
-          ...form,
-        });
-
+        const res = await api.put(`/dividend/update/${editingId}`, { ...form });
         const saved = { ...res.data.data, ...form };
 
-        setList((prev) =>
-          prev.map((item) => (item._id === editingId ? saved : item)),
-        );
-
-        setFilteredList((prev) =>
-          prev.map((item) => (item._id === editingId ? saved : item)),
-        );
-
+        setList((prev) => prev.map((item) => (item._id === editingId ? saved : item)));
+        setFilteredList((prev) => prev.map((item) => (item._id === editingId ? saved : item)));
         setEditingId(null);
-        setShowReport(true);
+        showSuccessAlert("Updated successfully");
       } else {
-        const res = await api.post("/dividend/add", {
-          userId,
-          ...form,
-        });
-
+        const res = await api.post("/dividend/add", { userId, ...form });
         const saved = { ...res.data.data, ...form };
+        
         setList((prev) => [saved, ...prev]);
         setFilteredList((prev) => [saved, ...prev]);
-        setShowReport(true);
+        showSuccessAlert("Saved successfully");
       }
 
-      setForm(defaultForm);
+      setForm({
+        ...defaultForm,
+        documentationDate: getBDDate(),
+      });
+      setShowReport(true);
     } catch (err) {
       showErrorAlert(err.response?.data?.message || "Save failed");
     } finally {
@@ -294,18 +268,13 @@ const Dividend = () => {
     setEditingId(null);
   };
 
+  // ডেট ওলটপালট ও মিক্স হওয়া ফিক্সড এডিট হ্যান্ডলার
   const handleEdit = (item) => {
     setEditingId(item._id);
     setForm({
-      documentationDate: item.documentationDate
-        ? new Date(item.documentationDate).toISOString().split("T")[0]
-        : "",
-      declarationDate: item.declarationDate
-        ? new Date(item.declarationDate).toISOString().split("T")[0]
-        : "",
-      recordDate: item.recordDate
-        ? new Date(item.recordDate).toISOString().split("T")[0]
-        : "",
+      documentationDate: formatBackendDate(item.documentationDate),
+      declarationDate: formatBackendDate(item.declarationDate),
+      recordDate: formatBackendDate(item.recordDate),
       companyName: item.companyName || "",
       shares: item.shares || "",
       dividendPercent: item.dividendPercent || "",
@@ -316,9 +285,7 @@ const Dividend = () => {
       taxAmount: item.taxAmount || "",
       netDividend: item.netDividend || "",
       netDividendSendInBank: item.netDividendSendInBank || "",
-      bankPaymentDate: item.bankPaymentDate
-        ? new Date(item.bankPaymentDate).toISOString().split("T")[0]
-        : "",
+      bankPaymentDate: formatBackendDate(item.bankPaymentDate),
       costPerShare: item.costPerShare || "",
       dividendPer100tk: item.dividendPer100tk || "",
       purificationRate: item.purificationRate || "",
@@ -338,23 +305,21 @@ const Dividend = () => {
       await api.delete(`/dividend/delete/${id}`);
       setList((prev) => prev.filter((item) => item._id !== id));
       setFilteredList((prev) => prev.filter((item) => item._id !== id));
+      showSuccessAlert("Deleted successfully");
     } catch (err) {
       showErrorAlert(err.response?.data?.message || "Delete failed");
     }
   };
 
-  // ================= VIEW =================
   const handleView = () => {
     setViewLoading(true);
 
     setTimeout(() => {
       const filtered = list.filter((item) => {
-        // Use documentationDate if available, otherwise use declarationDate, otherwise use recordDate
-        const dateToUse =
-          item.documentationDate || item.declarationDate || item.recordDate;
+        const dateToUse = item.documentationDate; // শুধুমাত্র ডকুমেন্টেশন ডেট দিয়ে ফিল্টার হবে
         if (!dateToUse) return false;
 
-        const d = new Date(dateToUse).toISOString().split("T")[0];
+        const d = formatBackendDate(dateToUse);
         return d >= fromDate && d <= toDate;
       });
 
@@ -364,24 +329,21 @@ const Dividend = () => {
     }, 300);
   };
 
-  // ================= RESET =================
   const handleReset = () => {
     setResetLoading(true);
 
     setTimeout(() => {
-      const { fromDate: monthFromDate, toDate: monthToDate } = getMonthDates();
-      setFromDate(monthFromDate);
-      setToDate(monthToDate);
+      const { fromDate: fiscalFromDate, toDate: fiscalToDate } = getFiscalYearDates();
+      setFromDate(fiscalFromDate);
+      setToDate(fiscalToDate);
       setFilteredList(list);
       setShowReport(false);
       setResetLoading(false);
     }, 300);
   };
 
-  // ================= EXPORT =================
   const handleExport = async () => {
     if (exportLoading) return;
-
     try {
       await DividendExport({
         filteredList,
@@ -400,7 +362,6 @@ const Dividend = () => {
         {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">Dividend</h1>
-
           <button
             onClick={() => navigate(-1)}
             className="bg-gray-700 px-4 py-2 rounded-lg"
@@ -409,13 +370,10 @@ const Dividend = () => {
           </button>
         </div>
 
-        {/* ================= FORM ================= */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 bg-gray-900 p-4 rounded">
+        {/* FORM */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 bg-gray-900 p-4 rounded mb-4">
           <div>
-            <label
-              htmlFor="documentationDate"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="documentationDate" className="block text-sm text-gray-300 mb-1">
               1. Documentation Date
             </label>
             <input
@@ -429,10 +387,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="declarationDate"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="declarationDate" className="block text-sm text-gray-300 mb-1">
               2. Declaration Date
             </label>
             <input
@@ -446,10 +401,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="recordDate"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="recordDate" className="block text-sm text-gray-300 mb-1">
               3. Record Date
             </label>
             <input
@@ -463,10 +415,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="companyName"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="companyName" className="block text-sm text-gray-300 mb-1">
               4. Company Name *
             </label>
             <input
@@ -480,10 +429,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="shares"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="shares" className="block text-sm text-gray-300 mb-1">
               5. Number of Shares *
             </label>
             <input
@@ -497,10 +443,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="dividendPercent"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="dividendPercent" className="block text-sm text-gray-300 mb-1">
               6. Company Dividend % *
             </label>
             <input
@@ -514,10 +457,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="faceValue"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="faceValue" className="block text-sm text-gray-300 mb-1">
               7. Face Value
             </label>
             <input
@@ -531,10 +471,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="perShareDividend"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="perShareDividend" className="block text-sm text-gray-300 mb-1">
               8. Per Share Cash Dividend
             </label>
             <input
@@ -548,10 +485,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="grossDividend"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="grossDividend" className="block text-sm text-gray-300 mb-1">
               9. Gross Dividend
             </label>
             <input
@@ -565,10 +499,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="taxPercent"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="taxPercent" className="block text-sm text-gray-300 mb-1">
               10. Tax %
             </label>
             <input
@@ -582,10 +513,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="taxAmount"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="taxAmount" className="block text-sm text-gray-300 mb-1">
               11. Tax Amount
             </label>
             <input
@@ -599,10 +527,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="netDividendSendInBank"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="netDividendSendInBank" className="block text-sm text-gray-300 mb-1">
               12. Net Dividend send in bank
             </label>
             <input
@@ -616,10 +541,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="bankPaymentDate"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="bankPaymentDate" className="block text-sm text-gray-300 mb-1">
               13. Bank Payment Date
             </label>
             <input
@@ -633,10 +555,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="costPerShare"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="costPerShare" className="block text-sm text-gray-300 mb-1">
               14. Per Share COST (Commission) *
             </label>
             <input
@@ -650,10 +569,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="dividendPer100tk"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="dividendPer100tk" className="block text-sm text-gray-300 mb-1">
               15. Dividend per 100 tk
             </label>
             <input
@@ -667,10 +583,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="nonShariahIncome"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="nonShariahIncome" className="block text-sm text-gray-300 mb-1">
               16. Non Shariah Income
             </label>
             <input
@@ -684,10 +597,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="totalIncome"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="totalIncome" className="block text-sm text-gray-300 mb-1">
               17. Total Income
             </label>
             <input
@@ -701,10 +611,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="purificationRate"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="purificationRate" className="block text-sm text-gray-300 mb-1">
               18. Purification Rate
             </label>
             <input
@@ -718,10 +625,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="purificationAmount"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="purificationAmount" className="block text-sm text-gray-300 mb-1">
               19. Purification Amount
             </label>
             <input
@@ -735,10 +639,7 @@ const Dividend = () => {
           </div>
 
           <div>
-            <label
-              htmlFor="netDividendAfterPurification"
-              className="block text-sm text-gray-300 mb-1"
-            >
+            <label htmlFor="netDividendAfterPurification" className="block text-sm text-gray-300 mb-1">
               20. Net Dividend after Purification
             </label>
             <input
@@ -752,8 +653,8 @@ const Dividend = () => {
           </div>
         </div>
 
-        {/* SAVE */}
-        <div className="flex flex-col gap-2 md:flex-row">
+        {/* FORM BUTTONS */}
+        <div className="flex flex-col gap-2 md:flex-row mb-4">
           <button
             type="button"
             onClick={handleSave}
@@ -762,7 +663,6 @@ const Dividend = () => {
           >
             {loading ? "Saving..." : editingId ? "Update" : "Save"}
           </button>
-
           <button
             type="button"
             onClick={handleRefresh}
@@ -770,7 +670,6 @@ const Dividend = () => {
           >
             Refresh
           </button>
-
           {editingId && (
             <button
               type="button"
@@ -782,37 +681,33 @@ const Dividend = () => {
           )}
         </div>
 
-        {/* ================= FILTER ================= */}
-        <div className="mt-4 bg-gray-900 p-4 rounded space-y-2">
+        {/* FILTER SECTION */}
+        <div className="bg-gray-900 p-4 rounded space-y-2 mb-4">
           <label className="block text-sm text-gray-300 mb-2">
-            Filter by Documentation Date
+            Filter by Documentation Date (Fiscal Year Default)
           </label>
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="text-xs text-gray-400 block mb-1">
-                From Date
-              </label>
+              <label className="text-xs text-gray-400 block mb-1">From Date</label>
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="w-full p-2 bg-gray-800 rounded"
+                className="w-full p-2 bg-gray-800 rounded text-white"
               />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-gray-400 block mb-1">
-                To Date
-              </label>
+              <label className="text-xs text-gray-400 block mb-1">To Date</label>
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="w-full p-2 bg-gray-800 rounded"
+                className="w-full p-2 bg-gray-800 rounded text-white"
               />
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={handleView}
@@ -821,7 +716,6 @@ const Dividend = () => {
             >
               {viewLoading ? "Loading..." : "View"}
             </button>
-
             <button
               type="button"
               onClick={handleExport}
@@ -830,7 +724,6 @@ const Dividend = () => {
             >
               {exportLoading ? "Exporting..." : "Export"}
             </button>
-
             <button
               type="button"
               onClick={handleReset}
@@ -842,152 +735,70 @@ const Dividend = () => {
           </div>
         </div>
 
+        {/* REPORT TABLE */}
         {showReport && (
-          <div className="mt-4 overflow-x-auto bg-gray-900 p-4 rounded border border-gray-800">
+          <div className="overflow-x-auto bg-gray-900 p-4 rounded border border-gray-800">
             <h2 className="text-xl font-semibold mb-3">Dividend Report</h2>
             {filteredList.length === 0 ? (
-              <p className="text-gray-400">
-                No dividend records found for the selected date range.
-              </p>
+              <p className="text-gray-400">No dividend records found for the selected date range.</p>
             ) : (
               <table className="min-w-full text-sm text-left border-collapse">
                 <thead className="bg-gray-800 text-gray-200">
                   <tr>
-                    <th className="p-2 border border-gray-700">
-                      Documentation Date
-                    </th>
-                    <th className="p-2 border border-gray-700">
-                      Declaration Date
-                    </th>
+                    <th className="p-2 border border-gray-700">Documentation Date</th>
+                    <th className="p-2 border border-gray-700">Declaration Date</th>
                     <th className="p-2 border border-gray-700">Record Date</th>
                     <th className="p-2 border border-gray-700">Company Name</th>
                     <th className="p-2 border border-gray-700">Shares</th>
                     <th className="p-2 border border-gray-700">Dividend %</th>
                     <th className="p-2 border border-gray-700">Face Value</th>
-                    <th className="p-2 border border-gray-700">
-                      Per Share Dividend
-                    </th>
-                    <th className="p-2 border border-gray-700">
-                      Gross Dividend
-                    </th>
+                    <th className="p-2 border border-gray-700">Per Share Dividend</th>
+                    <th className="p-2 border border-gray-700">Gross Dividend</th>
                     <th className="p-2 border border-gray-700">Tax %</th>
                     <th className="p-2 border border-gray-700">Tax Amount</th>
-                    <th className="p-2 border border-gray-700">
-                      Net Dividend send in bank
-                    </th>
-                    <th className="p-2 border border-gray-700">
-                      Bank Payment Date
-                    </th>
+                    <th className="p-2 border border-gray-700">Net Dividend send in bank</th>
+                    <th className="p-2 border border-gray-700">Bank Payment Date</th>
                     <th className="p-2 border border-gray-700">Cost/Share</th>
-                    <th className="p-2 border border-gray-700">
-                      Dividend per 100 tk
-                    </th>
-                    <th className="p-2 border border-gray-700">
-                      Non Shariah Income
-                    </th>
+                    <th className="p-2 border border-gray-700">Dividend per 100 tk</th>
+                    <th className="p-2 border border-gray-700">Non Shariah Income</th>
                     <th className="p-2 border border-gray-700">Total Income</th>
-                    <th className="p-2 border border-gray-700">
-                      Purification Rate
-                    </th>
-                    <th className="p-2 border border-gray-700">
-                      Purification Amount
-                    </th>
-                    <th className="p-2 border border-gray-700">
-                      Net Dividend after Purification
-                    </th>
+                    <th className="p-2 border border-gray-700">Purification Rate</th>
+                    <th className="p-2 border border-gray-700">Purification Amount</th>
+                    <th className="p-2 border border-gray-700">Net Dividend after Purification</th>
                     <th className="p-2 border border-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredList.map((item) => (
-                    <tr
-                      key={item._id}
-                      className="odd:bg-gray-950 even:bg-gray-900"
-                    >
+                    <tr key={item._id} className="odd:bg-gray-950 even:bg-gray-900">
                       <td className="p-2 border border-gray-700">
-                        {item.documentationDate
-                          ? new Date(item.documentationDate).toLocaleDateString(
-                              "en-GB",
-                            )
-                          : item.declarationDate
-                            ? new Date(item.declarationDate).toLocaleDateString(
-                                "en-GB",
-                              )
-                            : "-"}
+                        {item.documentationDate ? new Date(item.documentationDate).toLocaleDateString("en-GB") : "-"}
                       </td>
                       <td className="p-2 border border-gray-700">
-                        {item.declarationDate
-                          ? new Date(item.declarationDate).toLocaleDateString(
-                              "en-GB",
-                            )
-                          : "-"}
+                        {item.declarationDate ? new Date(item.declarationDate).toLocaleDateString("en-GB") : "-"}
                       </td>
                       <td className="p-2 border border-gray-700">
-                        {item.recordDate
-                          ? new Date(item.recordDate).toLocaleDateString(
-                              "en-GB",
-                            )
-                          : "-"}
+                        {item.recordDate ? new Date(item.recordDate).toLocaleDateString("en-GB") : "-"}
                       </td>
+                      <td className="p-2 border border-gray-700">{item.companyName || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.shares || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.dividendPercent || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.faceValue || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.perShareDividend || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.grossDividend || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.taxPercent || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.taxAmount || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.netDividendSendInBank || "-"}</td>
                       <td className="p-2 border border-gray-700">
-                        {item.companyName || "-"}
+                        {item.bankPaymentDate ? new Date(item.bankPaymentDate).toLocaleDateString("en-GB") : "-"}
                       </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.shares || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.dividendPercent || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.faceValue || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.perShareDividend || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.grossDividend || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.taxPercent || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.taxAmount || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.netDividendSendInBank ||
-                          (item.grossDividend && item.taxAmount
-                            ? Number(item.grossDividend) -
-                              Number(item.taxAmount)
-                            : "-")}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.bankPaymentDate
-                          ? new Date(item.bankPaymentDate).toLocaleDateString(
-                              "en-GB",
-                            )
-                          : "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.costPerShare || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.dividendPer100tk || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.nonShariahIncome || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.totalIncome || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.purificationRate || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.purificationAmount || "-"}
-                      </td>
-                      <td className="p-2 border border-gray-700">
-                        {item.netDividendAfterPurification || "-"}
-                      </td>
+                      <td className="p-2 border border-gray-700">{item.costPerShare || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.dividendPer100tk || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.nonShariahIncome || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.totalIncome || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.purificationRate || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.purificationAmount || "-"}</td>
+                      <td className="p-2 border border-gray-700">{item.netDividendAfterPurification || "-"}</td>
                       <td className="p-2 border border-gray-700">
                         <div className="flex flex-wrap gap-2">
                           <button
