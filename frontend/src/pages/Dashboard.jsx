@@ -4,6 +4,7 @@ import api from "../api";
 import SummaryPanel from "../components/SummaryPanel";
 import Sidebar from "../components/Sidebar";
 import RulesPopup from "../components/RulesPopup";
+import BuySalePopup from "../components/BuySalePopup"; // ✅ আপনার তৈরি করা পপআপটি ইমপোর্ট করুন
 import { useConfirm } from "../components/ConfirmProvider";
 import { calculatePortfolioMetrics } from "../utils/portfolioCalculations";
 import { getCurrentUserId } from "../utils/auth";
@@ -16,7 +17,15 @@ const Dashboard = () => {
   // POPUP & PENDING NAVIGATION STATE
   // =========================
   const [showRulesPopup, setShowRulesPopup] = useState(false);
-  const [pendingRoute, setPendingRoute] = useState(""); // ✅ Stores the destination while popup is open
+  const [pendingRoute, setPendingRoute] = useState(""); 
+
+  // =========================
+  // NEW STATES FOR LOGIN MARKET POPUP
+  // =========================
+  const [isMarketPopupOpen, setIsMarketPopupOpen] = useState(false);
+  const [marketDataLoading, setMarketDataLoading] = useState(false);
+  const [greenBuyCompanies, setGreenBuyCompanies] = useState([]);
+  const [greenSaleCompanies, setGreenSaleCompanies] = useState([]);
 
   // =========================
   // STATES
@@ -48,6 +57,49 @@ const Dashboard = () => {
     currentAssetsPP: null,
   });
   const [monthlyExpense, setMonthlyExpense] = useState(0);
+
+  // =========================
+  // FETCH MARKET POPUP DATA (BUY/SALE ZONE GREEN COMPANIES)
+  // =========================
+  const fetchMarketPopupData = useCallback(async () => {
+    try {
+      setMarketDataLoading(true);
+      
+      // আপনার ব্যাকএন্ডের এন্ডপয়েন্ট রাউট অনুযায়ী ইউআরএল চেক করে নেবেন (যেমন: /buy-zone নাকি /buyzone)
+      const [buyZoneRes, saleZoneRes] = await Promise.all([
+        api.get("/buy-zone").catch(() => ({ data: [] })),
+        api.get("/sale-zone").catch(() => ({ data: [] }))
+      ]);
+
+      const buyZoneData = buyZoneRes?.data?.data ?? buyZoneRes?.data ?? [];
+      const saleZoneData = saleZoneRes?.data?.data ?? saleZoneRes?.data ?? [];
+
+      // গ্রিন কালারের কোম্পানি ফিল্টার (আপনার ব্যাকএন্ড ডেটার কন্ডিশন 'green' বা 'isGreen' মিলিয়ে নিন)
+      const filteredBuy = buyZoneData.filter(item => item.color === "green" || item.status === "green" || item.isGreen);
+      const filteredSale = saleZoneData.filter(item => item.color === "green" || item.status === "green" || item.isGreen);
+
+      setGreenBuyCompanies(filteredBuy);
+      setGreenSaleCompanies(filteredSale);
+    } catch (err) {
+      console.error("Failed to fetch market zone popup data:", err);
+    } finally {
+      setMarketDataLoading(false);
+    }
+  }, []);
+
+  // =========================
+  // CHECK LOGIN TRIGGER
+  // =========================
+  useEffect(() => {
+    // লগইন সফল হওয়ার পর লগইন পেজে sessionStorage.setItem("justLoggedIn", "true"); সেট করে দিতে হবে
+    const justLoggedIn = sessionStorage.getItem("justLoggedIn");
+    
+    if (justLoggedIn === "true") {
+      setIsMarketPopupOpen(true);
+      sessionStorage.removeItem("justLoggedIn"); // একবার দেখানোর পর রিমুভ করে দেওয়া হলো যাতে রিফ্রেশে আর না আসে
+      fetchMarketPopupData();
+    }
+  }, [fetchMarketPopupData]);
 
   // =========================
   // FETCH COMPREHENSIVE PORTFOLIO DATA
@@ -166,14 +218,12 @@ const Dashboard = () => {
   // INTERCEPTIVE NAVIGATION
   // =========================
   const handleNavigate = (route) => {
-    // ✅ Check if the target route is Buy or Sale
     if (route === "/buy" || route === "/sale") {
-      setPendingRoute(route);  // Hold onto the target path
-      setShowRulesPopup(true); // Pop open the rules card
-      return;                  // Stop early to prevent immediate navigation
+      setPendingRoute(route);  
+      setShowRulesPopup(true); 
+      return;                  
     }
 
-    // Normal navigation for all other components
     setLoadingRoute(route);
     setTimeout(() => {
       navigate(route);
@@ -181,18 +231,16 @@ const Dashboard = () => {
     }, 300);
   };
 
-  // ✅ Triggered when user dismisses/acknowledges the popup
   const handleClosePopup = () => {
     setShowRulesPopup(false);
 
     if (pendingRoute) {
       setLoadingRoute(pendingRoute);
       
-      // Execute delayed transition smoothly using the stored route path
       setTimeout(() => {
         navigate(pendingRoute);
         setLoadingRoute("");
-        setPendingRoute(""); // Reset tracking state
+        setPendingRoute(""); 
       }, 300);
     }
   };
@@ -216,6 +264,15 @@ const Dashboard = () => {
       {showRulesPopup && (
         <RulesPopup onClose={handleClosePopup} />
       )}
+
+      {/* ✅ NEW BUY/SALE MARKET ALERTS POPUP */}
+      <BuySalePopup 
+        isOpen={isMarketPopupOpen} 
+        onClose={() => setIsMarketPopupOpen(false)}
+        buyList={greenBuyCompanies}
+        saleList={greenSaleCompanies}
+        loading={marketDataLoading}
+      />
 
       {/* MAIN DASHBOARD */}
       <div className="min-h-screen bg-gray-950 text-white">

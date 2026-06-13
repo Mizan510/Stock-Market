@@ -34,6 +34,7 @@ const Login = () => {
       });
 
       localStorage.setItem("token", response.data.token);
+      
       // store user id and name returned by backend (decode token for id)
       try {
         const token = response.data.token;
@@ -55,6 +56,9 @@ const Login = () => {
       } catch (e) {
         // ignore
       }
+
+      // ✅ ড্যাশবোর্ডে গ্রিন জোন পপআপটি দেখানোর জন্য ফ্ল্যাগ সেট করা হলো
+      sessionStorage.setItem("justLoggedIn", "true");
 
       setSuccess("Login successful! Redirecting...");
 
