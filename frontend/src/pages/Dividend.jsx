@@ -349,6 +349,25 @@ const Dividend = () => {
     }
   };
 
+  // কলামের টোটাল SUM বের করার হেল্পার ফাংশন
+  const computeColumnSum = (key) => {
+    const total = filteredList.reduce((acc, item) => acc + Number(item[key] || 0), 0);
+    return total === 0 ? "0.00" : total.toFixed(2);
+  };
+
+  // Purification কলামের ডাইনামিক ব্যাকগ্রাউন্ড স্টাইল নির্ধারণী
+  const getPurificationBgClass = (value) => {
+    const num = Number(value) || 0;
+    if (num > 0) return "bg-green-800 text-white font-bold";
+    if (num < 0) return "bg-red-900 text-white font-bold";
+    return "bg-gray-700 text-gray-200 font-bold";
+  };
+
+  const totalNetAfterPurification = filteredList.reduce(
+    (acc, item) => acc + Number(item.netDividendAfterPurification || 0),
+    0
+  );
+
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6 flex justify-center">
       <div className="w-full max-w-6xl">
@@ -794,6 +813,34 @@ const Dividend = () => {
                       </td>
                     </tr>
                   ))}
+
+                  {/* যোগ করা নতুন SUM / টোটাল রো */}
+                  <tr className="bg-gray-800 font-bold border-t-2 border-gray-600 text-yellow-500">
+                    <td className="p-2 border border-gray-700"></td>
+                    <td className="p-2 border border-gray-700"></td>
+                    <td className="p-2 border border-gray-700 text-center font-extrabold text-yellow-400">SUM</td>
+                    <td className="p-2 border border-gray-700 text-white">{computeColumnSum("shares")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("dividendPercent")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("faceValue")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("perShareDividend")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("grossDividend")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("taxPercent")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("taxAmount")}</td>
+                    {/* Net Dividend Send in Bank কলামটি গ্রিন হাইলাইট করা হয়েছে */}
+                    <td className="p-2 border border-gray-700 bg-green-700 text-white font-extrabold">{computeColumnSum("netDividendSendInBank")}</td>
+                    <td className="p-2 border border-gray-700"></td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("costPerShare")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("dividendPer100tk")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("nonShariahIncome")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("totalIncome")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("purificationRate")}</td>
+                    <td className="p-2 border border-gray-700">{computeColumnSum("purificationAmount")}</td>
+                    {/* Net Dividend After Purification কলামটি ডাইনামিকলি কালার হবে */}
+                    <td className={`p-2 border border-gray-700 ${getPurificationBgClass(totalNetAfterPurification)}`}>
+                      {totalNetAfterPurification === 0 ? "0.00" : totalNetAfterPurification.toFixed(2)}
+                    </td>
+                    <td className="p-2 border border-gray-700"></td>
+                  </tr>
                 </tbody>
               </table>
             )}
