@@ -15,23 +15,23 @@ const Sale = () => {
   const confirm = useConfirm();
   const userId = getCurrentUserId();
 
-  // ✅ Bangladesh Local Date (Safe & Clean)
-  const getBDDate = () => {
-    const options = {
-      timeZone: "Asia/Dhaka",
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    };
+  // ✅ Get local Bangladesh Date formatted for native input element (YYYY-MM-DD)
+  const getInitialBDDate = () => {
+    const d = new Date();
+    const localizedStr = d.toLocaleString("en-US", { timeZone: "Asia/Dhaka" });
+    const localizedDate = new Date(localizedStr);
 
-    return new Intl.DateTimeFormat("en-GB", options)
-      .format(new Date())
-      .replace(/ /g, "-");
+    const year = localizedDate.getFullYear();
+    const month = String(localizedDate.getMonth() + 1).padStart(2, "0");
+    const day = String(localizedDate.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
   };
 
   const [stockName, setStockName] = useState("");
   const [saleQuantity, setSaleQuantity] = useState("");
   const [perShareValue, setPerShareValue] = useState("");
+  const [saleDate, setSaleDate] = useState(getInitialBDDate()); // ✅ NEW: State for customizable sale entry date
   const [loading, setLoading] = useState(false);
 
   // Auto-calculated fields
@@ -121,14 +121,12 @@ const Sale = () => {
 
   // SAVE SALE
   const handleSave = async () => {
-    if (!saleQuantity || !perShareValue) {
-      return showAlert("Sale Quantity and Per Share Value are required");
+    if (!saleQuantity || !perShareValue || !saleDate) {
+      return showAlert("Sale Quantity, Per Share Value, and Entry Date are required");
     }
 
     try {
       setLoading(true);
-
-      // use outer-scope userId
 
       if (editingId) {
         const res = await api.put(`/sale/update/${editingId}`, {
@@ -138,6 +136,7 @@ const Sale = () => {
           sallingTotalShareValue,
           commission,
           totalValueWithCommission,
+          date: saleDate, // ✅ Passes the edited date on updates
         });
 
         const updated = res.data.data || res.data || {};
@@ -145,6 +144,7 @@ const Sale = () => {
           prev.map((item) => (item._id === editingId ? updated : item)),
         );
         setEditingId(null);
+        setSaleDate(getInitialBDDate());
         showSuccessAlert(res.data.message || "Sale updated successfully!");
       } else {
         const res = await api.post("/sale/add", {
@@ -155,7 +155,7 @@ const Sale = () => {
           sallingTotalShareValue,
           commission,
           totalValueWithCommission,
-          date: getBDDate(),
+          date: saleDate, // ✅ UPDATED: Dynamic state input string instead of static function execution
         });
 
         const saved = res.data?.data || res.data;
@@ -163,6 +163,7 @@ const Sale = () => {
           setSaleList((prev) => [saved, ...prev]);
         }
         showSuccessAlert(res.data.message);
+        setSaleDate(getInitialBDDate());
       }
 
       setStockName("");
@@ -180,6 +181,11 @@ const Sale = () => {
     setStockName(item.stockName || "");
     setSaleQuantity(item.saleQuantity ?? "");
     setPerShareValue(item.perShareValue ?? "");
+
+    // Format incoming database date string properly to initialize field layout view
+    if (item.date) {
+      setSaleDate(formatDateString(item.date));
+    }
   };
 
   const handleDelete = async (item) => {
@@ -194,6 +200,7 @@ const Sale = () => {
         setStockName("");
         setSaleQuantity("");
         setPerShareValue("");
+        setSaleDate(getInitialBDDate());
       }
     } catch (err) {
       showErrorAlert(err.response?.data?.message || "Delete failed");
@@ -205,6 +212,7 @@ const Sale = () => {
     setStockName("");
     setSaleQuantity("");
     setPerShareValue("");
+    setSaleDate(getInitialBDDate()); // ✅ Safely returns calendar state back to today's date context
     setEditingId(null);
   };
 
@@ -217,25 +225,35 @@ const Sale = () => {
 
           <button
             onClick={() => navigate(-1)}
-            className="bg-gray-700 px-4 py-2 rounded-lg"
+            className="bg-gray-700 px-4 py-2 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors"
           >
             Back
           </button>
         </div>
 
-        {/* CURRENT DATE */}
-        <div className="bg-gray-800 p-3 rounded-lg mb-4 text-center">
-          <p className="text-gray-400 text-sm">Today's Date</p>
-          <p className="text-xl font-semibold text-white">{getBDDate()}</p>
-        </div>
-
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-3">
+          
+          {/* ✅ TRANSACTION ENTRY DATE - MOVED AND RENDERED AS EDITABLE INPUT */}
+          <div>
+            <label className="text-gray-400 text-sm">
+              Transaction Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              className="w-full p-3 bg-gray-800 rounded border border-gray-700 text-white font-semibold focus:outline-hidden focus:border-red-500 color-scheme-dark"
+              value={saleDate}
+              onChange={(e) => setSaleDate(e.target.value)}
+              style={{ colorScheme: "dark" }} // Enforces clean native browser styling over custom dark layout templates
+            />
+          </div>
+
           {/* STOCK DROPDOWN */}
           <div className="relative">
+            <label className="text-gray-400 text-sm">Stock Name</label>
             <input
               placeholder="Stock Name"
-              className="w-full p-3 bg-gray-800 rounded"
+              className="w-full p-3 bg-gray-800 rounded border border-gray-700 focus:outline-hidden focus:border-gray-500"
               value={stockName}
               onChange={(e) => {
                 setStockName(e.target.value);
@@ -275,7 +293,7 @@ const Sale = () => {
               placeholder="Sale Quantity"
               type="number"
               step="0.01"
-              className={`w-full p-3 bg-gray-800 rounded border-2 ${
+              className={`w-full p-3 bg-gray-800 rounded border-2 focus:outline-hidden ${
                 !saleQuantity ? "border-red-500" : "border-gray-700"
               }`}
               value={saleQuantity}
@@ -292,7 +310,7 @@ const Sale = () => {
               placeholder="Per Share Value"
               type="number"
               step="0.01"
-              className={`w-full p-3 bg-gray-800 rounded border-2 ${
+              className={`w-full p-3 bg-gray-800 rounded border-2 focus:outline-hidden ${
                 !perShareValue ? "border-red-500" : "border-gray-700"
               }`}
               value={perShareValue}
@@ -329,11 +347,11 @@ const Sale = () => {
           </div>
 
           {/* BUTTONS */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               onClick={handleSave}
               disabled={loading}
-              className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-60 p-3 rounded font-bold"
+              className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-60 p-3 rounded font-bold cursor-pointer transition-colors text-white"
             >
               {loading
                 ? editingId
@@ -346,7 +364,7 @@ const Sale = () => {
             <button
               onClick={handleReset}
               disabled={loading}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 p-3 rounded font-bold"
+              className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-60 p-3 rounded font-bold cursor-pointer transition-colors text-white"
             >
               Reset
             </button>
