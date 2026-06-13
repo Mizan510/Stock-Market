@@ -7,15 +7,11 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
   try {
     const data = filteredList.length ? filteredList : list;
 
+    // সর্টিং লজিক থেকে documentationDate বাদ দিয়ে declarationDate বা recordDate ব্যবহার করা হয়েছে
     const sorted = [...data].sort((a, b) => {
-      const getPrimaryDate = (item) =>
-        item.documentationDate || item.declarationDate || item.recordDate;
-      const dateA = getPrimaryDate(a)
-        ? new Date(getPrimaryDate(a))
-        : new Date(0);
-      const dateB = getPrimaryDate(b)
-        ? new Date(getPrimaryDate(b))
-        : new Date(0);
+      const getPrimaryDate = (item) => item.declarationDate || item.recordDate;
+      const dateA = getPrimaryDate(a) ? new Date(getPrimaryDate(a)) : new Date(0);
+      const dateB = getPrimaryDate(b) ? new Date(getPrimaryDate(b)) : new Date(0);
       return dateA - dateB;
     });
 
@@ -68,8 +64,8 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       };
     };
 
+    // Header Row থেকে "Documentation Date" কলামটি বাদ দেওয়া হয়েছে
     const headerRow = sheet.addRow([
-      "Documentation Date",
       "Declaration Date",
       "Record Date",
       "Company Name",
@@ -93,9 +89,10 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
 
     headerRow.eachCell((cell, colNumber) => {
       let fillColor = "FF1F4E79";
-      if (colNumber === 12) {
+      // কলাম সরানোর কারণে ইনডেক্স পরিবর্তন হয়েছে (১২ নম্বর কলাম এখন ১১, ২০ নম্বর কলাম এখন ১৯)
+      if (colNumber === 11) {
         fillColor = "FF70AD47";
-      } else if (colNumber === 20) {
+      } else if (colNumber === 19) {
         fillColor = getNetAfterPurificationStyle(1).fill.fgColor.argb;
       }
 
@@ -137,8 +134,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
         try {
           let date;
           if (typeof dateValue === "string") {
-            // If it's just a date string (YYYY-MM-DD), add time
-            // If it's already an ISO string, use it as is
             date = dateValue.includes("T")
               ? new Date(dateValue)
               : new Date(dateValue + "T00:00:00Z");
@@ -146,7 +141,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
             date = new Date(dateValue);
           }
 
-          // Check if date is valid
           if (isNaN(date.getTime())) {
             return dateValue || "";
           }
@@ -155,16 +149,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
         } catch (e) {
           return dateValue || "";
         }
-      };
-
-      // Get the primary date - use documentationDate if available, fallback to declarationDate or recordDate
-      const getPrimaryDate = () => {
-        return (
-          item.documentationDate ||
-          item.declarationDate ||
-          item.recordDate ||
-          ""
-        );
       };
 
       const grossDividend = parseNumber(item.grossDividend);
@@ -198,8 +182,8 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
           ? parseNumber(item.netDividendAfterPurification)
           : netDividend - rowPurificationAmount;
 
+      // ডাটা রো থেকে documentationDate বাদ দেওয়া হয়েছে
       const row = sheet.addRow([
-        parseDate(getPrimaryDate()),
         parseDate(item.declarationDate),
         parseDate(item.recordDate),
         item.companyName || "",
@@ -224,14 +208,15 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       row.eachCell((cell, colNumber) => {
         cell.alignment = { ...centerStyle, wrapText: true };
         cell.border = borderStyle;
-        if (colNumber === 12) {
+        // ১১ নম্বর কলাম (Net Dividend send in bank) গ্রিন হাইলাইট
+        if (colNumber === 11) {
           cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
           cell.fill = {
             type: "pattern",
             pattern: "solid",
             fgColor: { argb: "FF70AD47" },
           };
-        } else if (colNumber === 20) {
+        } else if (colNumber === 19) { // ১৯ নম্বর কলাম (Net Dividend after Purification)
           const style = getNetAfterPurificationStyle(
             rowNetDividendAfterPurification,
           );
@@ -257,8 +242,8 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       totals.netDividendAfterPurification += rowNetDividendAfterPurification;
     });
 
+    // Total Row থেকে প্রথম ফাকা সেলটি একটি কমানো হয়েছে
     const totalRow = sheet.addRow([
-      "",
       "",
       "",
       "TOTAL",
@@ -284,15 +269,15 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       cell.font = { bold: true };
       cell.alignment = { ...centerStyle, wrapText: true };
       cell.border = borderStyle;
-      // Net Dividend column (column 12) - green highlight
-      if (colNumber === 12) {
+      
+      if (colNumber === 11) {
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
         cell.fill = {
           type: "pattern",
           pattern: "solid",
           fgColor: { argb: "FF70AD47" },
         };
-      } else if (colNumber === 20) {
+      } else if (colNumber === 19) {
         const style = getNetAfterPurificationStyle(
           totals.netDividendAfterPurification,
         );
@@ -307,27 +292,27 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       }
     });
 
+    // ১টি কলাম কমে যাওয়ার কারণে কলামের উইডথ সেটিংস ১৯টি কলামের জন্য রি-অ্যারেঞ্জ করা হয়েছে
     sheet.columns = [
-      { width: 14 },
-      { width: 14 },
-      { width: 12 },
-      { width: 20 },
-      { width: 10 },
-      { width: 10 },
-      { width: 10 },
-      { width: 10 },
-      { width: 12 },
-      { width: 8 },
-      { width: 12 },
-      { width: 12 },
-      { width: 14 },
-      { width: 12 },
-      { width: 14 },
-      { width: 14 },
-      { width: 14 },
-      { width: 12 },
-      { width: 12 },
-      { width: 16 },
+      { width: 14 }, // Declaration Date
+      { width: 12 }, // Record Date
+      { width: 20 }, // Company Name
+      { width: 10 }, // Shares
+      { width: 10 }, // Dividend %
+      { width: 10 }, // Face Value
+      { width: 10 }, // Per Share Dividend
+      { width: 12 }, // Gross Dividend
+      { width: 8 },  // Tax %
+      { width: 12 }, // Tax Amount
+      { width: 12 }, // Net Dividend send in bank
+      { width: 14 }, // Bank Payment Date
+      { width: 12 }, // Cost/Share
+      { width: 14 }, // Dividend per 100 tk
+      { width: 14 }, // Non Shariah Income
+      { width: 14 }, // Total Income
+      { width: 12 }, // Purification Rate
+      { width: 12 }, // Purification Amount
+      { width: 16 }, // Net Dividend after Purification
     ];
 
     const buffer = await workbook.xlsx.writeBuffer();
