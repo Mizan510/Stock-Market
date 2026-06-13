@@ -94,7 +94,7 @@ const SummaryPanel = ({
             <span>💼</span> Portfolio Summary
           </h2>
           <p className="text-gray-400 text-sm mt-1">
-            High-level portfolio performance and ROI at a glance
+            Portfolio performance and ROI at a glance
           </p>
         </div>
 
