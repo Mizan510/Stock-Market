@@ -15,17 +15,6 @@ const Dividend = () => {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
-  // বাংলাদেশ টাইমজোনে সঠিক কারেন্ট ডেট পাওয়ার ফাংশন
-  const getBDDate = () => {
-    const now = new Date();
-    const bd = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
-    );
-    return bd.getFullYear() + 
-      "-" + String(bd.getMonth() + 1).padStart(2, "0") + 
-      "-" + String(bd.getDate()).padStart(2, "0");
-  };
-
   // ডাইনামিক অর্থবছর (জুলাই ১ থেকে জুন ৩০) নির্ধারণের লজিক
   const getFiscalYearDates = () => {
     const now = new Date();
@@ -62,7 +51,6 @@ const Dividend = () => {
   };
 
   const defaultForm = {
-    documentationDate: getBDDate(),
     declarationDate: "",
     recordDate: "",
     companyName: "",
@@ -111,19 +99,16 @@ const Dividend = () => {
     try {
       const res = await api.get(`/dividend/${userId}`);
       setList(res.data);
-      
-      // শুরুতে পেজ লোড হওয়ার সময় ওই অর্থবছরের ডাটা ফিল্টার করে দেখাবে
       applyFilter(res.data, fromDate, toDate);
     } catch (err) {
       console.log(err);
     }
   };
 
-  // ফিল্টার করার কমন ফাংশন (যাতে স্টেট সিঙ্ক ঠিক থাকে)
+  // ফিল্টার করার ফাংশন (Declaration Date অথবা Record Date দিয়ে ফিল্টার হবে)
   const applyFilter = (allData, start, end) => {
     const filtered = allData.filter((item) => {
-      // যদি documentationDate থাকে সেটা নিবে, না থাকলে declarationDate, না থাকলে recordDate
-      const dateToUse = item.documentationDate || item.declarationDate || item.recordDate;
+      const dateToUse = item.declarationDate || item.recordDate;
       if (!dateToUse) return false;
 
       const d = formatBackendDate(dateToUse);
@@ -257,29 +242,21 @@ const Dividend = () => {
         showSuccessAlert("Saved successfully");
       }
 
-      // স্টেট আপডেট
       setList(updatedList);
       
-      // সেভ করা ডাটার ডেট অনুযায়ী ফিল্টার রেঞ্জ অটো এডজাস্ট করার ট্রিক (যাতে রিপোর্টে ডাটা গায়েব না হয়)
-      const savedDate = form.documentationDate || form.declarationDate || form.recordDate;
+      const savedDate = form.declarationDate || form.recordDate;
       let currentFrom = fromDate;
       let currentTo = toDate;
       
       if (savedDate && (savedDate < fromDate || savedDate > toDate)) {
-        // যদি সেভ করা ডাটা বর্তমান রেঞ্জের বাইরে হয়, রেঞ্জ এক্সপ্যান্ড করে দেওয়া হচ্ছে
         if (savedDate < fromDate) currentFrom = savedDate;
         if (savedDate > toDate) currentTo = savedDate;
         setFromDate(currentFrom);
         setToDate(currentTo);
       }
 
-      // সংশোধিত রেঞ্জ অনুযায়ী ফিল্টার অ্যাপ্লাই
       applyFilter(updatedList, currentFrom, currentTo);
-
-      setForm({
-        ...defaultForm,
-        documentationDate: getBDDate(),
-      });
+      setForm(defaultForm);
       setShowReport(true);
     } catch (err) {
       showErrorAlert(err.response?.data?.message || "Save failed");
@@ -289,10 +266,7 @@ const Dividend = () => {
   };
 
   const handleRefresh = () => {
-    setForm({
-      ...defaultForm,
-      documentationDate: getBDDate(),
-    });
+    setForm(defaultForm);
     applyFilter(list, fromDate, toDate);
     setShowReport(false);
     setEditingId(null);
@@ -301,7 +275,6 @@ const Dividend = () => {
   const handleEdit = (item) => {
     setEditingId(item._id);
     setForm({
-      documentationDate: formatBackendDate(item.documentationDate),
       declarationDate: formatBackendDate(item.declarationDate),
       recordDate: formatBackendDate(item.recordDate),
       companyName: item.companyName || "",
@@ -393,22 +366,8 @@ const Dividend = () => {
         {/* FORM */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 bg-gray-900 p-4 rounded mb-4">
           <div>
-            <label htmlFor="documentationDate" className="block text-sm text-gray-300 mb-1">
-              1. Documentation Date
-            </label>
-            <input
-              id="documentationDate"
-              name="documentationDate"
-              type="date"
-              value={form.documentationDate}
-              onChange={handleChange}
-              className={inputClass("documentationDate")}
-            />
-          </div>
-
-          <div>
             <label htmlFor="declarationDate" className="block text-sm text-gray-300 mb-1">
-              2. Declaration Date
+              1. Declaration Date
             </label>
             <input
               id="declarationDate"
@@ -422,7 +381,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="recordDate" className="block text-sm text-gray-300 mb-1">
-              3. Record Date
+              2. Record Date
             </label>
             <input
               id="recordDate"
@@ -436,7 +395,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="companyName" className="block text-sm text-gray-300 mb-1">
-              4. Company Name *
+              3. Company Name *
             </label>
             <input
               id="companyName"
@@ -450,7 +409,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="shares" className="block text-sm text-gray-300 mb-1">
-              5. Number of Shares *
+              4. Number of Shares *
             </label>
             <input
               id="shares"
@@ -464,7 +423,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="dividendPercent" className="block text-sm text-gray-300 mb-1">
-              6. Company Dividend % *
+              5. Company Dividend % *
             </label>
             <input
               id="dividendPercent"
@@ -478,7 +437,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="faceValue" className="block text-sm text-gray-300 mb-1">
-              7. Face Value
+              6. Face Value
             </label>
             <input
               id="faceValue"
@@ -492,7 +451,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="perShareDividend" className="block text-sm text-gray-300 mb-1">
-              8. Per Share Cash Dividend
+              7. Per Share Cash Dividend
             </label>
             <input
               id="perShareDividend"
@@ -506,7 +465,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="grossDividend" className="block text-sm text-gray-300 mb-1">
-              9. Gross Dividend
+              8. Gross Dividend
             </label>
             <input
               id="grossDividend"
@@ -520,7 +479,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="taxPercent" className="block text-sm text-gray-300 mb-1">
-              10. Tax %
+              9. Tax %
             </label>
             <input
               id="taxPercent"
@@ -534,7 +493,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="taxAmount" className="block text-sm text-gray-300 mb-1">
-              11. Tax Amount
+              10. Tax Amount
             </label>
             <input
               id="taxAmount"
@@ -548,7 +507,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="netDividendSendInBank" className="block text-sm text-gray-300 mb-1">
-              12. Net Dividend send in bank
+              11. Net Dividend send in bank
             </label>
             <input
               id="netDividendSendInBank"
@@ -562,7 +521,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="bankPaymentDate" className="block text-sm text-gray-300 mb-1">
-              13. Bank Payment Date
+              12. Bank Payment Date
             </label>
             <input
               id="bankPaymentDate"
@@ -576,7 +535,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="costPerShare" className="block text-sm text-gray-300 mb-1">
-              14. Per Share COST (Commission) *
+              13. Per Share COST (Commission) *
             </label>
             <input
               id="costPerShare"
@@ -590,7 +549,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="dividendPer100tk" className="block text-sm text-gray-300 mb-1">
-              15. Dividend per 100 tk
+              14. Dividend per 100 tk
             </label>
             <input
               id="dividendPer100tk"
@@ -604,7 +563,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="nonShariahIncome" className="block text-sm text-gray-300 mb-1">
-              16. Non Shariah Income
+              15. Non Shariah Income
             </label>
             <input
               id="nonShariahIncome"
@@ -618,7 +577,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="totalIncome" className="block text-sm text-gray-300 mb-1">
-              17. Total Income
+              16. Total Income
             </label>
             <input
               id="totalIncome"
@@ -632,7 +591,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="purificationRate" className="block text-sm text-gray-300 mb-1">
-              18. Purification Rate
+              17. Purification Rate
             </label>
             <input
               id="purificationRate"
@@ -646,7 +605,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="purificationAmount" className="block text-sm text-gray-300 mb-1">
-              19. Purification Amount
+              18. Purification Amount
             </label>
             <input
               id="purificationAmount"
@@ -660,7 +619,7 @@ const Dividend = () => {
 
           <div>
             <label htmlFor="netDividendAfterPurification" className="block text-sm text-gray-300 mb-1">
-              20. Net Dividend after Purification
+              19. Net Dividend after Purification
             </label>
             <input
               id="netDividendAfterPurification"
@@ -765,7 +724,6 @@ const Dividend = () => {
               <table className="min-w-full text-sm text-left border-collapse">
                 <thead className="bg-gray-800 text-gray-200">
                   <tr>
-                    <th className="p-2 border border-gray-700">Documentation Date</th>
                     <th className="p-2 border border-gray-700">Declaration Date</th>
                     <th className="p-2 border border-gray-700">Record Date</th>
                     <th className="p-2 border border-gray-700">Company Name</th>
@@ -791,9 +749,6 @@ const Dividend = () => {
                 <tbody>
                   {filteredList.map((item) => (
                     <tr key={item._id} className="odd:bg-gray-950 even:bg-gray-900">
-                      <td className="p-2 border border-gray-700">
-                        {item.documentationDate ? new Date(item.documentationDate).toLocaleDateString("en-GB") : "-"}
-                      </td>
                       <td className="p-2 border border-gray-700">
                         {item.declarationDate ? new Date(item.declarationDate).toLocaleDateString("en-GB") : "-"}
                       </td>
