@@ -56,47 +56,55 @@ const Sidebar = ({
       <div
         className={`flex flex-col items-center ${isOpen ? "mb-6" : "justify-center"}`}
       >
-        {isOpen && (
+        {isOpen ? (
           <div className="w-full text-center">
-            <h1 className="text-xl font-bold mb-1 text-white">Dashboard</h1>
-            <p className="text-sm text-gray-400">
+            {/* Added 🎛️ icon with flex layout alignment */}
+            <h1 className="text-xl font-bold mb-1 text-white flex items-center justify-center gap-2">
+              🎛️ Dashboard
+            </h1>
+            <p className="text-sm text-gray-400 truncate">
               {displayName || "Quick navigation for all sections."}
             </p>
           </div>
+        ) : (
+          /* Small indicator icon when sidebar is collapsed to keep spacing clean */
+          <div className="text-xl mb-4 py-1">🎛️</div>
         )}
       </div>
 
-      {/* Menu */}
-      <nav className="space-y-2 flex-1">
-        {menuItems.map((item) => {
-          const isActive = loadingRoute === item.route;
+      {/* MIDDLE MENU SECTION: Flex container shifts links into the exact middle of the sidebar layout */}
+      <div className="flex-1 flex flex-col justify-center overflow-y-auto no-scrollbar">
+        <nav className="space-y-2">
+          {menuItems.map((item) => {
+            const isActive = loadingRoute === item.route;
 
-          return (
-            <button
-              key={item.route}
-              type="button"
-              onClick={() => handleNavigate(item.route)}
-              disabled={isActive}
-              className={`w-full flex items-center gap-3 rounded-2xl transition-all duration-200 ${
-                isActive
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-900 text-gray-200 hover:bg-gray-800"
-              } ${isOpen ? "px-4 py-3" : "justify-center py-3"}`}
-            >
-              <span className="text-lg">{item.icon}</span>
+            return (
+              <button
+                key={item.route}
+                type="button"
+                onClick={() => handleNavigate(item.route)}
+                disabled={isActive}
+                className={`w-full flex items-center gap-3 rounded-2xl transition-all duration-200 ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-900 text-gray-200 hover:bg-gray-800"
+                } ${isOpen ? "px-4 py-3" : "justify-center py-3"}`}
+              >
+                <span className="text-lg shrink-0">{item.icon}</span>
 
-              {isOpen && (
-                <span className="truncate text-sm font-medium">
-                  {item.title}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+                {isOpen && (
+                  <span className="truncate text-sm font-medium">
+                    {item.title}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
 
       {/* Logout */}
-      <div className="mt-auto">
+      <div className="mt-auto pt-4">
         <button
           onClick={async () => {
             // 1. Instantly collapse the sidebar layout view cleanly
@@ -119,7 +127,7 @@ const Sidebar = ({
           disabled={logoutLoading}
           className={`w-full rounded-2xl text-sm font-medium transition-all duration-200 disabled:opacity-60 ${
             isOpen
-              ? "mt-4 bg-red-600 hover:bg-red-700 px-3 py-3"
+              ? "bg-red-600 hover:bg-red-700 px-3 py-3"
               : "bg-red-600 hover:bg-red-700 p-2"
           }`}
         >

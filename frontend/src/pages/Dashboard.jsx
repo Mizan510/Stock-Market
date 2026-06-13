@@ -136,7 +136,7 @@ const Dashboard = () => {
       setLogoutLoading(true);
       setSidebarOpen(false); // Instantly snap close sidebar elements
 
-      // 1. Flush active access vectors immediately 
+      // 1. Flush active access vectors immediately
       localStorage.removeItem("auth");
       localStorage.removeItem("token");
       sessionStorage.clear();
@@ -157,10 +157,9 @@ const Dashboard = () => {
         return;
       }
 
-      // 3. Web Browser Handling Environment 
+      // 3. Web Browser Handling Environment
       // Erase backward browsing memory logs and switch tracking directly back to login scene
       navigate("/login", { replace: true });
-
     } catch (err) {
       console.error("App closure sequence failed:", err);
       navigate("/login", { replace: true });
@@ -183,15 +182,15 @@ const Dashboard = () => {
 
   const menuItems = [
     { icon: "🔄", title: "Update Price", route: "/update-price" },
-    { icon: "🎯", title: "Buy Zone", route: "/zone" },
-    { icon: "📢", title: "Sale Zone", route: "/sale-zone" },
+    { icon: "🟩", title: "Buy", route: "/buy" },
+    { icon: "🟥", title: "Sale", route: "/sale" },
     { icon: "💼", title: "Investment", route: "/investment" },
     { icon: "🟢", title: "Buy", route: "/buy" },
     { icon: "🔴", title: "Sale", route: "/sale" },
     { icon: "💎", title: "Dividend", route: "/dividend" },
     { icon: "📊", title: "Reports", route: "/reports" },
-    { icon: "💸", title: "Expense", route: "/expense" },
-    { icon: "📄", title: "LBSL Report", route: "/lbsl-report" },
+    { icon: "💰", title: "Expense", route: "/expense" },
+    { icon: "📁", title: "LBSL Report", route: "/lbsl-report" },
   ];
 
   return (

@@ -76,7 +76,6 @@ const SaleZone = () => {
               item.sharePrice ?? item.buyPerShareValue ?? item.price ?? 0,
             );
 
-            // FIXED: Resilient matching scheme to handle varied backend naming patterns
             const tradeCompanyClean = company?.trim().toLowerCase();
             const matchedZone = rawZones.find((z) => {
               const zoneCompanyClean = (
@@ -100,7 +99,7 @@ const SaleZone = () => {
               ? (matchedZone.closingPrice ??
                 matchedZone.close ??
                 matchedZone.sessionClose ??
-                matchedZone.price) // Fallback to current asset price in zone metric if named uniquely
+                matchedZone.price)
               : (item.closingPrice ?? item.close ?? item.sessionClose);
 
             const closingPrice =
@@ -147,6 +146,7 @@ const SaleZone = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
+      {/* Dynamic Style Injection for aggressive layouts */}
       <style>
         {`
           @keyframes strongBlink {
@@ -155,6 +155,14 @@ const SaleZone = () => {
           }
           .animate-strong-blink {
             animation: strongBlink 0.8s steps(1, start) infinite;
+          }
+          
+          @keyframes successBlink {
+            0%, 100% { opacity: 1; background-color: rgba(16, 185, 129, 0.25); }
+            50% { opacity: 0.1; background-color: transparent; }
+          }
+          .animate-success-blink {
+            animation: successBlink 0.8s steps(1, start) infinite;
           }
         `}
       </style>
@@ -166,8 +174,8 @@ const SaleZone = () => {
             <h1 className="text-3xl font-bold tracking-tight text-white">
               Sale Zone
             </h1>
-            <p className="mt-1 text-lg font-semibold tracking-wide bg-linear-to-r from-cyan-400 via-blue-400 to-indigo-500 bg-clip-text text-transparent inline-block">
-              Risk Management
+            <p className="mt-1 text-sm font-semibold tracking-wide bg-linear-to-r from-cyan-400 via-blue-400 to-indigo-500 bg-clip-text text-transparent inline-block">
+              Red = Loss Sale | Green = Profit Sale | White = Middle Range
             </p>
           </div>
 
@@ -243,13 +251,19 @@ const SaleZone = () => {
 
               <tbody className="divide-y divide-gray-800">
                 {trades.map((t, i) => {
+                  // UPDATED: Precise 3-tier boundary color state processing
                   let companyColorClass = "text-white bg-gray-900/30";
+                  
                   if (t.closingPrice !== null) {
                     if (t.closingPrice <= t.slPrice) {
-                      companyColorClass =
-                        "text-red-500 font-black animate-strong-blink";
+                      // 1. Equal or below Exit Floor Price -> High Alert Red Blink
+                      companyColorClass = "text-red-500 font-black animate-strong-blink";
+                    } else if (t.closingPrice >= t.tpPrice) {
+                      // 2. Equal or above Profit Target -> Green Success Blink
+                      companyColorClass = "text-emerald-400 font-black animate-success-blink";
                     } else {
-                      companyColorClass = "text-emerald-400";
+                      // 3. Normal range inside boundaries -> Neutral White Text
+                      companyColorClass = "text-white bg-gray-900/30";
                     }
                   }
 
