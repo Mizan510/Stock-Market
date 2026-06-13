@@ -210,7 +210,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                 
                 {/* 🟢 LEFT SIDE: BUY ZONE (হালকা গ্রিন টিন্ট ব্যাকগ্রাউন্ড) */}
                 <div className="p-4 pr-3 bg-emerald-950/30 flex flex-col overflow-hidden">
-                  <div className="mb-2 pb-1 border-b border-emerald-900/30">
+                  <div className="mb-2 pb-1 border-b border-emerald-600/90">
                     <h2 className="text-xl font-bold text-emerald-400 font-mono tracking-wide flex items-center gap-1.5">
                       <span className="text-xs">🟢</span> Buy Zone
                     </h2>
@@ -241,7 +241,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
 
                 {/* 🔴 RIGHT SIDE: SALE ZONE (হালকা রেড টিন্ট ব্যাকগ্রাউন্ড) */}
                 <div className="p-4 pl-3 bg-rose-950/30 flex flex-col overflow-hidden gap-3">
-                  <div className="mb-2 pb-1 border-b border-rose-900/30">
+                  <div className="mb-2 pb-1 border-b border-rose-600/90">
                     <h2 className="text-xl font-bold text-rose-400 font-mono tracking-wide flex items-center gap-1.5 shrink-0">
                       <span className="text-xs">🔴</span> Sale Zone
                     </h2>
@@ -288,7 +288,7 @@ const BuySalePopup = ({ isOpen, onClose }) => {
                           {saleTargetProfitList.map((row, index) => (
                             <li
                               key={index}
-                              className="font-mono text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors tracking-normal"
+                              className="font-mono text-[14px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors tracking-normal"
                             >
                               {row.company}
                             </li>
