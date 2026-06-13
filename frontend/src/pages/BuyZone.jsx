@@ -55,35 +55,40 @@ const BuyZone = () => {
     const load = async () => {
       try {
         const res = await api.get("/zone");
-        setRows(
-          (res.data || []).map((row) => ({
-            ...row,
-            company: row.company || "",
-            low: row.low !== undefined && row.low !== null ? row.low : "",
-            high: row.high !== undefined && row.high !== null ? row.high : "",
-            buyPercent:
-              row.buyPercent !== undefined && row.buyPercent !== null
-                ? row.buyPercent
-                : 20,
-            sellPercent:
-              row.sellPercent !== undefined && row.sellPercent !== null
-                ? row.sellPercent
-                : 70,
-            todaysHigh:
-              row.todaysHigh !== undefined && row.todaysHigh !== null
-                ? row.todaysHigh
-                : "",
-            todaysLow:
-              row.todaysLow !== undefined && row.todaysLow !== null
-                ? row.todaysLow
-                : "",
-            closingPrice:
-              row.closingPrice !== undefined && row.closingPrice !== null
-                ? row.closingPrice
-                : "",
-            isEditing: false,
-          })),
+        const mappedData = (res.data || []).map((row) => ({
+          ...row,
+          company: row.company || "",
+          low: row.low !== undefined && row.low !== null ? row.low : "",
+          high: row.high !== undefined && row.high !== null ? row.high : "",
+          buyPercent:
+            row.buyPercent !== undefined && row.buyPercent !== null
+              ? row.buyPercent
+              : 20,
+          sellPercent:
+            row.sellPercent !== undefined && row.sellPercent !== null
+              ? row.sellPercent
+              : 70,
+          todaysHigh:
+            row.todaysHigh !== undefined && row.todaysHigh !== null
+              ? row.todaysHigh
+              : "",
+          todaysLow:
+            row.todaysLow !== undefined && row.todaysLow !== null
+              ? row.todaysLow
+              : "",
+          closingPrice:
+            row.closingPrice !== undefined && row.closingPrice !== null
+              ? row.closingPrice
+              : "",
+          isEditing: false,
+        }));
+
+        // SORT ALPHABETICALLY: Case-insensitive sorting from A to Z
+        const sortedData = mappedData.sort((a, b) =>
+          a.company.localeCompare(b.company, undefined, { sensitivity: "base" })
         );
+
+        setRows(sortedData);
       } catch (err) {
         console.error(err);
         showErrorAlert("Failed to load zones from server.");
