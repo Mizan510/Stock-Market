@@ -247,6 +247,7 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
           bottom: { style: "medium" },
           right: { style: "medium" },
         };
+        cell.border = borderStyle;
         cell.fill = {
           type: "pattern",
           pattern: "solid",
@@ -332,7 +333,6 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
                   className="border-b border-gray-800 hover:bg-gray-900"
                 >
                   <td className="p-3 whitespace-nowrap min-w-120px">
-                    {/* 🛠️ FIX: Direct UI Table layout changed to item.date first */}
                     {formatDateDisplay(item.date || item.createdAt)}
                   </td>
                   <td className="p-3">{item.stockName}</td>
@@ -378,7 +378,8 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
                   </td>
                 </tr>
               ))}
-              {/* totals row */}
+              
+              {/* 🛠️ FIXED totals row calculation layouts below using .toFixed(2) */}
               <tr className="bg-gray-800 font-bold">
                 <td className="p-3 whitespace-nowrap min-w-120px">TOTAL</td>
                 <td className="p-3">-</td>
@@ -394,20 +395,20 @@ const BuyReport = ({ buyList, userId, handleEdit, handleDelete }) => {
                     (s, it) =>
                       s + Number(it.buyingTotalShareValue ?? it.total ?? 0),
                     0,
-                  )}
+                  ).toFixed(2)}
                 </td>
                 <td className="p-3">
                   {filteredBuyList.reduce(
                     (s, it) => s + Number(it.commission ?? 0),
                     0,
-                  )}
+                  ).toFixed(2)}
                 </td>
                 <td className="p-3">
                   {filteredBuyList.reduce(
                     (s, it) =>
                       s + Number(it.totalValueWithCommission ?? it.total ?? 0),
                     0,
-                  )}
+                  ).toFixed(2)}
                 </td>
                 <td className="p-3">-</td>
               </tr>
