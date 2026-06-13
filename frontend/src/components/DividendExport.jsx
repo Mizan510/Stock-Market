@@ -85,7 +85,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       "Net Dividend after Purification",
     ]);
 
-    // হেডার রো এর হাইট বাড়ানো হলো যাতে ফুল টেক্সট দেখা যায়
     headerRow.height = 35;
 
     headerRow.eachCell((cell, colNumber) => {
@@ -106,22 +105,8 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       cell.border = borderStyle;
     });
 
+    // ব্যাকগ্রাউন্ড স্টাইলিং কালার ঠিক রাখার জন্য totals অবজেক্টটি রাখা হয়েছে
     const totals = {
-      shares: 0,
-      dividendPercent: 0,
-      faceValue: 0,
-      perShareDividend: 0,
-      grossDividend: 0,
-      taxPercent: 0,
-      taxAmount: 0,
-      netDividend: 0,
-      netDividendSendInBank: 0,
-      costPerShare: 0,
-      dividendPer100tk: 0,
-      purificationRate: 0,
-      purificationAmount: 0,
-      nonShariahIncome: 0,
-      totalIncome: 0,
       netDividendAfterPurification: 0,
     };
 
@@ -204,7 +189,6 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
         rowNetDividendAfterPurification || "",
       ]);
 
-      // ডেটা রো গুলোর হাইটও কিছুটা স্ট্যান্ডার্ড (২০) করে দেওয়া হলো যাতে দেখতে সুন্দর লাগে
       row.height = 20;
 
       row.eachCell((cell, colNumber) => {
@@ -226,43 +210,33 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
         }
       });
 
-      totals.shares += Number(item.shares || 0);
-      totals.dividendPercent += Number(item.dividendPercent || 0);
-      totals.faceValue += Number(item.faceValue || 0);
-      totals.perShareDividend += Number(item.perShareDividend || 0);
-      totals.grossDividend += Number(item.grossDividend || 0);
-      totals.taxPercent += Number(item.taxPercent || 0);
-      totals.taxAmount += Number(item.taxAmount || 0);
-      totals.netDividendSendInBank += rowNetDividendSendInBank;
-      totals.costPerShare += Number(item.costPerShare || 0);
-      totals.dividendPer100tk += Number(item.dividendPer100tk || 0);
-      totals.purificationRate += rowPurificationRate;
-      totals.purificationAmount += rowPurificationAmount;
-      totals.nonShariahIncome += Number(item.nonShariahIncome || 0);
-      totals.totalIncome += Number(item.totalIncome || 0);
       totals.netDividendAfterPurification += rowNetDividendAfterPurification;
     });
 
+    // Excel SUM formula ডাইনামিক রেঞ্জ নির্ধারণের জন্য
+    const startRow = 2; // হেডার রো ১, তাই ড্যাটা শুরু রো ২ থেকে
+    const endRow = sorted.length + 1;
+
     const totalRow = sheet.addRow([
-      "",
-      "",
-      "TOTAL",
-      totals.shares,
-      totals.dividendPercent,
-      totals.faceValue,
-      totals.perShareDividend,
-      totals.grossDividend,
-      totals.taxPercent,
-      totals.taxAmount,
-      totals.netDividendSendInBank,
-      "",
-      totals.costPerShare,
-      totals.dividendPer100tk,
-      totals.nonShariahIncome,
-      totals.totalIncome,
-      totals.purificationRate,
-      totals.purificationAmount,
-      totals.netDividendAfterPurification,
+      "", // Declaration Date
+      "", // Record Date
+      "SUM", // Company Name কলামে লেবেল পরিবর্তন করা হলো
+      { formula: `SUM(D${startRow}:D${endRow})` }, // Shares (Col D)
+      { formula: `SUM(E${startRow}:E${endRow})` }, // Dividend % (Col E)
+      { formula: `SUM(F${startRow}:F${endRow})` }, // Face Value (Col F)
+      { formula: `SUM(G${startRow}:G${endRow})` }, // Per Share Dividend (Col G)
+      { formula: `SUM(H${startRow}:H${endRow})` }, // Gross Dividend (Col H)
+      { formula: `SUM(I${startRow}:I${endRow})` }, // Tax % (Col I)
+      { formula: `SUM(J${startRow}:J${endRow})` }, // Tax Amount (Col J)
+      { formula: `SUM(K${startRow}:K${endRow})` }, // Net Dividend send in bank (Col K)
+      "", // Bank Payment Date
+      { formula: `SUM(M${startRow}:M${endRow})` }, // Cost/Share (Col M)
+      { formula: `SUM(N${startRow}:N${endRow})` }, // Dividend per 100 tk (Col N)
+      { formula: `SUM(O${startRow}:O${endRow})` }, // Non Shariah Income (Col O)
+      { formula: `SUM(P${startRow}:P${endRow})` }, // Total Income (Col P)
+      { formula: `SUM(Q${startRow}:Q${endRow})` }, // Purification Rate (Col Q)
+      { formula: `SUM(R${startRow}:R${endRow})` }, // Purification Amount (Col R)
+      { formula: `SUM(S${startRow}:S${endRow})` }, // Net Dividend after Purification (Col S)
     ]);
 
     totalRow.height = 22;
@@ -305,7 +279,7 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       { width: 14 }, // Gross Dividend
       { width: 9 },  // Tax %
       { width: 13 }, // Tax Amount
-      { width: 18 }, // Net Dividend send in bank (উইডথ একটু বাড়ানো হলো)
+      { width: 18 }, // Net Dividend send in bank
       { width: 15 }, // Bank Payment Date
       { width: 13 }, // Cost/Share
       { width: 16 }, // Dividend per 100 tk
@@ -313,7 +287,7 @@ const DividendExport = async ({ filteredList, list, setExportLoading }) => {
       { width: 14 }, // Total Income
       { width: 14 }, // Purification Rate
       { width: 15 }, // Purification Amount
-      { width: 22 }, // Net Dividend after Purification (উইডথ একটু বাড়ানো হলো)
+      { width: 22 }, // Net Dividend after Purification
     ];
 
     const buffer = await workbook.xlsx.writeBuffer();
