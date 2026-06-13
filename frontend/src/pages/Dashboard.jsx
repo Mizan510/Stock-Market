@@ -207,7 +207,7 @@ const Dashboard = () => {
     { icon: "💎", title: "Dividend", route: "/dividend" },
     { icon: "📊", title: "Reports", route: "/reports" },
     { icon: "💰", title: "Expense", route: "/expense" },
-    { icon: "📁", title: "LBSL Report", route: "/lbsl-report" },
+    { icon: "📑", title: "LBSL Report", route: "/lbsl-report" },
   ];
 
   return (
