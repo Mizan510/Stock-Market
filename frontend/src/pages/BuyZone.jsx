@@ -214,7 +214,7 @@ const BuyZone = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6">
+    <div className="min-h-screen bg-gray-950 text-white p-4">
       {/* Dynamic Global Style Injection for Strict High-Intensity Blinking */}
       <style>{`
         @keyframes strongBlinkGreen {
@@ -230,19 +230,18 @@ const BuyZone = () => {
       {/* Header layout aligned for tight distribution */}
       <div className="flex flex-row items-center justify-between gap-4 mb-2 border-b border-gray-900 pb-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-xl font-bold tracking-tight text-white">
             Buy Zone
           </h1>
-          <p className="mt-0.5 text-lg font-semibold tracking-wide bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent inline-block">
+          <p className="mt-0.5 text-xs font-semibold tracking-wide bg-linear-to-r from-emerald-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent inline-block">
             Green = Buy | Red = Sell | White = Middle Range
           </p>
         </div>
 
-        {/* Action Container aligned strictly to the right side */}
         <div className="flex items-center shrink-0">
           <button
             onClick={() => navigate(-1)}
-            className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+            className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-3 py-1 rounded-lg text-xs font-medium cursor-pointer"
           >
             Back
           </button>
@@ -250,54 +249,58 @@ const BuyZone = () => {
       </div>
 
       {rows.length === 0 ? (
-        <div className="text-center text-gray-500 mt-10">
+        <div className="text-center text-gray-500 mt-10 text-xs">
           No companies available.
         </div>
       ) : (
-        /* Overflow container sits tightly under header section */
-        <div className="overflow-auto max-h-[calc(100vh-140px)] rounded-xl border border-gray-800 mt-1">
-          <table className="w-full min-w-max text-sm text-center border-collapse">
+        <div className="overflow-auto max-h-[calc(100vh-110px)] rounded-xl border border-gray-800 mt-1">
+          <table className="w-full table-fixed min-w-max text-[11px] text-center border-collapse">
             <thead>
-              {/* Detailed Headers Row */}
-              <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold">
-                {/* Balanced column boundaries raised cleanly to 120px */}
-                <th className="p-2 border-r border-gray-800 sticky top-0 left-0 bg-gray-900 z-30 shadow-[2px_2px_5px_rgba(0,0,0,0.4)] min-w-[120px] max-w-[120px] text-xs truncate">
+              <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold tracking-tight text-[11px]">
+                {/* FIXED: Removed internal text artifact, forced exact sticky + solid background pairing */}
+                <th className="p-1 border-r border-gray-800 sticky top-0 left-0 bg-gray-900 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.5)] w-[110px] truncate">
                   Company Name
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20">
+                
+                {/* Compressed Middle Columns */}
+                <th className="p-1 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight w-[45px]">
                   1Y Low
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight w-[45px]">
                   1Y High
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
                   Session Low
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
                   Session High
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
                   Session Close
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight w-[50px]">
                   Pivot Point
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
                   Forecast Matrix
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight w-[45px]">
                   Buy % Target
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight w-[45px]">
                   Sell % Target
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight w-[68px]">
                   Buy Action Entry
                 </th>
-                <th className="p-2 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20">
+                <th className="p-1 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight w-[68px]">
                   Sell Action Target
                 </th>
-                <th className="p-2 bg-gray-900 sticky top-0 z-20">Action Control</th>
+
+                {/* Last Column Control Boundary */}
+                <th className="p-1 bg-gray-900 sticky top-0 z-20 w-[90px]">
+                  Action Control
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
@@ -333,8 +336,8 @@ const BuyZone = () => {
                     key={row._id || index}
                     className="group hover:bg-gray-900/50 transition-colors"
                   >
-                    {/* Synchronized row cell width seamlessly at 120px boundary profiles */}
-                    <td className="p-1 bg-gray-950 border-r border-gray-800 font-medium sticky left-0 z-10 group-hover:bg-gray-900 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.3)] min-w-[120px] max-w-[120px] truncate">
+                    {/* FIXED: Left boundary sticky position explicitly anchored over scrolling data rows */}
+                    <td className="p-0.5 bg-gray-950 border-r border-gray-800 font-medium sticky left-0 z-10 group-hover:bg-gray-900 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.4)] truncate">
                       {row.isEditing ? (
                         <input
                           type="text"
@@ -342,21 +345,20 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "company", e.target.value)
                           }
-                          className="w-full bg-gray-800 border border-gray-700 py-1 px-1.5 rounded text-center text-xs font-semibold focus:outline-hidden focus:border-blue-500 text-white"
-                          placeholder="AAPL"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-1 rounded text-center text-[11px] font-semibold focus:outline-hidden focus:border-blue-500 text-white"
                         />
                       ) : (
                         <div
                           style={inlineBlinkStyle}
-                          className="py-1 px-1 truncate block w-full text-center text-white text-sm transition-all"
+                          className="py-0.5 px-0.5 truncate block w-full text-center text-white text-[11px]"
                         >
                           {formatValue(row.company)}
                         </div>
                       )}
                     </td>
 
-                    {/* 1Y Low */}
-                    <td className="p-2 bg-blue-950/10 border-r border-gray-800">
+                    {/* Numeric Columns */}
+                    <td className="p-0.5 bg-blue-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
@@ -364,15 +366,14 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "low", e.target.value)
                           }
-                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[11px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1">{formatValue(row.low)}</div>
+                        <div className="py-0.5">{formatValue(row.low)}</div>
                       )}
                     </td>
 
-                    {/* 1Y High */}
-                    <td className="p-2 bg-blue-950/10 border-r border-gray-800">
+                    <td className="p-0.5 bg-blue-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
@@ -380,15 +381,14 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "high", e.target.value)
                           }
-                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[11px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1">{formatValue(row.high)}</div>
+                        <div className="py-0.5">{formatValue(row.high)}</div>
                       )}
                     </td>
 
-                    {/* Today's Low */}
-                    <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
+                    <td className="p-0.5 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
@@ -396,15 +396,14 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "todaysLow", e.target.value)
                           }
-                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[11px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1">{formatValue(row.todaysLow)}</div>
+                        <div className="py-0.5">{formatValue(row.todaysLow)}</div>
                       )}
                     </td>
 
-                    {/* Today's High */}
-                    <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
+                    <td className="p-0.5 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
@@ -412,17 +411,14 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "todaysHigh", e.target.value)
                           }
-                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[11px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1">
-                          {formatValue(row.todaysHigh)}
-                        </div>
+                        <div className="py-0.5">{formatValue(row.todaysHigh)}</div>
                       )}
                     </td>
 
-                    {/* Today's Close */}
-                    <td className="p-2 bg-emerald-950/10 border-r border-gray-800">
+                    <td className="p-0.5 bg-emerald-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
@@ -430,43 +426,34 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "closingPrice", e.target.value)
                           }
-                          className="w-20 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[11px] focus:outline-hidden"
                         />
                       ) : (
-                        <div style={inlineBlinkStyle} className="py-1 transition-all">
+                        <div style={inlineBlinkStyle} className="py-0.5 transition-all">
                           {formatValue(row.closingPrice)}
                         </div>
                       )}
                     </td>
 
-                    {/* Pivot Point */}
-                    <td className="p-2 bg-amber-950/10 border-r border-gray-800 text-amber-400 font-bold">
+                    <td className="p-0.5 bg-amber-950/10 border-r border-gray-800 text-amber-400 font-bold">
                       {pivotPoint !== undefined ? pivotPoint.toFixed(2) : ""}
                     </td>
 
-                    {/* Forecast */}
-                    <td className="p-2 bg-amber-950/10 border-r border-gray-800">
-                      <div className="text-xs font-bold tracking-wider uppercase">
+                    <td className="p-0.5 bg-amber-950/10 border-r border-gray-800">
+                      <div className="text-[9px] font-bold tracking-tighter uppercase">
                         {nextDayPlan === "Bullish" ? (
-                          <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-sm">
-                            {nextDayPlan}
-                          </span>
+                          <span className="text-emerald-400">{nextDayPlan}</span>
                         ) : nextDayPlan === "Bearish" ? (
-                          <span className="bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded-sm">
-                            {nextDayPlan}
-                          </span>
+                          <span className="text-rose-400">{nextDayPlan}</span>
                         ) : nextDayPlan === "Neutral" ? (
-                          <span className="bg-gray-500/20 text-gray-300 px-2 py-0.5 rounded-sm">
-                            {nextDayPlan}
-                          </span>
+                          <span className="text-gray-400">{nextDayPlan}</span>
                         ) : (
                           ""
                         )}
                       </div>
                     </td>
 
-                    {/* Buy % Target */}
-                    <td className="p-2 bg-purple-950/10 border-r border-gray-800">
+                    <td className="p-0.5 bg-purple-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
@@ -474,17 +461,16 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "buyPercent", e.target.value)
                           }
-                          className="w-16 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[11px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1 text-purple-300 font-medium">
+                        <div className="py-0.5 text-purple-300 font-medium">
                           {formatValue(row.buyPercent)}%
                         </div>
                       )}
                     </td>
 
-                    {/* Sell % Target */}
-                    <td className="p-2 bg-purple-950/10 border-r border-gray-800">
+                    <td className="p-0.5 bg-purple-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
                           type="number"
@@ -492,56 +478,54 @@ const BuyZone = () => {
                           onChange={(e) =>
                             handleChange(index, "sellPercent", e.target.value)
                           }
-                          className="w-16 bg-gray-800 border border-gray-700 p-1 rounded text-center text-white focus:outline-hidden"
+                          className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[11px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-1 text-purple-300 font-medium">
+                        <div className="py-0.5 text-purple-300 font-medium">
                           {formatValue(row.sellPercent)}%
                         </div>
                       )}
                     </td>
 
-                    {/* Buy Action Entry */}
-                    <td className="p-2 bg-orange-950/10 border-r border-gray-800 text-emerald-400 font-bold">
-                      {buyZone !== "" ? `≤ ${buyZone.toFixed(2)}` : ""}
+                    <td className="p-0.5 bg-orange-950/10 border-r border-gray-800 text-emerald-400 font-bold">
+                      {buyZone !== "" ? `≤${buyZone.toFixed(2)}` : ""}
                     </td>
 
-                    {/* Sell Action Target */}
-                    <td className="p-2 bg-orange-950/10 border-r border-gray-800 text-rose-400 font-bold">
-                      {sellZone !== "" ? `≥ ${sellZone.toFixed(2)}` : ""}
+                    <td className="p-0.5 bg-orange-950/10 border-r border-gray-800 text-rose-400 font-bold">
+                      {sellZone !== "" ? `≥${sellZone.toFixed(2)}` : ""}
                     </td>
 
-                    {/* Actions */}
-                    <td className="p-2 bg-slate-900/40">
-                      <div className="flex gap-1.5 justify-center items-center min-h-32px">
+                    {/* Action Panel Buttons Layout */}
+                    <td className="p-0.5 bg-slate-900/40">
+                      <div className="flex gap-0.5 justify-center items-center">
                         {row.isEditing ? (
                           <>
                             <button
                               onClick={() => saveRow(index)}
-                              className="bg-blue-600 hover:bg-blue-500 transition-colors px-2.5 py-1 rounded text-xs font-semibold cursor-pointer"
+                              className="bg-blue-600 hover:bg-blue-500 transition-colors px-1 py-0.5 rounded text-[10px] font-semibold cursor-pointer"
                             >
                               Save
                             </button>
                             <button
                               onClick={() => toggleEdit(index)}
-                              className="bg-gray-700 hover:bg-gray-600 transition-colors px-2.5 py-1 rounded text-xs font-semibold cursor-pointer"
+                              className="bg-gray-700 hover:bg-gray-600 transition-colors px-1 py-0.5 rounded text-[10px] font-semibold cursor-pointer"
                             >
-                              Cancel
+                              Can
                             </button>
                           </>
                         ) : (
                           <>
                             <button
                               onClick={() => toggleEdit(index)}
-                              className="bg-amber-600 hover:bg-amber-500 transition-colors px-2.5 py-1 rounded text-xs font-semibold cursor-pointer"
+                              className="bg-amber-600 hover:bg-amber-500 transition-colors px-1 py-0.5 rounded text-[10px] font-semibold cursor-pointer"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => deleteRow(index)}
-                              className="bg-rose-600 hover:bg-rose-500 transition-colors px-2.5 py-1 rounded text-xs font-semibold cursor-pointer"
+                              className="bg-rose-600 hover:bg-rose-500 transition-colors px-1 py-0.5 rounded text-[10px] font-semibold cursor-pointer"
                             >
-                              Delete
+                              Del
                             </button>
                           </>
                         )}
