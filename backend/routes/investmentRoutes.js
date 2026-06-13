@@ -38,11 +38,13 @@ router.post("/add", async (req, res) => {
 // ==============================
 // GET ALL TRANSACTIONS BY USER
 // ==============================
+// Changed sorting to 1 (ascending) so ledger entries build 
+// running balances chronologically from oldest to newest.
 router.get("/:userId", async (req, res) => {
   try {
     const data = await Investment.find({
       userId: req.params.userId,
-    }).sort({ date: -1 });
+    }).sort({ date: 1 }); 
 
     res.json(data);
   } catch (err) {
@@ -54,7 +56,10 @@ router.get("/:userId", async (req, res) => {
     });
   }
 });
+
+// ==============================
 // DELETE INVESTMENT
+// ==============================
 router.delete("/delete/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -67,15 +72,19 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
+// ==============================
 // UPDATE INVESTMENT
+// ==============================
+// Added 'date' to destructured body properties so that table-row 
+// inline date changes actually persist to your database.
 router.put("/update/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount, note } = req.body;
+    const { amount, note, date } = req.body; 
 
     const updated = await Investment.findByIdAndUpdate(
       id,
-      { amount, note },
+      { amount, note, date }, 
       { new: true }
     );
 
