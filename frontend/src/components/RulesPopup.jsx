@@ -357,7 +357,7 @@ const RulesPopup = ({ onClose }) => {
         <div className="bg-white border-t border-gray-150 p-2 flex justify-center">
           <button
             onClick={onClose}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-2xl sm:text-xl px-6 py-1.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-xl sm:text-xl px-6 py-1.5 rounded-xl transition-all duration-150 shadow-md hover:shadow-lg"
           >
             Rules Follow করেছের তো ? 😎
           </button>

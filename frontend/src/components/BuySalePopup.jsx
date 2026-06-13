@@ -303,12 +303,12 @@ const BuySalePopup = ({ isOpen, onClose }) => {
 
               {/* BOTTOM BUTTON */}
               <div className="flex justify-center p-2 bg-gray-950 border-t border-gray-900 shrink-0">
-                <button
-                  onClick={onClose}
-                  className="w-full max-w-xs py-1.5 bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-white font-mono text-xs font-semibold rounded-lg transition-all duration-200"
-                >
-                  Dismiss Profile
-                </button>
+               <button
+  onClick={onClose}
+  className="w-full max-w-xs py-2 px-4 bg-emerald-500/10 hover:bg-emerald-600 border border-emerald-500/20 hover:border-emerald-500 text-emerald-400 hover:text-white font-mono text-xs font-medium rounded-xl shadow-lg shadow-emerald-950/20 transition-all duration-300 tracking-wide"
+>
+  Dismiss Profile
+</button>
               </div>
             </>
           )}
