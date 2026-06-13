@@ -167,12 +167,12 @@ const BuyZone = () => {
                   res.data.buyPercent !== undefined &&
                   res.data.buyPercent !== null
                     ? res.data.buyPercent
-                    : "",
+                    : 20, // FIX: Preserved default fallbacks
                 sellPercent:
                   res.data.sellPercent !== undefined &&
                   res.data.sellPercent !== null
                     ? res.data.sellPercent
-                    : "",
+                    : 70, // FIX: Preserved default fallbacks
                 todaysHigh:
                   res.data.todaysHigh !== undefined &&
                   res.data.todaysHigh !== null
@@ -199,7 +199,6 @@ const BuyZone = () => {
     }
   };
 
-  // UPDATED: Replaced native window.confirm with modern, dark-themed SweetAlert2
   const deleteRow = async (index) => {
     const row = rows[index];
     const companyName = row.company || "this company";
@@ -209,24 +208,23 @@ const BuyZone = () => {
       text: `Are you sure to remove "${companyName}"!`,
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#e11d48", // Dark-mode premium rose/red
-      cancelButtonColor: "#374151", // Slate gray cancel button
+      confirmButtonColor: "#e11d48",
+      cancelButtonColor: "#374151",
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "Cancel",
-      background: "#030712", // Anchored to your exact bg-gray-950 hex code
-      color: "#ffffff", // White text matching the dashboard
-      iconColor: "#f43f5e", // Warning icon customized to match system red
+      background: "#030712",
+      color: "#ffffff",
+      iconColor: "#f43f5e",
     });
 
-    // Terminate if the user closes modal or hits cancel
     if (!result.isConfirmed) return;
 
     if (row._id) {
       try {
         await api.delete(`/zone/${row._id}`);
-        setRows((prev) => prev.filter((_, i) => i !== index));
+        // FIX: Solved race condition by filtering on unique ID instead of dynamic index matching
+        setRows((prev) => prev.filter((item) => item._id !== row._id));
 
-        // Success notification popup toast
         Swal.fire({
           title: "Deleted!",
           text: `"${companyName}" has been successfully wiped.`,
@@ -288,47 +286,83 @@ const BuyZone = () => {
           <table className="w-full table-fixed min-w-max text-[13px] text-center border-collapse">
             <thead>
               <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold tracking-tight text-[13px]">
-                <th className="p-1.5 border-r border-gray-800 sticky top-0 left-0 bg-gray-900 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.5)] w-[130px] truncate">
+                {/* FIX: Replaced arbitrary Tailwind classes with raw width definitions to remove Linter 9+ warnings */}
+                <th
+                  className="p-1.5 border-r border-gray-800 sticky top-0 left-0 bg-gray-900 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.5)] truncate"
+                  style={{ width: "130px" }}
+                >
                   Company Name
                 </th>
-
-                {/* Compressed Middle Columns */}
-                <th className="p-1.5 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "55px" }}
+                >
                   1Y Low
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "55px" }}
+                >
                   1Y High
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight w-[65px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "65px" }}
+                >
                   Session Low
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight w-[65px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "65px" }}
+                >
                   Session High
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight w-[65px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "65px" }}
+                >
                   Session Close
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight w-[60px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "60px" }}
+                >
                   Pivot Point
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight w-[65px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "65px" }}
+                >
                   Forecast Matrix
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "55px" }}
+                >
                   Buy % Target
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight w-[55px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "55px" }}
+                >
                   Sell % Target
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight w-[75px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "75px" }}
+                >
                   Buy Action Entry
                 </th>
-                <th className="p-1.5 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight w-[75px]">
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "75px" }}
+                >
                   Sell Action Target
                 </th>
-
-                {/* Last Column Control Boundary */}
-                <th className="p-1.5 bg-gray-900 sticky top-0 z-20 w-[100px]">
+                <th
+                  className="p-1.5 bg-gray-900 sticky top-0 z-20"
+                  style={{ width: "100px" }}
+                >
                   Action Control
                 </th>
               </tr>
@@ -347,6 +381,7 @@ const BuyZone = () => {
                   if (typeof buyZone === "number" && closePriceNum <= buyZone) {
                     inlineBlinkStyle = {
                       animation: "strongBlinkGreen 1s infinite steps(1, start)",
+
                       fontWeight: "700",
                     };
                   } else if (
@@ -355,7 +390,9 @@ const BuyZone = () => {
                   ) {
                     inlineBlinkStyle = {
                       color: "#f43f5e",
+
                       textShadow: "0 0 10px rgba(244,63,94,0.4)",
+
                       fontWeight: "700",
                     };
                   }
@@ -366,7 +403,6 @@ const BuyZone = () => {
                     key={row._id || index}
                     className="group hover:bg-gray-900/50 transition-colors"
                   >
-                    {/* Left boundary sticky position explicitly anchored over scrolling data rows */}
                     <td className="p-1 bg-gray-950 border-r border-gray-800 font-medium sticky left-0 z-10 group-hover:bg-gray-900 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.4)] truncate">
                       {row.isEditing ? (
                         <input
