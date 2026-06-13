@@ -59,7 +59,6 @@ const Sale = () => {
   };
 
   const formatDateString = (date) => {
-    const parsed = new Date(date);
     if (Number.isNaN(parsed.getTime())) {
       return date;
     }
@@ -122,7 +121,9 @@ const Sale = () => {
   // SAVE SALE
   const handleSave = async () => {
     if (!saleQuantity || !perShareValue || !saleDate) {
-      return showAlert("Sale Quantity, Per Share Value, and Entry Date are required");
+      return showAlert(
+        "Sale Quantity, Per Share Value, and Entry Date are required",
+      );
     }
 
     try {
@@ -136,10 +137,12 @@ const Sale = () => {
           sallingTotalShareValue,
           commission,
           totalValueWithCommission,
-          date: saleDate, // ✅ Passes the edited date on updates
+          date: saleDate,
+          saleDate: saleDate,
         });
 
-        const updated = res.data.data || res.data || {};
+        let updated = res.data.data || res.data || {};
+        updated = { ...updated, date: saleDate, saleDate: saleDate };
         setSaleList((prev) =>
           prev.map((item) => (item._id === editingId ? updated : item)),
         );
@@ -155,11 +158,13 @@ const Sale = () => {
           sallingTotalShareValue,
           commission,
           totalValueWithCommission,
-          date: saleDate, // ✅ UPDATED: Dynamic state input string instead of static function execution
+          date: saleDate,
+          saleDate: saleDate,
         });
 
-        const saved = res.data?.data || res.data;
+        let saved = res.data?.data || res.data;
         if (saved) {
+          saved = { ...saved, date: saleDate, saleDate: saleDate };
           setSaleList((prev) => [saved, ...prev]);
         }
         showSuccessAlert(res.data.message);
@@ -182,9 +187,10 @@ const Sale = () => {
     setSaleQuantity(item.saleQuantity ?? "");
     setPerShareValue(item.perShareValue ?? "");
 
-    // Format incoming database date string properly to initialize field layout view
-    if (item.date) {
-      setSaleDate(formatDateString(item.date));
+    // Check both potential key naming choices coming down from database
+    const rawTargetDate = item.date || item.saleDate;
+    if (rawTargetDate) {
+      setSaleDate(formatDateString(rawTargetDate));
     }
   };
 
@@ -233,7 +239,6 @@ const Sale = () => {
 
         {/* FORM */}
         <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 space-y-3">
-          
           {/* ✅ TRANSACTION ENTRY DATE - MOVED AND RENDERED AS EDITABLE INPUT */}
           <div>
             <label className="text-gray-400 text-sm">

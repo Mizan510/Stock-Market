@@ -16,11 +16,13 @@ router.post("/add", async (req, res) => {
       sallingTotalShareValue,
       commission,
       totalValueWithCommission,
+      date,
     } = req.body;
 
     const sale = new Sale({
       userId,
       stockName,
+      date: date || new Date().toISOString().split("T")[0],
       saleQuantity: Number(saleQuantity),
       perShareValue: Number(perShareValue),
       sallingTotalShareValue: Number(sallingTotalShareValue),
@@ -77,12 +79,14 @@ router.put("/update/:id", async (req, res) => {
       sallingTotalShareValue,
       commission,
       totalValueWithCommission,
+      date,
     } = req.body;
 
     const updatedSale = await Sale.findByIdAndUpdate(
       req.params.id,
       {
         ...(stockName !== undefined && { stockName }),
+        ...(date !== undefined && { date }),
         ...(saleQuantity !== undefined && { saleQuantity }),
         ...(perShareValue !== undefined && { perShareValue }),
         ...(sallingTotalShareValue !== undefined && { sallingTotalShareValue }),

@@ -40,6 +40,10 @@ const saleSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+
+    date: {
+      type: String,
+    },
   },
   {
     timestamps: true,
