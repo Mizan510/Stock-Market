@@ -33,16 +33,14 @@ const Dividend = () => {
       now.toLocaleString("en-US", { timeZone: "Asia/Dhaka" }),
     );
     const currentYear = bd.getFullYear();
-    const currentMonth = bd.getMonth() + 1; // JS-এ মাস 0-11 হয়, তাই +1 করা হয়েছে
+    const currentMonth = bd.getMonth() + 1;
 
     let fromYear, toYear;
 
-    // যদি মাস জুলাই (৭) বা তার পরে হয়, তবে চলতি বছরের জুলাই থেকে আগামী বছরের জুন
     if (currentMonth >= 7) {
       fromYear = currentYear;
       toYear = currentYear + 1;
     } else {
-      // যদি মাস জুন বা তার আগে হয়, তবে গত বছরের জুলাই থেকে চলতি বছরের জুন
       fromYear = currentYear - 1;
       toYear = currentYear;
     }
@@ -113,11 +111,25 @@ const Dividend = () => {
     try {
       const res = await api.get(`/dividend/${userId}`);
       setList(res.data);
-      // শুরুতে ইউজারকে ফিল্টার করা ডাটা দেখানোর জন্য সরাসরি ফিল্টার কল করা যেতে পারে
-      setFilteredList(res.data);
+      
+      // শুরুতে পেজ লোড হওয়ার সময় ওই অর্থবছরের ডাটা ফিল্টার করে দেখাবে
+      applyFilter(res.data, fromDate, toDate);
     } catch (err) {
       console.log(err);
     }
+  };
+
+  // ফিল্টার করার কমন ফাংশন (যাতে স্টেট সিঙ্ক ঠিক থাকে)
+  const applyFilter = (allData, start, end) => {
+    const filtered = allData.filter((item) => {
+      // যদি documentationDate থাকে সেটা নিবে, না থাকলে declarationDate, না থাকলে recordDate
+      const dateToUse = item.documentationDate || item.declarationDate || item.recordDate;
+      if (!dateToUse) return false;
+
+      const d = formatBackendDate(dateToUse);
+      return d >= start && d <= end;
+    });
+    setFilteredList(filtered);
   };
 
   const inputClass = (name) => {
@@ -228,23 +240,41 @@ const Dividend = () => {
 
     try {
       setLoading(true);
+      let updatedList = [];
 
       if (editingId) {
         const res = await api.put(`/dividend/update/${editingId}`, { ...form });
         const saved = { ...res.data.data, ...form };
 
-        setList((prev) => prev.map((item) => (item._id === editingId ? saved : item)));
-        setFilteredList((prev) => prev.map((item) => (item._id === editingId ? saved : item)));
+        updatedList = list.map((item) => (item._id === editingId ? saved : item));
         setEditingId(null);
         showSuccessAlert("Updated successfully");
       } else {
         const res = await api.post("/dividend/add", { userId, ...form });
         const saved = { ...res.data.data, ...form };
         
-        setList((prev) => [saved, ...prev]);
-        setFilteredList((prev) => [saved, ...prev]);
+        updatedList = [saved, ...list];
         showSuccessAlert("Saved successfully");
       }
+
+      // স্টেট আপডেট
+      setList(updatedList);
+      
+      // সেভ করা ডাটার ডেট অনুযায়ী ফিল্টার রেঞ্জ অটো এডজাস্ট করার ট্রিক (যাতে রিপোর্টে ডাটা গায়েব না হয়)
+      const savedDate = form.documentationDate || form.declarationDate || form.recordDate;
+      let currentFrom = fromDate;
+      let currentTo = toDate;
+      
+      if (savedDate && (savedDate < fromDate || savedDate > toDate)) {
+        // যদি সেভ করা ডাটা বর্তমান রেঞ্জের বাইরে হয়, রেঞ্জ এক্সপ্যান্ড করে দেওয়া হচ্ছে
+        if (savedDate < fromDate) currentFrom = savedDate;
+        if (savedDate > toDate) currentTo = savedDate;
+        setFromDate(currentFrom);
+        setToDate(currentTo);
+      }
+
+      // সংশোধিত রেঞ্জ অনুযায়ী ফিল্টার অ্যাপ্লাই
+      applyFilter(updatedList, currentFrom, currentTo);
 
       setForm({
         ...defaultForm,
@@ -263,12 +293,11 @@ const Dividend = () => {
       ...defaultForm,
       documentationDate: getBDDate(),
     });
-    setFilteredList(list);
+    applyFilter(list, fromDate, toDate);
     setShowReport(false);
     setEditingId(null);
   };
 
-  // ডেট ওলটপালট ও মিক্স হওয়া ফিক্সড এডিট হ্যান্ডলার
   const handleEdit = (item) => {
     setEditingId(item._id);
     setForm({
@@ -303,8 +332,9 @@ const Dividend = () => {
 
     try {
       await api.delete(`/dividend/delete/${id}`);
-      setList((prev) => prev.filter((item) => item._id !== id));
-      setFilteredList((prev) => prev.filter((item) => item._id !== id));
+      const updated = list.filter((item) => item._id !== id);
+      setList(updated);
+      applyFilter(updated, fromDate, toDate);
       showSuccessAlert("Deleted successfully");
     } catch (err) {
       showErrorAlert(err.response?.data?.message || "Delete failed");
@@ -313,17 +343,8 @@ const Dividend = () => {
 
   const handleView = () => {
     setViewLoading(true);
-
     setTimeout(() => {
-      const filtered = list.filter((item) => {
-        const dateToUse = item.documentationDate; // শুধুমাত্র ডকুমেন্টেশন ডেট দিয়ে ফিল্টার হবে
-        if (!dateToUse) return false;
-
-        const d = formatBackendDate(dateToUse);
-        return d >= fromDate && d <= toDate;
-      });
-
-      setFilteredList(filtered);
+      applyFilter(list, fromDate, toDate);
       setShowReport(true);
       setViewLoading(false);
     }, 300);
@@ -331,12 +352,11 @@ const Dividend = () => {
 
   const handleReset = () => {
     setResetLoading(true);
-
     setTimeout(() => {
       const { fromDate: fiscalFromDate, toDate: fiscalToDate } = getFiscalYearDates();
       setFromDate(fiscalFromDate);
       setToDate(fiscalToDate);
-      setFilteredList(list);
+      applyFilter(list, fiscalFromDate, fiscalToDate);
       setShowReport(false);
       setResetLoading(false);
     }, 300);
@@ -684,7 +704,7 @@ const Dividend = () => {
         {/* FILTER SECTION */}
         <div className="bg-gray-900 p-4 rounded space-y-2 mb-4">
           <label className="block text-sm text-gray-300 mb-2">
-            Filter by Documentation Date (Fiscal Year Default)
+            Filter by Date (Fiscal Year Default)
           </label>
           <div className="flex gap-2">
             <div className="flex-1">
