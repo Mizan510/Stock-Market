@@ -12,4 +12,4 @@ git push origin main --force-with-lease
  
   
  //For git hub to vs code
- git pull origin main
+ git pull origin main 
