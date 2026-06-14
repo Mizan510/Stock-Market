@@ -48,7 +48,7 @@ const SaleZone = () => {
               item.updatedAt ||
               item.Date ||
               item.tradeDate ||
-              "";
+              "" ;
 
             const company = (
               item.stockName ||
@@ -143,7 +143,7 @@ const SaleZone = () => {
               qty,
               price,
               type: "sale",
-              closingPrice: null, // Explicitly safe-guard against undefined values
+              closingPrice: null,
             };
           });
 
@@ -157,7 +157,6 @@ const SaleZone = () => {
             if (!trade.company) return;
             const key = trade.company;
 
-            // Strict verification step to ensure closing price mathematical operations only happen on valid items
             const hasValidClosingPrice = trade.type === "buy" && trade.closingPrice !== null && trade.closingPrice !== undefined;
 
             if (!aggregatedMap.has(key)) {
@@ -188,7 +187,6 @@ const SaleZone = () => {
                 existing.weightedSlPercentSum += trade.slPercent * trade.qty;
                 existing.weightedTpPercentSum += trade.tpPercent * trade.qty;
                 
-                // Track closing price numbers strictly inside the buy action sequence
                 if (trade.closingPrice !== null && trade.closingPrice !== undefined) {
                   existing.weightedClosingPriceSum += trade.closingPrice * trade.qty;
                   existing.closingPriceQtyCount += trade.qty;
@@ -222,11 +220,9 @@ const SaleZone = () => {
               const avgTpPercent =
                 totalBuyQty > 0 ? agg.weightedTpPercentSum / totalBuyQty : 10;
 
-              // CALCULATIONS DRIVEN BY priceWithCommission
               const slPrice = priceWithCommission * (1 - avgSlPercent / 100);
               const tpPrice = priceWithCommission * (1 + avgTpPercent / 100);
               
-              // Updated to prioritize risk metrics calculated against actual remaining inventory
               const totalLoss = (priceWithCommission - slPrice) * remainQty;
 
               const closingPrice =
@@ -245,7 +241,6 @@ const SaleZone = () => {
                 totalLoss,
                 tpPercent: avgTpPercent,
                 tpPrice,
-                totalValueWithCommission: buyNetValue,
                 priceWithCommission: priceWithCommission,
               };
             },
@@ -307,9 +302,6 @@ const SaleZone = () => {
                   <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-indigo-300">
                     Buy (Total Qtn)
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-indigo-300">
-                    Buy (Total Value with commission)
-                  </th>
                   <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-purple-300">
                     Remain Qtn
                   </th>
@@ -341,7 +333,6 @@ const SaleZone = () => {
                 {trades.map((t) => {
                   let companyColorClass = "text-white bg-gray-900/30";
 
-                  // NEW LOGIC: Only change color if there are items left in inventory
                   if (t.remainQty > 0 && t.closingPrice !== null) {
                     if (t.closingPrice <= t.slPrice) {
                       companyColorClass = "text-red-500 font-black bg-red-950/20";
@@ -362,9 +353,6 @@ const SaleZone = () => {
                       </td>
                       <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
                         {t.qty}
-                      </td>
-                      <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
-                        {formatCurrency(t.totalValueWithCommission)}
                       </td>
                       <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold text-base">
                         {t.remainQty}
