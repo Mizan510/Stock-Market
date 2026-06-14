@@ -6,7 +6,7 @@ const SummaryPanel = ({
   withdraw = 0,
   dividend = 0,
   balance = 0,
-  profit = 0,
+  profit = 0, 
   remainingShareValue = 0,
   totalBuyCost = 0,
   totalAssets = 0,
@@ -19,49 +19,62 @@ const SummaryPanel = ({
   tillNowProfitLoss = 0,
   tillNowCurrentAssets = 0,
   monthlyExpense = 0,
-  cardPadding = "p-4",
+  cardPadding = "p-5",
   cardValueSize = "text-xl md:text-2xl",
-  cardTitleSize = "text-base font-semibold",
+  cardTitleSize = "text-sm md:text-base font-semibold",
   cardSubtitleSize = "text-[11px] md:text-xs",
   cardRadius = "rounded-2xl",
   cardGap = "gap-4",
 }) => {
+  
+  // =========================
+  // FORMATTING UTILITIES
+  // =========================
   const formatMoney = (amount) => {
     if (loading) return "Loading...";
     const numericValue = Number(amount || 0);
     return `৳ ${numericValue.toLocaleString("en-US", {
-      minimumFractionDigits: 0, // Automatically removes .00 from whole numbers
-      maximumFractionDigits: 2, // Retains decimal values only if they exist (up to 2 places)
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     })}`;
   };
 
+  const getFinancialAccent = (val, isDarkBg = true) => {
+    if (val > 0) return isDarkBg ? "text-emerald-400" : "text-emerald-700";
+    if (val < 0) return isDarkBg ? "text-rose-400" : "text-rose-700";
+    return isDarkBg ? "text-white" : "text-slate-950";
+  };
+
+  // =========================
+  // FINANCIAL CALCULATIONS
+  // =========================
   const finalCashInvestment = deposit - withdraw;
   const assetsIncrease = profit + dividend;
-  const currentAssetsCashProfit = finalCashInvestment + tillNowProfitLoss + dividend;
-  const availableBalance = balance;
-  const totalAssetsValue = balance + remainingShareValue;
+  const availableBalance = finalCashInvestment + totalSaleValueWithCommission - totalBuyCost;
+  const totalAssetsValue = remainingShareValue + availableBalance;
+  const netProfitLoss = profit;
 
-  // Only use LBSL values if they are actually saved in DB, otherwise 0
+  // Database Null Safeguards
   const lbslCostAmountValue = lbslCostAmount !== null && lbslCostAmount !== undefined ? lbslCostAmount : 0;
   const lbslCurrentAssetsValue = lbslCurrentAssetsPP !== null && lbslCurrentAssetsPP !== undefined ? lbslCurrentAssetsPP : 0;
 
-  const costDeviation = lbslCostAmountValue - availableBalance;
-  const currentDeviation = lbslCurrentAssetsValue - currentAssetsCashProfit;
+  const costDeviation = Math.round(lbslCostAmountValue - availableBalance);
+  const currentDeviation = Math.round(lbslCurrentAssetsValue - remainingShareValue);
 
-  // Reusable card template component
+  // =========================
+  // SUB-COMPONENT: CARD TEMPLATE
+  // =========================
   const Card = ({
     title,
     value,
     subtitle,
     bgColor = "bg-slate-900",
-    borderColor = "border-slate-800",
+    borderColor = "border-slate-800/80",
     accent = "text-white",
     textColor = "text-gray-200",
     subtitleColor = "text-gray-400",
   }) => (
-    <div
-      className={`${cardPadding} ${cardRadius} border ${borderColor} ${bgColor} hover:scale-[1.01] transition-all duration-200 shadow-md flex flex-col justify-between overflow-hidden`}
-    >
+    <div className={`${cardPadding} ${cardRadius} border ${borderColor} ${bgColor} hover:scale-[1.01] transition-all duration-200 shadow-md flex flex-col justify-between overflow-hidden`}>
       <div>
         <h3 className={`${cardTitleSize} ${textColor} mb-1 leading-snug`}>
           {title}
@@ -78,17 +91,11 @@ const SummaryPanel = ({
     </div>
   );
 
-  // Helper helper to flag financial color ranges dynamically
-  const getFinancialAccent = (val, isDarkBg = true) => {
-    if (val > 0) return isDarkBg ? "text-emerald-400" : "text-emerald-700";
-    if (val < 0) return isDarkBg ? "text-rose-400" : "text-rose-700";
-    return isDarkBg ? "text-white" : "text-slate-950";
-  };
-
   return (
-    <div className="space-y-2">
+    <div className="space-y-6">
+      
       {/* HEADER SECTION */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800 pb-2">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800/60 pb-4">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
             <span>💼</span> Portfolio Summary
@@ -98,21 +105,20 @@ const SummaryPanel = ({
           </p>
         </div>
 
-        <div className="text-right">
-          <p className="text-sm text-red-400 -mb-1">Monthly Expense</p>
-          <p className="text-2xl font-bold text-red-500">
+        <div className="text-left sm:text-right bg-red-950/20 border border-red-900/30 px-4 py-2 rounded-xl">
+          <p className="text-xs font-medium text-red-400 uppercase tracking-wider">Monthly Expense</p>
+          <p className="text-xl md:text-2xl font-bold text-red-500 mt-0.5">
             {formatMoney(monthlyExpense)}
           </p>
         </div>
-
       </div>
 
       {/* ROI HERO SECTION */}
-      <div className="grid grid-cols-1 gap-4">
+      <div>
         <Card
           title="ROI (Return on Investment)"
           subtitle="(Profit / Deposit) * 100"
-          value={deposit > 0 ? `${Number(((profit / deposit) * 100).toFixed(2))}%` : "0%"}
+          value={deposit > 0 ? `${((profit / deposit) * 100).toFixed(2)}%` : "0%"}
           bgColor="bg-amber-400"
           borderColor="border-amber-500"
           accent="text-slate-950"
@@ -122,16 +128,16 @@ const SummaryPanel = ({
       </div>
 
       {/* RESULT METRICS */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-2">
           <span>📊</span> Result Summary
         </h3>
         <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${cardGap}`}>
           <Card
             title="Profit/Loss"
-            subtitle="Net gain"
-            value={formatMoney(tillNowProfitLoss)}
-            accent={getFinancialAccent(tillNowProfitLoss)}
+            subtitle="Sum of individual company net profit/losses"
+            value={formatMoney(netProfitLoss)}
+            accent={getFinancialAccent(netProfitLoss)}
           />
           <Card
             title="Dividend after Purification"
@@ -146,16 +152,16 @@ const SummaryPanel = ({
             accent={getFinancialAccent(assetsIncrease)}
           />
           <Card
-            title="Total Assets"
-            subtitle="Cash Balance + Remaining Purchased Share Value"
+            title="Current Total Assets"
+            subtitle="Remaining Purchased Share Value + Available Balance"
             value={formatMoney(totalAssetsValue)}
           />
         </div>
       </div>
 
       {/* CASH FLOW SECTION */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-2">
           <span>💰</span> Cash Summary
         </h3>
         <div className={`grid grid-cols-1 sm:grid-cols-3 ${cardGap}`}>
@@ -182,71 +188,25 @@ const SummaryPanel = ({
         </div>
       </div>
 
-      {/* STOCK INVENTORIES */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
-          <span>📦</span> Holdings Summary
+      {/* STOCK INVENTORIES & VALUATION */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+          <span>📦</span> Holdings & Valuation Summary
         </h3>
-        <div className={`grid grid-cols-1 sm:grid-cols-2 ${cardGap}`}>
+        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${cardGap}`}>
           <Card
-            title="Remaining Purchased Share Qtn"
+            title="Remaining Share Qty"
             subtitle="Remaining shares quantity after sale"
             value={loading ? "Loading..." : totalRemainQty.toLocaleString()}
             accent="text-sky-400"
           />
           <Card
-            title="Remaining Purchased Share Value"
+            title="Remaining Share Value"
             subtitle="Remaining shares value after sale"
             value={formatMoney(remainingShareValue)}
           />
-        </div>
-      </div>
-
-      {/* LIQUIDITY ANALYSIS */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
-          <span>🟢</span> Liquidity / Cost
-        </h3>
-        <div className={`grid grid-cols-1 sm:grid-cols-3 ${cardGap}`}>
           <Card
-            title="Available Balance (for Further Purchase)"
-            subtitle="Current Cash Balance"
-            value={formatMoney(availableBalance)}
-          />
-          <Card
-            title="As per LBSL (Cost Amount (TK.)"
-            subtitle="As per LBSL Report"
-            value={formatMoney(lbslCostAmountValue)}
-          />
-          <Card
-            title="Deviation"
-            subtitle="LBSL Cost Amount - Available Balance"
-            value={formatMoney(costDeviation)}
-            bgColor="bg-violet-950"
-            borderColor="border-violet-800/80"
-            accent={getFinancialAccent(costDeviation)}
-          />
-        </div>
-      </div>
-
-      {/* CURRENT RUNNING VALUATION */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center gap-2">
-          <span>📈</span> Current Asset Details
-        </h3>
-        <div className={`grid grid-cols-1 sm:grid-cols-3 ${cardGap}`}>
-          <Card
-            title="Current Assets"
-            subtitle="Final Cash Investment + Profit/Loss + Dividend"
-            value={formatMoney(currentAssetsCashProfit)}
-            bgColor="bg-slate-100"
-            borderColor="border-slate-300"
-            accent="text-slate-950"
-            textColor="text-slate-950"
-            subtitleColor="text-slate-600"
-          />
-          <Card
-            title="As per LBSL (Current Assets)/ PP"
+            title="As per LBSL Cost Amount"
             subtitle="As per LBSL Report"
             value={formatMoney(lbslCurrentAssetsValue)}
             bgColor="bg-slate-100"
@@ -256,8 +216,8 @@ const SummaryPanel = ({
             subtitleColor="text-slate-600"
           />
           <Card
-            title="Deviation"
-            subtitle="LBSL Current Assets PP - Current Assets (Cash + Profit)"
+            title="Valuation Deviation"
+            subtitle="LBSL Cost Amount - Remaining Share Value"
             value={formatMoney(currentDeviation)}
             bgColor="bg-violet-900"
             borderColor="border-violet-700"
@@ -265,6 +225,34 @@ const SummaryPanel = ({
           />
         </div>
       </div>
+
+      {/* LIQUIDITY ANALYSIS */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+          <span>💧</span> Liquidity Analysis
+        </h3>
+        <div className={`grid grid-cols-1 sm:grid-cols-3 ${cardGap}`}>
+          <Card
+            title="Available Balance (For Further Purchases)"
+            subtitle="Final Cash Investment + Total Sale - Total Buy Cost"
+            value={formatMoney(availableBalance)}
+          />
+          <Card
+            title="As per LBSL (Current Assets) / PP"
+            subtitle="As per LBSL Report"
+            value={formatMoney(lbslCostAmountValue)}
+          />
+          <Card
+            title="Liquidity Deviation"
+            subtitle="LBSL (Current Assets) / PP - Available Balance"
+            value={formatMoney(costDeviation)}
+            bgColor="bg-violet-950"
+            borderColor="border-violet-800/80"
+            accent={getFinancialAccent(costDeviation)}
+          />
+        </div>
+      </div>
+
     </div>
   );
 };

@@ -139,8 +139,7 @@ const LBSLReport = () => {
           <div>
             <h1 className="text-3xl font-bold">LBSL Report</h1>
             <p className="text-gray-400 mt-2">
-              Enter LBSL figures for Cost Amount (TK.) and (Current Assets) /
-              PP.
+              Enter LBSL figures for (Current Assets) / PP and Cost Amount (TK.)
             </p>
           </div>
           <button
@@ -154,26 +153,26 @@ const LBSLReport = () => {
 
         <div className="grid gap-4 md:grid-cols-2">
           <label className="block text-sm text-gray-300">
-            <span className="block mb-2 font-medium">Cost Amount (TK.)</span>
+            <span className="block mb-2 font-medium">(Current Assets) / PP</span>
             <input
               type="number"
               value={costAmount}
               onChange={(e) => setCostAmount(e.target.value)}
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-              placeholder="Enter cost amount"
+              placeholder="Enter current assets per PP"
             />
           </label>
 
           <label className="block text-sm text-gray-300">
             <span className="block mb-2 font-medium">
-              (Current Assets) / PP
+              Cost Amount (TK.)
             </span>
             <input
               type="number"
               value={currentAssetsPP}
               onChange={(e) => setCurrentAssetsPP(e.target.value)}
               className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20"
-              placeholder="Enter current assets per PP"
+              placeholder="Enter cost amount"
             />
           </label>
         </div>
@@ -250,7 +249,7 @@ const LBSLReport = () => {
               </thead>
               <tbody className="divide-y divide-slate-800 bg-slate-900">
                 <tr>
-                  <td className="px-4 py-4 text-gray-300">Cost Amount (TK.)</td>
+                  <td className="px-4 py-4 text-gray-300">(Current Assets) / PP</td>
                   <td className="px-4 py-4 font-semibold text-white">
                     {savedReport?.costAmount !== undefined
                       ? `৳ ${savedReport.costAmount.toFixed(2)}`
@@ -259,7 +258,7 @@ const LBSLReport = () => {
                 </tr>
                 <tr>
                   <td className="px-4 py-4 text-gray-300">
-                    (Current Assets) / PP
+                    Cost Amount (TK.)
                   </td>
                   <td className="px-4 py-4 font-semibold text-white">
                     {savedReport?.currentAssetsPP !== undefined
