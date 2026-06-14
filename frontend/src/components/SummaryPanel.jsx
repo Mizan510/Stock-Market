@@ -105,12 +105,15 @@ const SummaryPanel = ({
           </p>
         </div>
 
-        <div className="text-left sm:text-right bg-red-950/20 border border-red-900/30 px-4 py-2 rounded-xl">
-          <p className="text-xs font-medium text-red-400 uppercase tracking-wider">Monthly Expense</p>
-          <p className="text-xl md:text-2xl font-bold text-red-500 mt-0.5">
-            {formatMoney(monthlyExpense)}
-          </p>
-        </div>
+        {/* Added 'w-fit' to wrap the text and 'ml-auto' to push the box to the right */}
+<div className="w-fit ml-auto text-right bg-red-950/20 border border-red-900/30 px-4 py-2 rounded-xl">
+  <p className="text-xs font-medium text-red-400 uppercase tracking-wider">
+    Monthly Expense
+  </p>
+  <p className="text-xl md:text-2xl font-bold text-red-500 mt-0.5">
+    {formatMoney(monthlyExpense)}
+  </p>
+</div>
       </div>
 
       {/* ROI HERO SECTION */}
