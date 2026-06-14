@@ -267,7 +267,7 @@ const BuySalePopup = ({ isOpen, onClose, buyList, saleList, loading }) => {
             <>
               <div className="grid grid-cols-2 divide-x divide-gray-900 flex-1 overflow-hidden">
                 {/* 🟢 LEFT SIDE: BUY ZONE */}
-                <div className="p-4 pr-3 bg-emerald-950/30 flex flex-col overflow-hidden">
+                <div className="p-4 pr-3 bg-emerald-950/10 flex flex-col overflow-hidden">
                   <div className="mb-2 pb-1 border-b border-emerald-600/90">
                     <h2 className="text-xl font-bold text-emerald-400 font-mono tracking-wide flex items-center gap-1.5">
                       <span className="text-xs">🟢</span> Buy Zone
@@ -298,7 +298,7 @@ const BuySalePopup = ({ isOpen, onClose, buyList, saleList, loading }) => {
                 </div>
 
                 {/* 🔴 RIGHT SIDE: SALE ZONE - Companies fetched from aggregated buy/sale data */}
-                <div className="p-4 pl-3 bg-rose-950/30 flex flex-col overflow-hidden gap-3">
+                <div className="p-4 pl-3 bg-rose-950/20 flex flex-col overflow-hidden gap-3">
                   <div className="mb-2 pb-1 border-b border-rose-600/90">
                     <h2 className="text-xl font-bold text-rose-400 font-mono tracking-wide flex items-center gap-1.5 shrink-0">
                       <span className="text-xs">🔴</span> Sale Zone
