@@ -327,7 +327,7 @@ const BuySalePopup = ({ isOpen, onClose, buyList, saleList, loading }) => {
                             >
                               {row.company}
                               {/* ✅ Color Matched: Changed from blue-500 to a cohesive muted red-400/60 */}
-                              <div className="text-[11px] text-red-400/60 mt-0.5 font-sans">
+                              <div className="text-[10px] text-red-400/60 mt-0.5 font-sans">
                                 Close:{" "}
                                 <span className="font-mono font-semibold">
                                   {row.closingPrice.toFixed(2)}
@@ -365,7 +365,7 @@ const BuySalePopup = ({ isOpen, onClose, buyList, saleList, loading }) => {
                             >
                               {row.company}
                               {/* ✅ Design Aligned: Muted emerald typography and layout structure perfectly mirrors the red section */}
-                              <div className="text-[11px] text-emerald-400/60 mt-0.5 font-sans">
+                              <div className="text-[10px] text-emerald-400/60 mt-0.5 font-sans">
                                 Close:{" "}
                                 <span className="font-mono font-semibold">
                                   {row.closingPrice.toFixed(2)}
