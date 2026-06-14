@@ -6,7 +6,7 @@ const SummaryPanel = ({
   withdraw = 0,
   dividend = 0,
   balance = 0,
-  profit = 0, 
+  profit = 0,
   remainingShareValue = 0,
   totalBuyCost = 0,
   totalAssets = 0,
@@ -26,7 +26,6 @@ const SummaryPanel = ({
   cardRadius = "rounded-2xl",
   cardGap = "gap-4",
 }) => {
-  
   // =========================
   // FORMATTING UTILITIES
   // =========================
@@ -50,16 +49,25 @@ const SummaryPanel = ({
   // =========================
   const finalCashInvestment = deposit - withdraw;
   const assetsIncrease = profit + dividend;
-  const availableBalance = finalCashInvestment + totalSaleValueWithCommission - totalBuyCost;
+  const availableBalance =
+    finalCashInvestment + totalSaleValueWithCommission - totalBuyCost;
   const totalAssetsValue = remainingShareValue + availableBalance;
   const netProfitLoss = profit;
 
   // Database Null Safeguards
-  const lbslCostAmountValue = lbslCostAmount !== null && lbslCostAmount !== undefined ? lbslCostAmount : 0;
-  const lbslCurrentAssetsValue = lbslCurrentAssetsPP !== null && lbslCurrentAssetsPP !== undefined ? lbslCurrentAssetsPP : 0;
+  const lbslCostAmountValue =
+    lbslCostAmount !== null && lbslCostAmount !== undefined
+      ? lbslCostAmount
+      : 0;
+  const lbslCurrentAssetsValue =
+    lbslCurrentAssetsPP !== null && lbslCurrentAssetsPP !== undefined
+      ? lbslCurrentAssetsPP
+      : 0;
 
   const costDeviation = Math.round(lbslCostAmountValue - availableBalance);
-  const currentDeviation = Math.round(lbslCurrentAssetsValue - remainingShareValue);
+  const currentDeviation = Math.round(
+    lbslCurrentAssetsValue - remainingShareValue,
+  );
 
   // =========================
   // SUB-COMPONENT: CARD TEMPLATE
@@ -74,7 +82,9 @@ const SummaryPanel = ({
     textColor = "text-gray-200",
     subtitleColor = "text-gray-400",
   }) => (
-    <div className={`${cardPadding} ${cardRadius} border ${borderColor} ${bgColor} hover:scale-[1.01] transition-all duration-200 shadow-md flex flex-col justify-between overflow-hidden`}>
+    <div
+      className={`${cardPadding} ${cardRadius} border ${borderColor} ${bgColor} hover:scale-[1.01] transition-all duration-200 shadow-md flex flex-col justify-between overflow-hidden`}
+    >
       <div>
         <h3 className={`${cardTitleSize} ${textColor} mb-1 leading-snug`}>
           {title}
@@ -92,8 +102,7 @@ const SummaryPanel = ({
   );
 
   return (
-    <div className="space-y-6">
-      
+    <div className="space-y-1">
       {/* HEADER SECTION */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-slate-800/60 pb-4">
         <div>
@@ -106,14 +115,14 @@ const SummaryPanel = ({
         </div>
 
         {/* Added 'w-fit' to wrap the text and 'ml-auto' to push the box to the right */}
-<div className="w-fit ml-auto text-right bg-red-950/20 border border-red-900/30 px-4 py-2 rounded-xl">
-  <p className="text-xs font-medium text-red-400 uppercase tracking-wider">
-    Monthly Expense
-  </p>
-  <p className="text-xl md:text-2xl font-bold text-red-500 mt-0.5">
-    {formatMoney(monthlyExpense)}
-  </p>
-</div>
+        <div className="w-fit ml-auto text-right bg-red-950/20 border border-red-900/30 px-4 py-2 rounded-xl">
+          <p className="text-xs font-medium text-red-400 uppercase tracking-wider">
+            Monthly Expense
+          </p>
+          <p className="text-xl md:text-2xl font-bold text-red-500 mt-0.5">
+            {formatMoney(monthlyExpense)}
+          </p>
+        </div>
       </div>
 
       {/* ROI HERO SECTION */}
@@ -121,7 +130,9 @@ const SummaryPanel = ({
         <Card
           title="ROI (Return on Investment)"
           subtitle="(Profit / Deposit) * 100"
-          value={deposit > 0 ? `${((profit / deposit) * 100).toFixed(2)}%` : "0%"}
+          value={
+            deposit > 0 ? `${((profit / deposit) * 100).toFixed(2)}%` : "0%"
+          }
           bgColor="bg-amber-400"
           borderColor="border-amber-500"
           accent="text-slate-950"
@@ -135,7 +146,9 @@ const SummaryPanel = ({
         <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-2">
           <span>📊</span> Result Summary
         </h3>
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${cardGap}`}>
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${cardGap}`}
+        >
           <Card
             title="Profit/Loss"
             subtitle="Sum of individual company net profit/losses"
@@ -196,7 +209,9 @@ const SummaryPanel = ({
         <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-2">
           <span>📦</span> Holdings & Valuation Summary
         </h3>
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${cardGap}`}>
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${cardGap}`}
+        >
           <Card
             title="Remaining Share Qty"
             subtitle="Remaining shares quantity after sale"
@@ -255,7 +270,6 @@ const SummaryPanel = ({
           />
         </div>
       </div>
-
     </div>
   );
 };
