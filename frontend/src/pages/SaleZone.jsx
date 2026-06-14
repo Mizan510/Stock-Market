@@ -10,21 +10,6 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const formatDateValue = (dateValue) => {
-  if (!dateValue) return "";
-  const date = new Date(dateValue);
-  if (!isNaN(date.getTime())) {
-    return date
-      .toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      })
-      .replace(/ /g, "-");
-  }
-  return dateValue;
-};
-
 const SaleZone = () => {
   const navigate = useNavigate();
   const [trades, setTrades] = useState([]);
@@ -42,14 +27,19 @@ const SaleZone = () => {
         }
 
         if (userId) {
-          const [buyResponse, zoneResponse] = await Promise.all([
+          const [buyResponse, saleResponse, zoneResponse] = await Promise.all([
             api.get(`/buy/${userId}`).catch(() => ({ data: [] })),
+            api.get(`/sale/${userId}`).catch(() => ({ data: [] })),
             api.get("/zone").catch(() => ({ data: [] })),
           ]);
 
-          const rawTrades = buyResponse.data?.data || buyResponse.data || [];
+          const rawBuys = buyResponse.data?.data || buyResponse.data || [];
+          const rawSales = saleResponse.data?.data || saleResponse.data || [];
           const rawZones = zoneResponse.data?.data || zoneResponse.data || [];
 
+          const rawTrades = rawBuys;
+
+          // 1. Map raw trade rows and clean strings
           const normalized = rawTrades.map((item) => {
             const date =
               item.date ||
@@ -60,13 +50,16 @@ const SaleZone = () => {
               item.tradeDate ||
               "";
 
-            const company =
+            const company = (
               item.stockName ||
               item.company ||
               item.companyName ||
               item.Company ||
               item.symbol ||
-              "";
+              ""
+            )
+              .trim()
+              .toUpperCase();
 
             const qty = Number(
               item.quantity ?? item.buyQuantity ?? item.BuyTotalQtn ?? 0,
@@ -76,16 +69,18 @@ const SaleZone = () => {
               item.sharePrice ?? item.buyPerShareValue ?? item.price ?? 0,
             );
 
-            const tradeCompanyClean = company?.trim().toLowerCase();
+            const tradeCompanyClean = company.toLowerCase();
             const matchedZone = rawZones.find((z) => {
               const zoneCompanyClean = (
-                z.company ?? 
-                z.companyName ?? 
-                z.stockName ?? 
-                z.symbol ?? 
-                z.ticker ?? 
+                z.company ??
+                z.companyName ??
+                z.stockName ??
+                z.symbol ??
+                z.ticker ??
                 ""
-              ).trim().toLowerCase();
+              )
+                .trim()
+                .toLowerCase();
 
               if (!zoneCompanyClean || !tradeCompanyClean) return false;
               return (
@@ -107,15 +102,8 @@ const SaleZone = () => {
                 ? Number(rawClosingPrice)
                 : null;
 
-            const priceWithCommission = price * 1.004;
-
             const slPercent = Number(item.stopLossPercent ?? 3);
             const tpPercent = Number(item.targetProfitPercent ?? 10);
-
-            const slPrice = priceWithCommission * (1 - slPercent / 100);
-            const tpPrice = priceWithCommission * (1 + tpPercent / 100);
-
-            const totalLoss = (priceWithCommission - slPrice) * qty;
 
             return {
               date,
@@ -123,16 +111,147 @@ const SaleZone = () => {
               qty,
               price,
               closingPrice,
-              priceWithCommission,
               slPercent,
-              slPrice,
-              totalLoss,
               tpPercent,
-              tpPrice,
+              type: "buy",
             };
           });
 
-          setTrades(normalized);
+          // Process sale records with same normalization
+          const normalizedSales = rawSales.map((item) => {
+            const company = (
+              item.stockName ||
+              item.company ||
+              item.companyName ||
+              item.Company ||
+              item.symbol ||
+              ""
+            )
+              .trim()
+              .toUpperCase();
+
+            const qty = Number(
+              item.quantity ?? item.saleQuantity ?? item.saleTotalQtn ?? 0,
+            );
+
+            const price = Number(
+              item.perShareValue ?? item.salePerShareValue ?? item.price ?? 0,
+            );
+
+            return {
+              company,
+              qty,
+              price,
+              type: "sale",
+              closingPrice: null, // Explicitly safe-guard against undefined values
+            };
+          });
+
+          // Combine normalized data for aggregation
+          const allNormalized = [...normalized, ...normalizedSales];
+
+          // 2. Aggregate raw items - track buy and sale quantities separately
+          const aggregatedMap = new Map();
+
+          allNormalized.forEach((trade) => {
+            if (!trade.company) return;
+            const key = trade.company;
+
+            // Strict verification step to ensure closing price mathematical operations only happen on valid items
+            const hasValidClosingPrice = trade.type === "buy" && trade.closingPrice !== null && trade.closingPrice !== undefined;
+
+            if (!aggregatedMap.has(key)) {
+              aggregatedMap.set(key, {
+                company: trade.company,
+                totalBuyQty: trade.type === "buy" ? trade.qty : 0,
+                totalSaleQty: trade.type === "sale" ? trade.qty : 0,
+                totalValue: trade.type === "buy" ? trade.price * trade.qty : 0,
+                totalCommission:
+                  trade.type === "buy" ? trade.price * trade.qty * 0.004 : 0,
+                weightedClosingPriceSum: hasValidClosingPrice ? trade.closingPrice * trade.qty : 0,
+                closingPriceQtyCount: hasValidClosingPrice ? trade.qty : 0,
+                weightedSlPercentSum:
+                  trade.type === "buy" && trade.slPercent !== undefined
+                    ? trade.slPercent * trade.qty
+                    : 0,
+                weightedTpPercentSum:
+                  trade.type === "buy" && trade.tpPercent !== undefined
+                    ? trade.tpPercent * trade.qty
+                    : 0,
+              });
+            } else {
+              const existing = aggregatedMap.get(key);
+              if (trade.type === "buy") {
+                existing.totalBuyQty += trade.qty;
+                existing.totalValue += trade.price * trade.qty;
+                existing.totalCommission += trade.price * trade.qty * 0.004;
+                existing.weightedSlPercentSum += trade.slPercent * trade.qty;
+                existing.weightedTpPercentSum += trade.tpPercent * trade.qty;
+                
+                // Track closing price numbers strictly inside the buy action sequence
+                if (trade.closingPrice !== null && trade.closingPrice !== undefined) {
+                  existing.weightedClosingPriceSum += trade.closingPrice * trade.qty;
+                  existing.closingPriceQtyCount += trade.qty;
+                }
+              } else {
+                existing.totalSaleQty += trade.qty;
+              }
+            }
+          });
+
+          // 3. Sequential Calculation Pipeline
+          const finalMergedTrades = Array.from(aggregatedMap.values()).map(
+            (agg) => {
+              const totalBuyQty = agg.totalBuyQty;
+              const totalSaleQty = agg.totalSaleQty;
+              const remainQty = totalBuyQty - totalSaleQty;
+
+              const totalValue = agg.totalValue;
+              const totalCommission = Number(agg.totalCommission.toFixed(2));
+              const buyNetValue = Number(
+                (totalValue + totalCommission).toFixed(2),
+              );
+
+              const avgBasePrice =
+                totalBuyQty > 0 ? totalValue / totalBuyQty : 0;
+              const priceWithCommission =
+                totalBuyQty > 0 ? buyNetValue / totalBuyQty : 0;
+
+              const avgSlPercent =
+                totalBuyQty > 0 ? agg.weightedSlPercentSum / totalBuyQty : 3;
+              const avgTpPercent =
+                totalBuyQty > 0 ? agg.weightedTpPercentSum / totalBuyQty : 10;
+
+              // CALCULATIONS DRIVEN BY priceWithCommission
+              const slPrice = priceWithCommission * (1 - avgSlPercent / 100);
+              const tpPrice = priceWithCommission * (1 + avgTpPercent / 100);
+              
+              // Updated to prioritize risk metrics calculated against actual remaining inventory
+              const totalLoss = (priceWithCommission - slPrice) * remainQty;
+
+              const closingPrice =
+                agg.closingPriceQtyCount > 0
+                  ? agg.weightedClosingPriceSum / agg.closingPriceQtyCount
+                  : null;
+
+              return {
+                company: agg.company,
+                qty: totalBuyQty,
+                remainQty: remainQty,
+                price: avgBasePrice,
+                closingPrice,
+                slPercent: avgSlPercent,
+                slPrice,
+                totalLoss,
+                tpPercent: avgTpPercent,
+                tpPrice,
+                totalValueWithCommission: buyNetValue,
+                priceWithCommission: priceWithCommission,
+              };
+            },
+          );
+
+          setTrades(finalMergedTrades);
         }
       } catch (err) {
         console.error("Error cross-referencing session matrices:", err);
@@ -146,27 +265,6 @@ const SaleZone = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-6">
-      {/* Dynamic Style Injection for aggressive layouts */}
-      <style>
-        {`
-          @keyframes strongBlink {
-            0%, 100% { opacity: 1; background-color: rgba(239, 68, 68, 0.25); }
-            50% { opacity: 0.1; background-color: transparent; }
-          }
-          .animate-strong-blink {
-            animation: strongBlink 0.8s steps(1, start) infinite;
-          }
-          
-          @keyframes successBlink {
-            0%, 100% { opacity: 1; background-color: rgba(16, 185, 129, 0.25); }
-            50% { opacity: 0.1; background-color: transparent; }
-          }
-          .animate-success-blink {
-            animation: successBlink 0.8s steps(1, start) infinite;
-          }
-        `}
-      </style>
-
       <div className="mx-auto max-w-7xl">
         {/* HEADER */}
         <div className="flex flex-row items-center justify-between gap-4 mb-6 border-b border-gray-900 pb-4">
@@ -174,8 +272,8 @@ const SaleZone = () => {
             <h1 className="text-3xl font-bold tracking-tight text-white">
               Sale Zone
             </h1>
-            <p className="mt-1 text-sm font-semibold tracking-wide bg-linear-to-r from-cyan-400 via-blue-400 to-indigo-500 bg-clip-text text-transparent inline-block">
-              Red = Loss Sale | Green = Profit Sale | White = Middle Range
+            <p className="mt-1 text-sm font-semibold tracking-wide bg-linear-to-r from-red-400 via-gray-300 to-emerald-400 bg-clip-text text-transparent inline-block">
+              Red = Loss Sale | Green = Profit Sale | White = Middle Range (Active Only)
             </p>
           </div>
 
@@ -202,111 +300,96 @@ const SaleZone = () => {
           <div className="overflow-x-auto rounded-xl border border-gray-800">
             <table className="w-full text-sm text-center border-collapse">
               <thead>
-                <tr className="bg-slate-900 text-xs font-bold uppercase tracking-wider text-slate-200 border-b border-gray-800">
-                  <th className="p-3 border-r border-gray-800" colSpan="2">
-                    Asset Info
+                <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold text-xs uppercase tracking-wider">
+                  <th className="p-3 border-r border-gray-800 text-left pl-4">
+                    Company Name
                   </th>
-                  <th className="p-3 border-r border-gray-800" colSpan="4">
-                    Entry Metrics
+                  <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-indigo-300">
+                    Buy (Total Qtn)
                   </th>
-                  <th className="p-3 border-r border-gray-800" colSpan="3">
-                    Risk Mitigation
+                  <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-indigo-300">
+                    Buy (Total Value with commission)
                   </th>
-                  <th className="p-3" colSpan="2">
-                    Profit Targets
+                  <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-purple-300">
+                    Remain Qtn
                   </th>
-                </tr>
-                <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold">
-                  <th className="p-3 border-r border-gray-800">Date</th>
-                  <th className="p-3 border-r border-gray-800">Company</th>
-                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-sky-300">
-                    Buy Qtn
+                  <th className="p-3 border-r border-gray-800 bg-sky-950/30 text-sky-300">
+                    Buy Per Share + Commission
                   </th>
-                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-sky-300">
-                    Base Price
-                  </th>
-                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-teal-300">
+                  <th className="p-3 border-r border-gray-800 bg-sky-950/40 text-teal-300">
                     Session Close
                   </th>
-                  <th className="p-2 border-r border-gray-800 bg-blue-950/40 text-blue-300">
-                    With Comm. (0.4%)
-                  </th>
-                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
+                  <th className="p-3 border-r border-gray-800 bg-red-950/40 text-red-400">
                     Stop Loss %
                   </th>
-                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
+                  <th className="p-3 border-r border-gray-800 bg-red-950/40 text-red-400">
                     Exit Floor Price
                   </th>
-                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
+                  <th className="p-3 border-r border-gray-800 bg-red-950/40 text-red-400">
                     Max Risk Capital
                   </th>
-                  <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                  <th className="p-3 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
                     Target %
                   </th>
-                  <th className="p-2 bg-emerald-950/40 text-emerald-300">
+                  <th className="p-3 bg-emerald-950/40 text-emerald-300">
                     Target Price
                   </th>
                 </tr>
               </thead>
 
               <tbody className="divide-y divide-gray-800">
-                {trades.map((t, i) => {
-                  // UPDATED: Precise 3-tier boundary color state processing
+                {trades.map((t) => {
                   let companyColorClass = "text-white bg-gray-900/30";
-                  
-                  if (t.closingPrice !== null) {
+
+                  // NEW LOGIC: Only change color if there are items left in inventory
+                  if (t.remainQty > 0 && t.closingPrice !== null) {
                     if (t.closingPrice <= t.slPrice) {
-                      // 1. Equal or below Exit Floor Price -> High Alert Red Blink
-                      companyColorClass = "text-red-500 font-black animate-strong-blink";
+                      companyColorClass = "text-red-500 font-black bg-red-950/20";
                     } else if (t.closingPrice >= t.tpPrice) {
-                      // 2. Equal or above Profit Target -> Green Success Blink
-                      companyColorClass = "text-emerald-400 font-black animate-success-blink";
-                    } else {
-                      // 3. Normal range inside boundaries -> Neutral White Text
-                      companyColorClass = "text-white bg-gray-900/30";
+                      companyColorClass = "text-emerald-400 font-black bg-emerald-950/20";
                     }
                   }
 
                   return (
                     <tr
-                      key={i}
+                      key={t.company}
                       className="hover:bg-gray-900/50 transition-colors"
                     >
-                      <td className="p-3 bg-gray-900/30 border-r border-gray-800">
-                        {t.date ? formatDateValue(t.date) : "-"}
-                      </td>
                       <td
-                        className={`p-3 border-r border-gray-800 font-bold tracking-wide ${companyColorClass}`}
+                        className={`p-3 border-r border-gray-800 text-left pl-4 font-bold tracking-wide ${companyColorClass}`}
                       >
                         {t.company || "-"}
                       </td>
-                      <td className="p-3 bg-sky-950/10 border-r border-gray-800 text-sky-300 font-semibold">
+                      <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
                         {t.qty}
                       </td>
-                      <td className="p-3 bg-sky-950/10 border-r border-gray-800 text-sky-300 font-semibold">
-                        {formatCurrency(t.price)}
+                      <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
+                        {formatCurrency(t.totalValueWithCommission)}
                       </td>
-                      <td className="p-3 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10">
+                      <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold text-base">
+                        {t.remainQty}
+                      </td>
+                      <td className="p-3 bg-sky-950/10 border-r border-gray-800 text-sky-400 font-mono font-bold text-base">
+                        {formatCurrency(t.priceWithCommission)}
+                      </td>
+                      <td className="p-3 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10 text-base font-mono">
                         {t.closingPrice !== null
                           ? formatCurrency(t.closingPrice)
                           : "-"}
                       </td>
-                      <td className="p-3 bg-blue-950/10 border-r border-gray-800 text-blue-400 font-semibold">
-                        {formatCurrency(t.priceWithCommission)}
+                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
+                        {t.slPercent.toFixed(1)}%
                       </td>
-                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold">
-                        {t.slPercent}%
-                      </td>
-                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold text-base">
+                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold text-base font-mono">
                         {formatCurrency(t.slPrice)}
                       </td>
-                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold">
+                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
                         {formatCurrency(t.totalLoss)}
                       </td>
-                      <td className="p-3 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold">
-                        {t.tpPercent}%
+                      <td className="p-3 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold font-mono">
+                        {t.tpPercent.toFixed(1)}%
                       </td>
-                      <td className="p-3 bg-emerald-950/10 text-emerald-400 font-bold text-base">
+                      <td className="p-3 bg-emerald-950/10 text-emerald-400 font-bold text-base font-mono">
                         {formatCurrency(t.tpPrice)}
                       </td>
                     </tr>
