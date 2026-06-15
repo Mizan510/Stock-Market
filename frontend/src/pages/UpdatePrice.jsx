@@ -661,8 +661,8 @@ const UpdatePrice = () => {
         { header: 'Company Name', key: 'company', width: 20 },
         { header: '1Y Low', key: 'low', width: 14 },
         { header: '1Y High', key: 'high', width: 14 },
-        { header: 'Session High', key: 'session_high', width: 16 },
         { header: 'Session Low', key: 'session_low', width: 16 },
+        { header: 'Session High', key: 'session_high', width: 16 },
         { header: 'Session Close', key: 'session_close', width: 16 },
         { header: 'Pivot Point', key: 'pivot', width: 16 },
         { header: 'Sentiment', key: 'sentiment', width: 14 }
@@ -684,8 +684,8 @@ const UpdatePrice = () => {
           company: cleanCompanyName,
           low: item.low ? Number(Number(item.low).toFixed(2)) : null,
           high: item.high ? Number(Number(item.high).toFixed(2)) : null,
-          session_high: item.todaysHigh ? Number(Number(item.todaysHigh).toFixed(2)) : null,
           session_low: item.todaysLow ? Number(Number(item.todaysLow).toFixed(2)) : null,
+          session_high: item.todaysHigh ? Number(Number(item.todaysHigh).toFixed(2)) : null,
           session_close: item.closingPrice ? Number(Number(item.closingPrice).toFixed(2)) : null,
           pivot: item.pivotPoint ? Number(Number(item.pivotPoint).toFixed(2)) : null,
           sentiment: sentiment
@@ -836,7 +836,7 @@ const UpdatePrice = () => {
         
         <div className="flex flex-row justify-between items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-emerald-400">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
               🔄 Update Actual Price
             </h1>
             <p className="text-gray-400 mt-1 text-xs sm:text-sm hidden sm:block">
@@ -947,6 +947,7 @@ const UpdatePrice = () => {
           )}
         </div>
 
+        {/* INPUT DATA SHEET PROFILE FORM - REARRANGED */}
         <div className="bg-gray-900 border border-gray-800 p-4 sm:p-6 rounded-xl space-y-4 shadow-xl mb-6">
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -990,19 +991,8 @@ const UpdatePrice = () => {
             )}
           </div>
 
+          {/* REARRANGED INPUT BOXES: Session Low, Session High, Session Close, 1Y Low Price, 1Y High Price */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Session High</label>
-              <input
-                type="number"
-                name="todaysHigh"
-                placeholder="0.00"
-                value={formData.todaysHigh}
-                onChange={handleChange}
-                step="0.01"
-                className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
-              />
-            </div>
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1.5">Session Low</label>
               <input
@@ -1010,6 +1000,18 @@ const UpdatePrice = () => {
                 name="todaysLow"
                 placeholder="0.00"
                 value={formData.todaysLow}
+                onChange={handleChange}
+                step="0.01"
+                className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Session High</label>
+              <input
+                type="number"
+                name="todaysHigh"
+                placeholder="0.00"
+                value={formData.todaysHigh}
                 onChange={handleChange}
                 step="0.01"
                 className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
@@ -1057,7 +1059,7 @@ const UpdatePrice = () => {
             <button
               onClick={handleSubmit}
               disabled={submitLoading || loading}
-              className="flex-1 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer"
             >
               {submitLoading ? "Processing Variables..." : formData._id ? "Update Data" : "Submit Data"}
             </button>
@@ -1095,7 +1097,7 @@ const UpdatePrice = () => {
                 <button
                   onClick={exportReportToExcel}
                   disabled={sortedZoneData.length === 0}
-                  className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap"
+                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap"
                 >
                   <span>📊</span> Export Report to Excel
                 </button>
@@ -1109,8 +1111,8 @@ const UpdatePrice = () => {
                     <th className="p-3 font-semibold min-w-140px">Company Name</th>
                     <th className="p-3 font-semibold text-right text-gray-300">1Y Low</th>
                     <th className="p-3 font-semibold text-right text-gray-300">1Y High</th>
-                    <th className="p-3 font-semibold text-right text-blue-400">Session High</th>
                     <th className="p-3 font-semibold text-right text-blue-400">Session Low</th>
+                    <th className="p-3 font-semibold text-right text-blue-400">Session High</th>
                     <th className="p-3 font-semibold text-right text-blue-300">Session Close</th>
                     <th className="p-3 font-semibold text-right text-purple-400">Pivot Point</th>
                     <th className="p-3 font-semibold text-center text-amber-400">Forecast Matrix</th>
@@ -1145,11 +1147,11 @@ const UpdatePrice = () => {
                           <td className={`p-3 text-right font-mono ${getCellClass('high', item.high)}`}>
                             {item.high ? Number(item.high).toFixed(2) : "-"}
                            </td>
-                          <td className={`p-3 text-right font-mono ${getCellClass('todaysHigh', item.todaysHigh)}`}>
-                            {item.todaysHigh ? Number(item.todaysHigh).toFixed(2) : "-"}
-                           </td>
                           <td className={`p-3 text-right font-mono ${getCellClass('todaysLow', item.todaysLow)}`}>
                             {item.todaysLow ? Number(item.todaysLow).toFixed(2) : "-"}
+                           </td>
+                          <td className={`p-3 text-right font-mono ${getCellClass('todaysHigh', item.todaysHigh)}`}>
+                            {item.todaysHigh ? Number(item.todaysHigh).toFixed(2) : "-"}
                            </td>
                           <td className={`p-3 text-right font-mono ${getCellClass('closingPrice', item.closingPrice)}`}>
                             {item.closingPrice ? Number(item.closingPrice).toFixed(2) : "-"}
@@ -1199,27 +1201,27 @@ const UpdatePrice = () => {
                           <td className="p-3 font-bold text-gray-100 whitespace-nowrap">{item.company}</td>
                           <td className="p-3 text-right font-mono text-gray-400">
                             {item.low ? Number(item.low).toFixed(2) : "-"}
-                          </td>
+                           </td>
                           <td className="p-3 text-right font-mono text-gray-400">
                             {item.high ? Number(item.high).toFixed(2) : "-"}
-                          </td>
-                          <td className="p-3 text-right font-mono text-blue-400/90">
-                            {item.todaysHigh ? Number(item.todaysHigh).toFixed(2) : "-"}
-                          </td>
+                           </td>
                           <td className="p-3 text-right font-mono text-blue-400/90">
                             {item.todaysLow ? Number(item.todaysLow).toFixed(2) : "-"}
-                          </td>
+                           </td>
+                          <td className="p-3 text-right font-mono text-blue-400/90">
+                            {item.todaysHigh ? Number(item.todaysHigh).toFixed(2) : "-"}
+                           </td>
                           <td className="p-3 text-right font-mono text-gray-200">
                             {item.closingPrice ? Number(item.closingPrice).toFixed(2) : "-"}
-                          </td>
+                           </td>
                           <td className="p-3 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
                             {item.pivotPoint ? Number(item.pivotPoint).toFixed(2) : "-"}
-                          </td>
+                           </td>
                           <td className="p-3 text-center whitespace-nowrap">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${sentimentStyle}`}>
                               {sentiment}
                             </span>
-                          </td>
+                           </td>
                           <td className="p-3 text-center whitespace-nowrap">
                             <div className="flex gap-1.5 justify-center">
                               <button
@@ -1235,7 +1237,7 @@ const UpdatePrice = () => {
                                 Delete
                               </button>
                             </div>
-                          </td>
+                           </td>
                         </tr>
                       );
                     })
