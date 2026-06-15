@@ -876,7 +876,7 @@ const UpdatePrice = () => {
               <label className="block text-sm font-semibold text-gray-300 mb-3">
                 📁 Upload Excel File (.xlsx, .xls)
               </label>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -893,7 +893,7 @@ const UpdatePrice = () => {
               </div>
               <div className="mt-3 space-y-1">
                 <p className="text-xs text-gray-500">
-                  💡 Supported columns: Trading Code, Symbol, Company Name, Session High/Low/Close, 1Y Low/High
+                  💡 Check Template before upload
                 </p>
               </div>
             </div>
