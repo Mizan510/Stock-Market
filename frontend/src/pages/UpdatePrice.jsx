@@ -836,7 +836,7 @@ const UpdatePrice = () => {
         
         <div className="flex flex-row justify-between items-center gap-4 mb-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-emerald-400">
               🔄 Update Actual Price
             </h1>
             <p className="text-gray-400 mt-1 text-xs sm:text-sm hidden sm:block">
@@ -1059,7 +1059,7 @@ const UpdatePrice = () => {
             <button
               onClick={handleSubmit}
               disabled={submitLoading || loading}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer"
+              className="flex-1 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer"
             >
               {submitLoading ? "Processing Variables..." : formData._id ? "Update Data" : "Submit Data"}
             </button>
@@ -1097,7 +1097,7 @@ const UpdatePrice = () => {
                 <button
                   onClick={exportReportToExcel}
                   disabled={sortedZoneData.length === 0}
-                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap"
+                  className="bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap"
                 >
                   <span>📊</span> Export Report to Excel
                 </button>
