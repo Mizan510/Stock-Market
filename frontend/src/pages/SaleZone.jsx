@@ -299,31 +299,31 @@ const SaleZone = () => {
                   <th className="p-3 border-r border-gray-800 text-left pl-4">
                     Company Name
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-indigo-300">
+                  <th className="p-2 border-r border-gray-800 bg-indigo-950/30 text-indigo-300">
                     Buy (Total Qtn)
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-indigo-950/30 text-purple-300">
+                  <th className="p-2 border-r border-gray-800 bg-indigo-950/30 text-purple-300">
                     Remain Qtn
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-sky-950/30 text-sky-300">
+                  <th className="p-2 border-r border-gray-800 bg-sky-950/30 text-sky-300">
                     Buy Per Share + Commission
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-sky-950/40 text-teal-300">
+                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-teal-300">
                     Session Close
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-red-950/40 text-red-400">
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
                     Stop Loss %
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-red-950/40 text-red-400">
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
                     Exit Floor Price
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-red-950/40 text-red-400">
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400">
                     Max Risk Capital
                   </th>
-                  <th className="p-3 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
+                  <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300">
                     Target %
                   </th>
-                  <th className="p-3 bg-emerald-950/40 text-emerald-300">
+                  <th className="p-2 bg-emerald-950/40 text-emerald-300">
                     Target Price
                   </th>
                 </tr>
@@ -351,33 +351,33 @@ const SaleZone = () => {
                       >
                         {t.company || "-"}
                       </td>
-                      <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
+                      <td className="p-2 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
                         {t.qty}
                       </td>
-                      <td className="p-3 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold text-base">
+                      <td className="p-2 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold text-base">
                         {t.remainQty}
                       </td>
-                      <td className="p-3 bg-sky-950/10 border-r border-gray-800 text-sky-400 font-mono font-bold text-base">
+                      <td className="p-2 bg-sky-950/10 border-r border-gray-800 text-sky-400 font-mono font-bold text-base">
                         {formatCurrency(t.priceWithCommission)}
                       </td>
-                      <td className="p-3 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10 text-base font-mono">
+                      <td className="p-2 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10 text-base font-mono">
                         {t.closingPrice !== null
                           ? formatCurrency(t.closingPrice)
                           : "-"}
                       </td>
-                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
+                      <td className="p-2 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
                         {t.slPercent.toFixed(1)}%
                       </td>
-                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold text-base font-mono">
+                      <td className="p-2 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold text-base font-mono">
                         {formatCurrency(t.slPrice)}
                       </td>
-                      <td className="p-3 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
+                      <td className="p-2 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
                         {formatCurrency(t.totalLoss)}
                       </td>
-                      <td className="p-3 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold font-mono">
+                      <td className="p-2 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold font-mono">
                         {t.tpPercent.toFixed(1)}%
                       </td>
-                      <td className="p-3 bg-emerald-950/10 text-emerald-400 font-bold text-base font-mono">
+                      <td className="p-2 bg-emerald-950/10 text-emerald-400 font-bold text-base font-mono">
                         {formatCurrency(t.tpPrice)}
                       </td>
                     </tr>
