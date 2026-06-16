@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import api from "../api";
 
-const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = false }) => {
+const BuySalePopup = ({
+  isOpen,
+  onClose,
+  buyList = [],
+  saleList = [],
+  loading = false,
+}) => {
   const [buyRows, setBuyRows] = useState([]);
   const [saleRows, setSaleRows] = useState([]);
   const [localLoading, setLocalLoading] = useState(false);
@@ -32,22 +38,6 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
     return lowValue + ((highValue - lowValue) * percentValue) / 100;
   };
 
-  const calculatePivot = (high, low, close) => {
-    const highValue = parseNumber(high);
-    const lowValue = parseNumber(low);
-    const closeValue = parseNumber(close);
-
-    if (
-      highValue === undefined ||
-      lowValue === undefined ||
-      closeValue === undefined
-    ) {
-      return null;
-    }
-
-    return (highValue + lowValue + closeValue) / 3;
-  };
-
   useEffect(() => {
     if (!isOpen) return;
 
@@ -75,41 +65,70 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
         const rawBuys = buyResponse.data?.data || buyResponse.data || [];
         const rawSales = saleResponse.data?.data || saleResponse.data || [];
 
-        // Calculate pivot points for each company
+        console.log("=== DEBUG: Raw Zone Data ===", rawZones);
+
+        // Get pivot points from database (already calculated by backend)
         const pivots = {};
         rawZones.forEach((zone) => {
           const company =
             zone.company || zone.companyName || zone.stockName || "";
-          if (company) {
-            const pivot = calculatePivot(
-              zone.high,
-              zone.low,
-              zone.closingPrice || zone.sessionClose,
-            );
-            if (pivot !== null) {
-              pivots[company] = pivot;
-            }
+          if (
+            company &&
+            zone.pivotPoint !== undefined &&
+            zone.pivotPoint !== null
+          ) {
+            pivots[company] = zone.pivotPoint;
+            console.log(`${company} pivot from DB:`, zone.pivotPoint);
           }
         });
+
+        console.log("=== All Pivots from DB ===", pivots);
         setPivotData(pivots);
 
+        // Create buy rows with proper data
         const mappedBuyData = rawZones
-          .map((row) => ({
-            ...row,
-            company: row.company || row.companyName || row.stockName || "",
-            low: row.low ?? "",
-            high: row.high ?? "",
-            buyPercent: row.buyPercent ?? 20,
-            closingPrice: row.closingPrice ?? row.sessionClose ?? "",
-          }))
+          .map((row) => {
+            const company =
+              row.company || row.companyName || row.stockName || "";
+
+            // Session values
+            const sessionHigh = row.todaysHigh || 0;
+            const sessionLow = row.todaysLow || 0;
+            const sessionClose = row.closingPrice || 0;
+
+            // Yearly values
+            const yearlyHigh = row.high || 0;
+            const yearlyLow = row.low || 0;
+
+            return {
+              ...row,
+              company: company,
+              // Session values
+              sessionHigh: sessionHigh,
+              sessionLow: sessionLow,
+              sessionClose: sessionClose,
+              // Yearly values
+              yearlyHigh: yearlyHigh,
+              yearlyLow: yearlyLow,
+              // For display - use session values for pivot display
+              high: sessionHigh,
+              low: sessionLow,
+              closingPrice: sessionClose,
+              buyPercent: row.buyPercent ?? 20,
+              // Use pivot from database
+              pivot: row.pivotPoint || null,
+            };
+          })
           .sort((a, b) =>
             a.company.localeCompare(b.company, undefined, {
               sensitivity: "base",
             }),
           );
 
+        console.log("=== Mapped Buy Data ===", mappedBuyData);
         setBuyRows(mappedBuyData);
 
+        // Buy aggregation
         const buyAggregation = {};
         rawBuys.forEach((item) => {
           const company = (
@@ -139,6 +158,7 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
           buyAggregation[company].totalCommission += commission;
         });
 
+        // Sale aggregation
         const saleAggregation = {};
         rawSales.forEach((item) => {
           const company = (
@@ -157,6 +177,7 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
           saleAggregation[company].totalQty += qty;
         });
 
+        // Normalize sale data
         const normalizedSaleData = Object.keys(buyAggregation)
           .map((company) => {
             const buyData = buyAggregation[company];
@@ -174,15 +195,12 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
 
             const companyClean = cleanString(company);
             const matchedZone = rawZones.find(
-              (z) => cleanString(z.company) === companyClean,
+              (z) =>
+                cleanString(z.company || z.companyName || z.stockName || "") ===
+                companyClean,
             );
 
-            const closingPrice = Number(
-              matchedZone?.closingPrice ??
-                matchedZone?.close ??
-                matchedZone?.sessionClose ??
-                0,
-            );
+            const closingPrice = Number(matchedZone?.closingPrice ?? 0);
 
             const exitFloorPrice = avgBuyPriceWithCommission * (1 - 3 / 100);
             const targetPrice = avgBuyPriceWithCommission * (1 + 10 / 100);
@@ -215,10 +233,13 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
 
   const isLoading = loading || localLoading;
 
-  // Yearly Low Buy - Show when Current Price is LESS than or equal to 20% Zone
+  // Yearly Low Buy - Uses yearly high/low values
   const yearlyLowBuyList = buyRows.filter((row) => {
     const currentPrice = parseNumber(row.closingPrice);
-    const buyZone = calcZone(row.low, row.high, row.buyPercent);
+    // Use yearly values for zone calculation
+    const yearlyHigh = row.yearlyHigh || row.high || 0;
+    const yearlyLow = row.yearlyLow || row.low || 0;
+    const buyZone = calcZone(yearlyLow, yearlyHigh, row.buyPercent);
     return (
       currentPrice !== undefined &&
       buyZone !== undefined &&
@@ -226,10 +247,22 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
     );
   });
 
-  // Pivot Point Buy - Show when Current Price is GREATER than Pivot
+  // Pivot Point Buy - Uses pivot from database
   const pivotBuyList = buyRows.filter((row) => {
     const currentPrice = parseNumber(row.closingPrice);
-    const pivotValue = pivotData[row.company];
+    // Get pivot from database
+    const pivotValue = row.pivot || pivotData[row.company];
+
+    console.log(`Checking ${row.company}:`, {
+      currentPrice,
+      pivotValue,
+      sessionHigh: row.sessionHigh,
+      sessionLow: row.sessionLow,
+      sessionClose: row.sessionClose,
+      yearlyHigh: row.yearlyHigh,
+      yearlyLow: row.yearlyLow,
+    });
+
     return (
       currentPrice !== undefined &&
       pivotValue !== undefined &&
@@ -277,7 +310,9 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
           <div className="flex-1 flex items-center justify-center py-12">
             <div className="text-center">
               <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-gray-400 text-sm">Loading your portfolio data...</p>
+              <p className="text-gray-400 text-sm">
+                Loading your portfolio data...
+              </p>
             </div>
           </div>
         ) : (
@@ -313,9 +348,11 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
                         <div className="space-y-1.5">
                           {yearlyLowBuyList.map((row, idx) => {
                             const currentPrice = parseNumber(row.closingPrice);
+                            const yearlyHigh = row.yearlyHigh || row.high || 0;
+                            const yearlyLow = row.yearlyLow || row.low || 0;
                             const buyZone = calcZone(
-                              row.low,
-                              row.high,
+                              yearlyLow,
+                              yearlyHigh,
                               row.buyPercent,
                             );
                             return (
@@ -332,13 +369,13 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
                                   </span>
                                 </div>
                                 <div className="flex justify-between text-[10px] mt-1">
-                                  <span className="text-gray-400">
+                                  <span className="text-gray-400 text-[9px]">
                                     Current:{" "}
                                     <span className="text-gray-300 font-medium">
                                       ৳{currentPrice?.toFixed(2)}
                                     </span>
                                   </span>
-                                  <span className="text-green-400">
+                                  <span className="text-green-400 text-[9px]">
                                     ≤20% Zone:{" "}
                                     <span className="font-medium">
                                       ৳{buyZone?.toFixed(2)}
@@ -376,7 +413,9 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
                         <div className="space-y-1.5">
                           {pivotBuyList.map((row, idx) => {
                             const currentPrice = parseNumber(row.closingPrice);
-                            const pivotValue = pivotData[row.company];
+                            const pivotValue =
+                              row.pivot || pivotData[row.company];
+
                             return (
                               <div
                                 key={idx}
@@ -403,6 +442,11 @@ const BuySalePopup = ({ isOpen, onClose, buyList = [], saleList = [], loading = 
                                       ৳{pivotValue?.toFixed(2)}
                                     </span>
                                   </span>
+                                </div>
+                                {/* Debug info - shows session values used for pivot */}
+                                <div className="text-[8px] text-gray-500 mt-1">
+                                  Low: {row.sessionLow}, High: {row.sessionHigh}
+                                  , Close: {row.closingPrice}
                                 </div>
                               </div>
                             );
