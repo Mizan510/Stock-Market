@@ -126,19 +126,51 @@ const SummaryPanel = ({
       </div>
 
       {/* ROI HERO SECTION */}
+
       <div>
-        <Card
-          title="ROI (Return on Investment)"
-          subtitle="(Profit / Deposit) * 100"
-          value={
-            deposit > 0 ? `${((profit / deposit) * 100).toFixed(2)}%` : "0%"
-          }
-          bgColor="bg-amber-400"
-          borderColor="border-amber-500"
-          accent="text-slate-950"
-          textColor="text-slate-950"
-          subtitleColor="text-slate-800 font-medium"
-        />
+        <div
+          className={`${cardPadding} ${cardRadius} border border-amber-500/30 bg-amber-400/90 backdrop-blur-sm hover:scale-[1.01] transition-all duration-200 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 flex flex-col justify-between overflow-hidden`}
+        >
+          <h3 className={`${cardTitleSize} text-slate-950 leading-none`}>
+            📈 ROI (Return on Investment)
+          </h3>
+
+          <div className="space-y-1 mt-1">
+            {/* ROI on Deposit - Green Section */}
+            <div className="flex items-center justify-between rounded bg-emerald-500/20 px-1 py-0.5 border border-emerald-500/20">
+              <div>
+                <p className="text-[10px] font-medium text-slate-800 leading-tight">
+                  Return on Deposit
+                </p>
+                <p className="text-[8px] text-slate-700 leading-tight">
+                  ((Profit + Dividend) / Deposit) × 100
+                </p>
+              </div>
+              <p className="text-sm font-bold text-emerald-700 leading-none">
+                {deposit > 0
+                  ? `${(((profit + dividend) / deposit) * 100).toFixed(2)}%`
+                  : "0%"}
+              </p>
+            </div>
+
+            {/* ROI on Remaining Capital - Blue Section */}
+            <div className="flex items-center justify-between rounded bg-blue-500/20 px-1 py-0.5 border border-blue-500/20">
+              <div>
+                <p className="text-[10px] font-medium text-slate-800 leading-tight">
+                  Return on Remaining Capital
+                </p>
+                <p className="text-[8px] text-slate-700 leading-tight">
+                  ((Profit + Dividend) / (Deposit - Withdraw)) × 100
+                </p>
+              </div>
+              <p className="text-sm font-bold text-blue-700 leading-none">
+                {deposit - withdraw > 0
+                  ? `${(((profit + dividend) / (deposit - withdraw)) * 100).toFixed(2)}%`
+                  : "0%"}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* RESULT METRICS */}
