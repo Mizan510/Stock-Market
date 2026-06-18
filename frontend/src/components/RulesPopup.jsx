@@ -180,6 +180,13 @@ const RulesPopup = ({ onClose }) => {
                       </span>
                     </div>
                   </div>
+
+                  <p>
+                    <span className="text-emerald-900 font-extrabold">
+                      5. Pivot Point & Pyramid Rule:
+                    </span>{" "}
+                    Pivot point বের করে Pyramid Rule ফলো করুন।
+                  </p>
                 </div>
               </div>
 
