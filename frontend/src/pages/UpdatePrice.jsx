@@ -121,6 +121,7 @@ const UpdatePrice = () => {
       try {
         setLoading(true);
         const res = await api.get("/zone");
+        console.log(res.data);
         const zoneList = res.data || [];
         
         const uppercasedZoneList = zoneList.map(item => {
@@ -405,18 +406,15 @@ const UpdatePrice = () => {
 
     try {
       setSubmitLoading(true);
+      const updatedZoneMap = new Map();
       
-      const dataMap = new Map();
       zoneData.forEach(item => {
-        const key = item.company?.toLowerCase() || '';
-        if (key) {
-          dataMap.set(key, { ...item });
-        }
+        updatedZoneMap.set(item.company.toLowerCase(), { ...item });
       });
       
       let successCount = 0;
       let errorCount = 0;
-      const newCompaniesSet = new Set(companies.map(c => c.toLowerCase()));
+      let newCompaniesList = new Set(companies.map(c => c.toLowerCase()));
 
       for (const item of comparisonData) {
         if (!item.company) {
@@ -425,18 +423,10 @@ const UpdatePrice = () => {
         }
 
         const companyKey = item.company.toLowerCase();
+        const existingItem = updatedZoneMap.get(companyKey);
 
-        const indicatorData = {
-          todaysHigh: item.todaysHigh,
-          todaysLow: item.todaysLow,
-          closingPrice: item.closingPrice,
-          low: item.low,
-          high: item.high,
-          todayVolume: item.todayVolume,
-          avgVolume1M: item.avgVolume1M
-        };
-
-        const indicators = calculateIndicators(indicatorData);
+        // Calculate indicators for the payload
+        const indicators = calculateIndicators(item);
 
         const payload = {
           company: item.company,
@@ -456,69 +446,40 @@ const UpdatePrice = () => {
         };
 
         try {
-          let savedRecord;
-          const existingItem = dataMap.get(companyKey);
-          
           if (existingItem && existingItem._id) {
             const res = await api.put(`/zone/${existingItem._id}`, payload);
-            savedRecord = res.data?.data || res.data || { ...payload, _id: existingItem._id };
+            const savedRecord = res.data?.data || res.data || { ...payload, _id: existingItem._id };
+            updatedZoneMap.set(companyKey, savedRecord);
+            successCount++;
           } else {
             const res = await api.post("/zone", payload);
-            savedRecord = res.data?.data || res.data || payload;
-            newCompaniesSet.add(companyKey);
+            const savedRecord = res.data?.data || res.data;
+            updatedZoneMap.set(companyKey, savedRecord);
+            newCompaniesList.add(companyKey);
+            successCount++;
           }
-          
-          dataMap.set(companyKey, {
-            ...savedRecord,
-            ...indicators,
-            company: item.company,
-            todaysHigh: item.todaysHigh,
-            todaysLow: item.todaysLow,
-            closingPrice: item.closingPrice,
-            low: item.low,
-            high: item.high,
-            todayVolume: item.todayVolume,
-            avgVolume1M: item.avgVolume1M,
-          });
-          successCount++;
         } catch (err) {
           console.error(`Error processing ${item.company}:`, err);
           errorCount++;
         }
       }
 
-      const finalData = Array.from(dataMap.values()).map(item => {
-        const indicators = calculateIndicators({
-          todaysHigh: item.todaysHigh,
-          todaysLow: item.todaysLow,
-          closingPrice: item.closingPrice,
-          low: item.low,
-          high: item.high,
-          todayVolume: item.todayVolume,
-          avgVolume1M: item.avgVolume1M
-        });
-        
-        return {
-          ...item,
-          ...indicators
-        };
-      });
-
-      setZoneData(finalData);
-      setCompanies(Array.from(newCompaniesSet).sort());
+      const updatedZoneData = Array.from(updatedZoneMap.values());
+      setZoneData(updatedZoneData);
       
-      setExcelPreviewData(null);
-      setComparisonData([]);
-      setShowComparison(false);
-      setExcelFileName("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      const updatedCompanies = Array.from(newCompaniesList).sort();
+      setCompanies(updatedCompanies);
       
       if (successCount > 0) {
         showSuccessAlert(`✅ Successfully merged ${successCount} records! ${errorCount > 0 ? `${errorCount} records failed.` : ''}`);
-        setShowReport(true);
-        console.log('Final data after merge:', finalData);
+        
+        setExcelPreviewData(null);
+        setComparisonData([]);
+        setShowComparison(false);
+        setExcelFileName("");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
       } else {
         showErrorAlert("No valid records were saved. Please check your data format.");
       }
@@ -587,18 +548,9 @@ const UpdatePrice = () => {
         savedRecord = res.data?.data || res.data || { ...payload, _id: formData._id };
         showSuccessAlert("Price parameters updated successfully!");
         
-        setZoneData((prev) => {
-          const updated = prev.map((item) => {
-            if (item._id === formData._id) {
-              return {
-                ...savedRecord,
-                ...indicators
-              };
-            }
-            return item;
-          });
-          return updated;
-        });
+        setZoneData((prev) =>
+          prev.map((item) => (item._id === formData._id ? savedRecord : item))
+        );
         
         setCompanies(prev => {
           const newList = [...prev];
@@ -618,25 +570,14 @@ const UpdatePrice = () => {
           showSuccessAlert("Matrix profile updated successfully!");
           
           setZoneData((prev) =>
-            prev.map((item) => {
-              if (item._id === existingCompany._id) {
-                return {
-                  ...savedRecord,
-                  ...indicators
-                };
-              }
-              return item;
-            })
+            prev.map((item) => (item._id === existingCompany._id ? savedRecord : item))
           );
         } else {
           const res = await api.post("/zone", payload);
-          savedRecord = res.data?.data || res.data || payload;
+          savedRecord = res.data?.data || res.data;
           showSuccessAlert("Matrix profile generated successfully!");
           
-          setZoneData((prev) => [{
-            ...savedRecord,
-            ...indicators
-          }, ...prev]);
+          setZoneData((prev) => [savedRecord, ...prev]);
           
           if (!companies.map(c => c.toLowerCase()).includes(uppercasedCompany.toLowerCase())) {
             setCompanies((prev) => [...prev, uppercasedCompany].sort());
@@ -1531,6 +1472,9 @@ const UpdatePrice = () => {
                     })
                   ) : (
                     sortedZoneData.map((item, index) => {
+                        console.log("Company:", item.company);
+  console.log("Today Volume:", item.todayVolume);
+  console.log("Avg Volume:", item.avgVolume1M);
                       return (
                         <tr key={item._id || index} className="hover:bg-gray-850/40 transition-colors">
                           <td 
