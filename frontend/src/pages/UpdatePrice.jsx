@@ -32,12 +32,87 @@ const UpdatePrice = () => {
     closingPrice: "",
     low: "",
     high: "",
+    todayVolume: "",
+    avgVolume1M: "",
   });
 
   // Helper function to convert company names to uppercase
   const toUpperCaseName = (name) => {
     if (!name) return name;
     return name.toUpperCase().trim();
+  };
+
+  // Calculate pivot and support/resistance levels
+  const calculateIndicators = (data) => {
+    const h = parseFloat(data.todaysHigh);
+    const l = parseFloat(data.todaysLow);
+    const c = parseFloat(data.closingPrice);
+    const volume = parseFloat(data.todayVolume);
+    const avgVolume = parseFloat(data.avgVolume1M);
+
+    let pivot = null;
+    let r1 = null;
+    let s1 = null;
+    let volRatio = null;
+    let originalSignal = "Neutral";
+    let customSignal = "Neutral";
+
+    // Calculate Pivot
+    if (h && l && c) {
+      pivot = (h + l + c) / 3;
+      
+      // Calculate R1 and S1
+      r1 = (2 * pivot) - l;
+      s1 = (2 * pivot) - h;
+    }
+
+    // Calculate Volume Ratio
+    if (volume && avgVolume && avgVolume > 0) {
+      volRatio = volume / avgVolume;
+    }
+
+    // Calculate Original Signal
+    if (c && pivot) {
+      if (c > pivot) {
+        originalSignal = "Bullish";
+      } else if (c < pivot) {
+        originalSignal = "Bearish";
+      } else {
+        originalSignal = "Neutral";
+      }
+    }
+
+    // Calculate Custom Signal
+    if (c && pivot && r1 && s1 && volRatio) {
+      const priceDiffPercent = Math.abs((c - pivot) / pivot);
+      
+      if (priceDiffPercent <= 0.005) {
+        customSignal = "Neutral";
+      } else if (c > r1 && volRatio > 2) {
+        customSignal = "Very Strong Buyer";
+      } else if (c > pivot && volRatio > 1.5) {
+        customSignal = "Strong Buyer";
+      } else if (c > pivot) {
+        customSignal = "Weak Buyer";
+      } else if (c < s1 && volRatio > 2) {
+        customSignal = "Very Strong Seller";
+      } else if (c < pivot && volRatio > 1.5) {
+        customSignal = "Strong Seller";
+      } else if (c < pivot) {
+        customSignal = "Weak Seller";
+      } else {
+        customSignal = "Neutral";
+      }
+    }
+
+    return {
+      pivot,
+      r1,
+      s1,
+      volRatio,
+      originalSignal,
+      customSignal
+    };
   };
 
   // Initial load
@@ -48,10 +123,23 @@ const UpdatePrice = () => {
         const res = await api.get("/zone");
         const zoneList = res.data || [];
         
-        const uppercasedZoneList = zoneList.map(item => ({
-          ...item,
-          company: toUpperCaseName(item.company)
-        }));
+        const uppercasedZoneList = zoneList.map(item => {
+          const dataWithIndicators = {
+            ...item,
+            company: toUpperCaseName(item.company),
+            todaysHigh: item.todaysHigh || null,
+            todaysLow: item.todaysLow || null,
+            closingPrice: item.closingPrice || null,
+            low: item.low || null,
+            high: item.high || null,
+            todayVolume: item.todayVolume || null,
+            avgVolume1M: item.avgVolume1M || null,
+          };
+          return {
+            ...dataWithIndicators,
+            ...calculateIndicators(dataWithIndicators)
+          };
+        });
         
         setZoneData(uppercasedZoneList);
         
@@ -99,6 +187,8 @@ const UpdatePrice = () => {
         closingPrice: existingCompany.closingPrice ? String(existingCompany.closingPrice) : "",
         low: existingCompany.low ? String(existingCompany.low) : "",
         high: existingCompany.high ? String(existingCompany.high) : "",
+        todayVolume: existingCompany.todayVolume ? String(existingCompany.todayVolume) : "",
+        avgVolume1M: existingCompany.avgVolume1M ? String(existingCompany.avgVolume1M) : "",
         _id: existingCompany._id,
       });
     }
@@ -157,9 +247,13 @@ const UpdatePrice = () => {
         existing => existing.company?.toLowerCase() === uppercasedCompany?.toLowerCase()
       );
       
+      // Calculate indicators for uploaded data
+      const indicators = calculateIndicators(uploaded);
+      
       if (!existing) {
         return {
           ...uploaded,
+          ...indicators,
           company: uppercasedCompany,
           existing: null,
           isNew: true,
@@ -185,9 +279,16 @@ const UpdatePrice = () => {
       if (Number(uploaded.closingPrice) !== Number(existing.closingPrice)) {
         mismatches.push({ field: 'Session Close', old: existing.closingPrice, new: uploaded.closingPrice });
       }
+      if (Number(uploaded.todayVolume) !== Number(existing.todayVolume)) {
+        mismatches.push({ field: 'Today Volume', old: existing.todayVolume, new: uploaded.todayVolume });
+      }
+      if (Number(uploaded.avgVolume1M) !== Number(existing.avgVolume1M)) {
+        mismatches.push({ field: 'Avg Volume (1M)', old: existing.avgVolume1M, new: uploaded.avgVolume1M });
+      }
       
       return {
         ...uploaded,
+        ...indicators,
         company: uppercasedCompany,
         existing: existing,
         isNew: false,
@@ -238,26 +339,40 @@ const UpdatePrice = () => {
                       item["YearHigh"] !== undefined ? item["YearHigh"] : 
                       item["High Price"] !== undefined ? item["High Price"] : null;
 
+      const todayVol = item["Today Volume"] !== undefined ? item["Today Volume"] :
+                      item["TodayVolume"] !== undefined ? item["TodayVolume"] :
+                      item["Volume"] !== undefined ? item["Volume"] : null;
+
+      const avgVol = item["Avg Volume (1M)"] !== undefined ? item["Avg Volume (1M)"] :
+                    item["AvgVolume1M"] !== undefined ? item["AvgVolume1M"] :
+                    item["Avg Volume"] !== undefined ? item["Avg Volume"] : null;
+
       const h = parseNum(rawHigh);
       const l = parseNum(rawLow);
       const c = parseNum(rawClose);
       const yearLow = parseNum(oneYLow);
       const yearHigh = parseNum(oneYHigh);
+      const volume = parseNum(todayVol);
+      const avgVolume = parseNum(avgVol);
 
-      let computedPivot = null;
-      if (h !== null && l !== null && c !== null) {
-        computedPivot = (h + l + c) / 3;
-      }
-
-      return {
+      const data = {
         company: compName,
         todaysHigh: h,
         todaysLow: l,
         closingPrice: c,
         low: yearLow,
         high: yearHigh,
-        pivotPoint: computedPivot,
+        todayVolume: volume,
+        avgVolume1M: avgVolume,
         _processed: true
+      };
+
+      // Calculate all indicators
+      const indicators = calculateIndicators(data);
+      
+      return {
+        ...data,
+        ...indicators
       };
     }).filter(item => item.company);
   };
@@ -290,15 +405,18 @@ const UpdatePrice = () => {
 
     try {
       setSubmitLoading(true);
-      const updatedZoneMap = new Map();
       
+      const dataMap = new Map();
       zoneData.forEach(item => {
-        updatedZoneMap.set(item.company.toLowerCase(), { ...item });
+        const key = item.company?.toLowerCase() || '';
+        if (key) {
+          dataMap.set(key, { ...item });
+        }
       });
       
       let successCount = 0;
       let errorCount = 0;
-      let newCompaniesList = new Set(companies.map(c => c.toLowerCase()));
+      const newCompaniesSet = new Set(companies.map(c => c.toLowerCase()));
 
       for (const item of comparisonData) {
         if (!item.company) {
@@ -307,7 +425,18 @@ const UpdatePrice = () => {
         }
 
         const companyKey = item.company.toLowerCase();
-        const existingItem = updatedZoneMap.get(companyKey);
+
+        const indicatorData = {
+          todaysHigh: item.todaysHigh,
+          todaysLow: item.todaysLow,
+          closingPrice: item.closingPrice,
+          low: item.low,
+          high: item.high,
+          todayVolume: item.todayVolume,
+          avgVolume1M: item.avgVolume1M
+        };
+
+        const indicators = calculateIndicators(indicatorData);
 
         const payload = {
           company: item.company,
@@ -316,44 +445,80 @@ const UpdatePrice = () => {
           closingPrice: item.closingPrice,
           low: item.low,
           high: item.high,
-          pivotPoint: item.pivotPoint
+          todayVolume: item.todayVolume,
+          avgVolume1M: item.avgVolume1M,
+          pivotPoint: indicators.pivot,
+          r1: indicators.r1,
+          s1: indicators.s1,
+          volRatio: indicators.volRatio,
+          originalSignal: indicators.originalSignal,
+          customSignal: indicators.customSignal
         };
 
         try {
+          let savedRecord;
+          const existingItem = dataMap.get(companyKey);
+          
           if (existingItem && existingItem._id) {
             const res = await api.put(`/zone/${existingItem._id}`, payload);
-            const savedRecord = res.data?.data || res.data || { ...payload, _id: existingItem._id };
-            updatedZoneMap.set(companyKey, savedRecord);
-            successCount++;
+            savedRecord = res.data?.data || res.data || { ...payload, _id: existingItem._id };
           } else {
             const res = await api.post("/zone", payload);
-            const savedRecord = res.data?.data || res.data;
-            updatedZoneMap.set(companyKey, savedRecord);
-            newCompaniesList.add(companyKey);
-            successCount++;
+            savedRecord = res.data?.data || res.data || payload;
+            newCompaniesSet.add(companyKey);
           }
+          
+          dataMap.set(companyKey, {
+            ...savedRecord,
+            ...indicators,
+            company: item.company,
+            todaysHigh: item.todaysHigh,
+            todaysLow: item.todaysLow,
+            closingPrice: item.closingPrice,
+            low: item.low,
+            high: item.high,
+            todayVolume: item.todayVolume,
+            avgVolume1M: item.avgVolume1M,
+          });
+          successCount++;
         } catch (err) {
           console.error(`Error processing ${item.company}:`, err);
           errorCount++;
         }
       }
 
-      const updatedZoneData = Array.from(updatedZoneMap.values());
-      setZoneData(updatedZoneData);
+      const finalData = Array.from(dataMap.values()).map(item => {
+        const indicators = calculateIndicators({
+          todaysHigh: item.todaysHigh,
+          todaysLow: item.todaysLow,
+          closingPrice: item.closingPrice,
+          low: item.low,
+          high: item.high,
+          todayVolume: item.todayVolume,
+          avgVolume1M: item.avgVolume1M
+        });
+        
+        return {
+          ...item,
+          ...indicators
+        };
+      });
+
+      setZoneData(finalData);
+      setCompanies(Array.from(newCompaniesSet).sort());
       
-      const updatedCompanies = Array.from(newCompaniesList).sort();
-      setCompanies(updatedCompanies);
+      setExcelPreviewData(null);
+      setComparisonData([]);
+      setShowComparison(false);
+      setExcelFileName("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       
       if (successCount > 0) {
         showSuccessAlert(`✅ Successfully merged ${successCount} records! ${errorCount > 0 ? `${errorCount} records failed.` : ''}`);
-        
-        setExcelPreviewData(null);
-        setComparisonData([]);
-        setShowComparison(false);
-        setExcelFileName("");
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+        setShowReport(true);
+        console.log('Final data after merge:', finalData);
       } else {
         showErrorAlert("No valid records were saved. Please check your data format.");
       }
@@ -387,22 +552,32 @@ const UpdatePrice = () => {
       const h = formData.todaysHigh !== "" ? Number(formData.todaysHigh) : null;
       const l = formData.todaysLow !== "" ? Number(formData.todaysLow) : null;
       const c = formData.closingPrice !== "" ? Number(formData.closingPrice) : null;
+      const volume = formData.todayVolume !== "" ? Number(formData.todayVolume) : null;
+      const avgVolume = formData.avgVolume1M !== "" ? Number(formData.avgVolume1M) : null;
 
-      let computedPivot = null;
-      if (h && l && c) {
-        computedPivot = (h + l + c) / 3;
-      }
-
-      const uppercasedCompany = toUpperCaseName(formData.company.trim());
-
-      const payload = {
-        company: uppercasedCompany,
+      const data = {
         todaysHigh: h,
         todaysLow: l,
         closingPrice: c,
         low: formData.low !== "" ? Number(formData.low) : null,
         high: formData.high !== "" ? Number(formData.high) : null,
-        pivotPoint: computedPivot
+        todayVolume: volume,
+        avgVolume1M: avgVolume
+      };
+
+      const indicators = calculateIndicators(data);
+
+      const uppercasedCompany = toUpperCaseName(formData.company.trim());
+
+      const payload = {
+        company: uppercasedCompany,
+        ...data,
+        pivotPoint: indicators.pivot,
+        r1: indicators.r1,
+        s1: indicators.s1,
+        volRatio: indicators.volRatio,
+        originalSignal: indicators.originalSignal,
+        customSignal: indicators.customSignal
       };
 
       let savedRecord;
@@ -412,9 +587,18 @@ const UpdatePrice = () => {
         savedRecord = res.data?.data || res.data || { ...payload, _id: formData._id };
         showSuccessAlert("Price parameters updated successfully!");
         
-        setZoneData((prev) =>
-          prev.map((item) => (item._id === formData._id ? savedRecord : item))
-        );
+        setZoneData((prev) => {
+          const updated = prev.map((item) => {
+            if (item._id === formData._id) {
+              return {
+                ...savedRecord,
+                ...indicators
+              };
+            }
+            return item;
+          });
+          return updated;
+        });
         
         setCompanies(prev => {
           const newList = [...prev];
@@ -434,14 +618,25 @@ const UpdatePrice = () => {
           showSuccessAlert("Matrix profile updated successfully!");
           
           setZoneData((prev) =>
-            prev.map((item) => (item._id === existingCompany._id ? savedRecord : item))
+            prev.map((item) => {
+              if (item._id === existingCompany._id) {
+                return {
+                  ...savedRecord,
+                  ...indicators
+                };
+              }
+              return item;
+            })
           );
         } else {
           const res = await api.post("/zone", payload);
-          savedRecord = res.data?.data || res.data;
+          savedRecord = res.data?.data || res.data || payload;
           showSuccessAlert("Matrix profile generated successfully!");
           
-          setZoneData((prev) => [savedRecord, ...prev]);
+          setZoneData((prev) => [{
+            ...savedRecord,
+            ...indicators
+          }, ...prev]);
           
           if (!companies.map(c => c.toLowerCase()).includes(uppercasedCompany.toLowerCase())) {
             setCompanies((prev) => [...prev, uppercasedCompany].sort());
@@ -467,6 +662,8 @@ const UpdatePrice = () => {
       closingPrice: "",
       low: "",
       high: "",
+      todayVolume: "",
+      avgVolume1M: "",
       _id: undefined,
     });
     setIsNewCompany(false);
@@ -481,6 +678,8 @@ const UpdatePrice = () => {
       closingPrice: item.closingPrice ? String(item.closingPrice) : "",
       low: item.low ? String(item.low) : "",
       high: item.high ? String(item.high) : "",
+      todayVolume: item.todayVolume ? String(item.todayVolume) : "",
+      avgVolume1M: item.avgVolume1M ? String(item.avgVolume1M) : "",
       _id: item._id,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -517,7 +716,9 @@ const UpdatePrice = () => {
         { header: '1Y High', key: 'y1_high', width: 14 },
         { header: 'Session Low', key: 'session_low', width: 16 },
         { header: 'Session High', key: 'session_high', width: 16 },
-        { header: 'Session Close', key: 'session_close', width: 16 }
+        { header: 'Session Close', key: 'session_close', width: 16 },
+        { header: 'Today Volume', key: 'today_volume', width: 16 },
+        { header: 'Avg Volume (1M)', key: 'avg_volume', width: 16 }
       ];
       
       ws.addRow({
@@ -526,7 +727,9 @@ const UpdatePrice = () => {
         y1_high: 250.75,
         session_low: 120.30,
         session_high: 180.45,
-        session_close: 150.60
+        session_close: 150.60,
+        today_volume: 2500000,
+        avg_volume: 1500000
       });
       
       ws.addRow({
@@ -535,7 +738,9 @@ const UpdatePrice = () => {
         y1_high: 200.00,
         session_low: 90.50,
         session_high: 175.30,
-        session_close: 145.80
+        session_close: 145.80,
+        today_volume: 3200000,
+        avg_volume: 1800000
       });
       
       const headerRow = ws.getRow(1);
@@ -584,8 +789,10 @@ const UpdatePrice = () => {
               right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
             };
             
-            if (colNumber > 1) {
+            if (colNumber > 1 && colNumber <= 6) {
               cell.numFmt = '0.00';
+            } else if (colNumber > 6) {
+              cell.numFmt = '#,##0';
             }
           });
         }
@@ -606,11 +813,14 @@ const UpdatePrice = () => {
         { content: 'Session Low: Today\'s or current session lowest price' },
         { content: 'Session High: Today\'s or current session highest price' },
         { content: 'Session Close: Today\'s or current session closing/last price' },
+        { content: 'Today Volume: Current trading volume' },
+        { content: 'Avg Volume (1M): 1-month average trading volume' },
         { content: '' },
         { content: 'Tips:' },
         { content: 'You can add as many rows as needed' },
         { content: 'Remove the sample rows before uploading your data' },
-        { content: 'All price values should be numeric (decimals allowed)' }
+        { content: 'All price values should be numeric (decimals allowed)' },
+        { content: 'Volume values should be numeric (integers)' }
       ];
       
       instructions.forEach(item => {
@@ -625,7 +835,7 @@ const UpdatePrice = () => {
         name: 'Calibri'
       };
       
-      [3, 11].forEach(rowNum => {
+      [3, 12].forEach(rowNum => {
         const row = wsInstructions.getRow(rowNum);
         row.getCell(1).font = {
           bold: true,
@@ -664,20 +874,17 @@ const UpdatePrice = () => {
         { header: 'Session Low', key: 'session_low', width: 16 },
         { header: 'Session High', key: 'session_high', width: 16 },
         { header: 'Session Close', key: 'session_close', width: 16 },
+        { header: 'Today Volume', key: 'today_volume', width: 16 },
+        { header: 'Avg Volume (1M)', key: 'avg_volume', width: 16 },
         { header: 'Pivot Point', key: 'pivot', width: 16 },
-        { header: 'Sentiment', key: 'sentiment', width: 14 }
+        { header: 'Resistance (R1)', key: 'r1', width: 16 },
+        { header: 'Support (S1)', key: 's1', width: 16 },
+        { header: 'Volume Ratio', key: 'vol_ratio', width: 16 },
+        { header: 'Original Signal', key: 'original_signal', width: 18 },
+        { header: 'Custom Signal', key: 'custom_signal', width: 20 }
       ];
       
       sortedZoneData.forEach((item) => {
-        let sentiment = "NEUTRAL";
-        if (item.closingPrice && item.pivotPoint) {
-          if (item.closingPrice > item.pivotPoint) {
-            sentiment = "BULLISH";
-          } else if (item.closingPrice < item.pivotPoint) {
-            sentiment = "BEARISH";
-          }
-        }
-        
         const cleanCompanyName = toUpperCaseName(item.company || "-");
         
         ws.addRow({
@@ -687,8 +894,14 @@ const UpdatePrice = () => {
           session_low: item.todaysLow ? Number(Number(item.todaysLow).toFixed(2)) : null,
           session_high: item.todaysHigh ? Number(Number(item.todaysHigh).toFixed(2)) : null,
           session_close: item.closingPrice ? Number(Number(item.closingPrice).toFixed(2)) : null,
+          today_volume: item.todayVolume ? Number(item.todayVolume) : null,
+          avg_volume: item.avgVolume1M ? Number(item.avgVolume1M) : null,
           pivot: item.pivotPoint ? Number(Number(item.pivotPoint).toFixed(2)) : null,
-          sentiment: sentiment
+          r1: item.r1 ? Number(Number(item.r1).toFixed(2)) : null,
+          s1: item.s1 ? Number(Number(item.s1).toFixed(2)) : null,
+          vol_ratio: item.volRatio ? Number(Number(item.volRatio).toFixed(2)) : null,
+          original_signal: item.originalSignal || "Neutral",
+          custom_signal: item.customSignal || "Neutral"
         });
       });
       
@@ -723,7 +936,8 @@ const UpdatePrice = () => {
         if (rowNumber > 1) {
           row.height = 24;
           
-          const sentiment = row.getCell(8).value;
+          const originalSignal = row.getCell(13).value;
+          const customSignal = row.getCell(14).value;
           
           row.eachCell((cell, colNumber) => {
             if (typeof cell.value === 'string') {
@@ -746,43 +960,91 @@ const UpdatePrice = () => {
               right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
             };
             
-            if (colNumber >= 2 && colNumber <= 7) {
+            if (colNumber >= 2 && colNumber <= 6) {
+              cell.numFmt = '0.00';
+            } else if (colNumber >= 7 && colNumber <= 8) {
+              cell.numFmt = '#,##0';
+            } else if (colNumber >= 9 && colNumber <= 12) {
               cell.numFmt = '0.00';
             }
             
-            if (sentiment === 'BULLISH') {
-              cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFF0FFF0' }
-              };
-            } else if (sentiment === 'BEARISH') {
-              cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFFFF0F0' }
-              };
-            }
-            
-            if (colNumber === 8) {
+            // Color coding for Original Signal
+            if (colNumber === 13) {
               cell.alignment = { horizontal: 'center', vertical: 'middle' };
               cell.font = { ...cell.font, bold: true, size: 11 };
               
-              if (sentiment === 'BULLISH') {
+              if (originalSignal === 'BULLISH') {
                 cell.fill = {
                   type: 'pattern',
                   pattern: 'solid',
                   fgColor: { argb: 'FFC6EFCE' }
                 };
                 cell.font.color = { argb: 'FF006100' };
-              } else if (sentiment === 'BEARISH') {
+              } else if (originalSignal === 'BEARISH') {
                 cell.fill = {
                   type: 'pattern',
                   pattern: 'solid',
                   fgColor: { argb: 'FFFFC7CE' }
                 };
                 cell.font.color = { argb: 'FF9C0006' };
-              } else if (sentiment === 'NEUTRAL') {
+              } else {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFEB9C' }
+                };
+                cell.font.color = { argb: 'FF9C6500' };
+              }
+            }
+            
+            // Color coding for Custom Signal
+            if (colNumber === 14) {
+              cell.alignment = { horizontal: 'center', vertical: 'middle' };
+              cell.font = { ...cell.font, bold: true, size: 11 };
+              
+              if (customSignal === 'VERY STRONG BUYER') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FF006100' }
+                };
+                cell.font.color = { argb: 'FFFFFFFF' };
+              } else if (customSignal === 'STRONG BUYER') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FF92D050' }
+                };
+                cell.font.color = { argb: 'FF000000' };
+              } else if (customSignal === 'WEAK BUYER') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFC6EFCE' }
+                };
+                cell.font.color = { argb: 'FF006100' };
+              } else if (customSignal === 'VERY STRONG SELLER') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FF9C0006' }
+                };
+                cell.font.color = { argb: 'FFFFFFFF' };
+              } else if (customSignal === 'STRONG SELLER') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFC7CE' }
+                };
+                cell.font.color = { argb: 'FF9C0006' };
+              } else if (customSignal === 'WEAK SELLER') {
+                cell.fill = {
+                  type: 'pattern',
+                  pattern: 'solid',
+                  fgColor: { argb: 'FFFFC7CE' }
+                };
+                cell.font.color = { argb: 'FF9C0006' };
+              } else {
                 cell.fill = {
                   type: 'pattern',
                   pattern: 'solid',
@@ -810,16 +1072,26 @@ const UpdatePrice = () => {
     }
   };
 
-  const getSentiment = (item) => {
-    if (!item.closingPrice || !item.pivotPoint) return { text: "NEUTRAL", style: "bg-gray-800/60 text-gray-400" };
+  const getSignalStyle = (signal) => {
+    if (!signal) return "bg-gray-800/60 text-gray-400";
     
-    if (item.closingPrice > item.pivotPoint) {
-      return { text: "BULLISH", style: "bg-emerald-950/60 text-emerald-400 border border-emerald-800/50" };
-    } else if (item.closingPrice < item.pivotPoint) {
-      return { text: "BEARISH", style: "bg-rose-950/60 text-rose-400 border border-rose-800/50" };
+    const signalUpper = signal.toUpperCase();
+    
+    if (signalUpper.includes('VERY STRONG BUYER')) {
+      return "bg-emerald-950/90 text-emerald-300 border border-emerald-600 font-bold";
+    } else if (signalUpper.includes('STRONG BUYER')) {
+      return "bg-emerald-900/80 text-emerald-300 border border-emerald-700";
+    } else if (signalUpper.includes('WEAK BUYER')) {
+      return "bg-emerald-800/70 text-emerald-300 border border-emerald-800/50";
+    } else if (signalUpper.includes('VERY STRONG SELLER')) {
+      return "bg-rose-950/90 text-rose-300 border border-rose-600 font-bold";
+    } else if (signalUpper.includes('STRONG SELLER')) {
+      return "bg-rose-900/80 text-rose-300 border border-rose-700";
+    } else if (signalUpper.includes('WEAK SELLER')) {
+      return "bg-rose-800/70 text-rose-300 border border-rose-800/50";
     }
     
-    return { text: "NEUTRAL", style: "bg-gray-800/60 text-gray-400" };
+    return "bg-gray-800/60 text-gray-400";
   };
 
   const isValueChanged = (companyName, field, newValue) => {
@@ -947,7 +1219,7 @@ const UpdatePrice = () => {
           )}
         </div>
 
-        {/* INPUT DATA SHEET PROFILE FORM - REARRANGED */}
+        {/* INPUT DATA SHEET PROFILE FORM */}
         <div className="bg-gray-900 border border-gray-800 p-4 sm:p-6 rounded-xl space-y-4 shadow-xl mb-6">
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -991,8 +1263,32 @@ const UpdatePrice = () => {
             )}
           </div>
 
-          {/* REARRANGED INPUT BOXES: Session Low, Session High, Session Close, 1Y Low Price, 1Y High Price */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* INPUT BOXES - Reordered to match header order */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">1Y Low Price</label>
+              <input
+                type="number"
+                name="low"
+                placeholder="0.00"
+                value={formData.low}
+                onChange={handleChange}
+                step="0.01"
+                className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">1Y High Price</label>
+              <input
+                type="number"
+                name="high"
+                placeholder="0.00"
+                value={formData.high}
+                onChange={handleChange}
+                step="0.01"
+                className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
+              />
+            </div>
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1.5">Session Low</label>
               <input
@@ -1030,26 +1326,26 @@ const UpdatePrice = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">1Y Low Price</label>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Today Volume</label>
               <input
                 type="number"
-                name="low"
-                placeholder="0.00"
-                value={formData.low}
+                name="todayVolume"
+                placeholder="0"
+                value={formData.todayVolume}
                 onChange={handleChange}
-                step="0.01"
+                step="1"
                 className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">1Y High Price</label>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">Avg Volume (1M)</label>
               <input
                 type="number"
-                name="high"
-                placeholder="0.00"
-                value={formData.high}
+                name="avgVolume1M"
+                placeholder="0"
+                value={formData.avgVolume1M}
                 onChange={handleChange}
-                step="0.01"
+                step="1"
                 className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -1104,25 +1400,44 @@ const UpdatePrice = () => {
               </div>
             </div>
             
-            <div className="overflow-x-auto rounded-xl border border-gray-800">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-gray-950 text-[11px] uppercase tracking-wider text-gray-400 border-b border-gray-800">
-                    <th className="p-3 font-semibold min-w-140px">Company Name</th>
-                    <th className="p-3 font-semibold text-right text-gray-300">1Y Low</th>
-                    <th className="p-3 font-semibold text-right text-gray-300">1Y High</th>
-                    <th className="p-3 font-semibold text-right text-blue-400">Session Low</th>
-                    <th className="p-3 font-semibold text-right text-blue-400">Session High</th>
-                    <th className="p-3 font-semibold text-right text-blue-300">Session Close</th>
-                    <th className="p-3 font-semibold text-right text-purple-400">Pivot Point</th>
-                    <th className="p-3 font-semibold text-center text-amber-400">Forecast Matrix</th>
-                    <th className="p-3 font-semibold text-center min-w-130px">Action Control</th>
+            {/* Table Container with max height for scrolling */}
+            <div 
+              className="overflow-auto rounded-xl border border-gray-800"
+              style={{ maxHeight: '600px' }}
+            >
+              <table className="w-full text-left border-collapse relative text-xs">
+                <thead className="sticky top-0 z-20">
+                  <tr className="bg-gray-950 text-[10px] uppercase tracking-wider text-gray-400 border-b border-gray-800">
+                    <th 
+                      className="p-2.5 font-semibold min-w-[120px] sticky left-0 z-30 bg-gray-950 border-r border-gray-800"
+                      style={{ 
+                        position: 'sticky',
+                        left: 0,
+                        zIndex: 30,
+                        backgroundColor: '#030712'
+                      }}
+                    >
+                      Company Name
+                    </th>
+                    <th className="p-2.5 font-semibold text-right text-gray-300 whitespace-nowrap">1Y Low</th>
+                    <th className="p-2.5 font-semibold text-right text-gray-300 whitespace-nowrap">1Y High</th>
+                    <th className="p-2.5 font-semibold text-right text-blue-400 whitespace-nowrap">Session Low</th>
+                    <th className="p-2.5 font-semibold text-right text-blue-400 whitespace-nowrap">Session High</th>
+                    <th className="p-2.5 font-semibold text-right text-blue-300 whitespace-nowrap">Session Close</th>
+                    <th className="p-2.5 font-semibold text-right text-amber-400 whitespace-nowrap">Today Volume</th>
+                    <th className="p-2.5 font-semibold text-right text-amber-400 whitespace-nowrap">Avg Volume (1M)</th>
+                    <th className="p-2.5 font-semibold text-right text-purple-400 whitespace-nowrap">Pivot Point</th>
+                    <th className="p-2.5 font-semibold text-right text-orange-400 whitespace-nowrap">Resistance (R1)</th>
+                    <th className="p-2.5 font-semibold text-right text-orange-400 whitespace-nowrap">Support (S1)</th>
+                    <th className="p-2.5 font-semibold text-right text-cyan-400 whitespace-nowrap">Volume Ratio</th>
+                    <th className="p-2.5 font-semibold text-center text-emerald-400 whitespace-nowrap">Original Signal</th>
+                    <th className="p-2.5 font-semibold text-center text-cyan-400 whitespace-nowrap">Custom Signal</th>
+                    <th className="p-2.5 font-semibold text-center min-w-[100px] whitespace-nowrap">Action Control</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800 text-xs">
+                <tbody className="divide-y divide-gray-800">
                   {showComparison && comparisonData.length > 0 ? (
                     comparisonData.map((item, index) => {
-                      const sentiment = getSentiment(item);
                       const hasChanges = item.hasMismatch;
                       const isNewRecord = item.isNew;
                       
@@ -1136,108 +1451,162 @@ const UpdatePrice = () => {
                       
                       return (
                         <tr key={`compare-${index}`} className={`hover:bg-gray-850/40 transition-colors ${hasChanges ? 'bg-yellow-950/10' : ''}`}>
-                          <td className="p-3 font-bold text-gray-100 whitespace-nowrap">
-                            {isNewRecord && <span className="mr-2 text-green-500 text-xs">🆕</span>}
-                            {hasChanges && !isNewRecord && <span className="mr-2 text-amber-500 text-xs">✏️</span>}
+                          <td 
+                            className="p-2.5 font-bold text-gray-100 whitespace-nowrap sticky left-0 z-10 bg-gray-900 border-r border-gray-800"
+                            style={{
+                              position: 'sticky',
+                              left: 0,
+                              zIndex: 10,
+                              backgroundColor: hasChanges ? 'rgba(253, 230, 138, 0.05)' : '#111827'
+                            }}
+                          >
+                            {isNewRecord && <span className="mr-1 text-green-500 text-[10px]">🆕</span>}
+                            {hasChanges && !isNewRecord && <span className="mr-1 text-amber-500 text-[10px]">✏️</span>}
                             {item.company}
                           </td>
-                          <td className={`p-3 text-right font-mono ${getCellClass('low', item.low)}`}>
+                          <td className={`p-2.5 text-right font-mono ${getCellClass('low', item.low)}`}>
                             {item.low ? Number(item.low).toFixed(2) : "-"}
-                           </td>
-                          <td className={`p-3 text-right font-mono ${getCellClass('high', item.high)}`}>
+                          </td>
+                          <td className={`p-2.5 text-right font-mono ${getCellClass('high', item.high)}`}>
                             {item.high ? Number(item.high).toFixed(2) : "-"}
-                           </td>
-                          <td className={`p-3 text-right font-mono ${getCellClass('todaysLow', item.todaysLow)}`}>
+                          </td>
+                          <td className={`p-2.5 text-right font-mono ${getCellClass('todaysLow', item.todaysLow)}`}>
                             {item.todaysLow ? Number(item.todaysLow).toFixed(2) : "-"}
-                           </td>
-                          <td className={`p-3 text-right font-mono ${getCellClass('todaysHigh', item.todaysHigh)}`}>
+                          </td>
+                          <td className={`p-2.5 text-right font-mono ${getCellClass('todaysHigh', item.todaysHigh)}`}>
                             {item.todaysHigh ? Number(item.todaysHigh).toFixed(2) : "-"}
-                           </td>
-                          <td className={`p-3 text-right font-mono ${getCellClass('closingPrice', item.closingPrice)}`}>
+                          </td>
+                          <td className={`p-2.5 text-right font-mono ${getCellClass('closingPrice', item.closingPrice)}`}>
                             {item.closingPrice ? Number(item.closingPrice).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
+                          </td>
+                          <td className={`p-2.5 text-right font-mono ${getCellClass('todayVolume', item.todayVolume)}`}>
+                            {item.todayVolume ? Number(item.todayVolume).toLocaleString() : "-"}
+                          </td>
+                          <td className={`p-2.5 text-right font-mono ${getCellClass('avgVolume1M', item.avgVolume1M)}`}>
+                            {item.avgVolume1M ? Number(item.avgVolume1M).toLocaleString() : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
                             {item.pivotPoint ? Number(item.pivotPoint).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-center whitespace-nowrap">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${sentiment.style}`}>
-                              {sentiment.text}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-orange-400">
+                            {item.r1 ? Number(item.r1).toFixed(2) : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-orange-400">
+                            {item.s1 ? Number(item.s1).toFixed(2) : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-cyan-400">
+                            {item.volRatio ? Number(item.volRatio).toFixed(2) : "-"}
+                          </td>
+                          <td className="p-2.5 text-center whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
+                              item.originalSignal === 'Bullish' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' :
+                              item.originalSignal === 'Bearish' ? 'bg-rose-950/60 text-rose-400 border border-rose-800/50' :
+                              'bg-gray-800/60 text-gray-400'
+                            }`}>
+                              {item.originalSignal || 'Neutral'}
                             </span>
-                           </td>
-                          <td className="p-3 text-center whitespace-nowrap">
+                          </td>
+                          <td className="p-2.5 text-center whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getSignalStyle(item.customSignal)}`}>
+                              {item.customSignal || 'Neutral'}
+                            </span>
+                          </td>
+                          <td className="p-2.5 text-center whitespace-nowrap">
                             {!isNewRecord && item.existing && (
                               <button
                                 onClick={() => {
                                   if (item.existing) handleEdit(item.existing);
                                 }}
-                                className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-700/50 px-2 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer"
+                                className="bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-700/50 px-2 py-1 rounded text-[10px] font-semibold transition-all cursor-pointer"
                               >
-                                View Existing
+                                View
                               </button>
                             )}
                             {isNewRecord && (
-                              <span className="text-xs text-green-500">New Record</span>
+                              <span className="text-[10px] text-green-500">New</span>
                             )}
-                           </td>
+                          </td>
                         </tr>
                       );
                     })
                   ) : (
                     sortedZoneData.map((item, index) => {
-                      let sentiment = "NEUTRAL";
-                      let sentimentStyle = "bg-gray-800/60 text-gray-400";
-                      if (item.closingPrice && item.pivotPoint) {
-                        if (item.closingPrice > item.pivotPoint) {
-                          sentiment = "BULLISH";
-                          sentimentStyle = "bg-emerald-950/60 text-emerald-400 border border-emerald-800/50";
-                        } else if (item.closingPrice < item.pivotPoint) {
-                          sentiment = "BEARISH";
-                          sentimentStyle = "bg-rose-950/60 text-rose-400 border border-rose-800/50";
-                        }
-                      }
-
                       return (
                         <tr key={item._id || index} className="hover:bg-gray-850/40 transition-colors">
-                          <td className="p-3 font-bold text-gray-100 whitespace-nowrap">{item.company}</td>
-                          <td className="p-3 text-right font-mono text-gray-400">
+                          <td 
+                            className="p-2.5 font-bold text-gray-100 whitespace-nowrap sticky left-0 z-10 bg-gray-900 border-r border-gray-800"
+                            style={{
+                              position: 'sticky',
+                              left: 0,
+                              zIndex: 10,
+                              backgroundColor: '#111827'
+                            }}
+                          >
+                            {item.company}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-gray-400">
                             {item.low ? Number(item.low).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-right font-mono text-gray-400">
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-gray-400">
                             {item.high ? Number(item.high).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-right font-mono text-blue-400/90">
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-blue-400/90">
                             {item.todaysLow ? Number(item.todaysLow).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-right font-mono text-blue-400/90">
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-blue-400/90">
                             {item.todaysHigh ? Number(item.todaysHigh).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-right font-mono text-gray-200">
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-gray-200">
                             {item.closingPrice ? Number(item.closingPrice).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-amber-400">
+                            {item.todayVolume ? Number(item.todayVolume).toLocaleString() : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-amber-400">
+                            {item.avgVolume1M ? Number(item.avgVolume1M).toLocaleString() : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
                             {item.pivotPoint ? Number(item.pivotPoint).toFixed(2) : "-"}
-                           </td>
-                          <td className="p-3 text-center whitespace-nowrap">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${sentimentStyle}`}>
-                              {sentiment}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-orange-400">
+                            {item.r1 ? Number(item.r1).toFixed(2) : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-orange-400">
+                            {item.s1 ? Number(item.s1).toFixed(2) : "-"}
+                          </td>
+                          <td className="p-2.5 text-right font-mono text-cyan-400">
+                            {item.volRatio ? Number(item.volRatio).toFixed(2) : "-"}
+                          </td>
+                          <td className="p-2.5 text-center whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${
+                              item.originalSignal === 'Bullish' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/50' :
+                              item.originalSignal === 'Bearish' ? 'bg-rose-950/60 text-rose-400 border border-rose-800/50' :
+                              'bg-gray-800/60 text-gray-400'
+                            }`}>
+                              {item.originalSignal || 'Neutral'}
                             </span>
-                           </td>
-                          <td className="p-3 text-center whitespace-nowrap">
-                            <div className="flex gap-1.5 justify-center">
+                          </td>
+                          <td className="p-2.5 text-center whitespace-nowrap">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getSignalStyle(item.customSignal)}`}>
+                              {item.customSignal || 'Neutral'}
+                            </span>
+                          </td>
+                          <td className="p-2.5 text-center whitespace-nowrap">
+                            <div className="flex gap-1 justify-center">
                               <button
                                 onClick={() => handleEdit(item)}
-                                className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-700/50 px-2 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer"
+                                className="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-700/50 px-2 py-1 rounded text-[10px] font-semibold transition-all cursor-pointer"
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDelete(item)}
-                                className="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-700/50 px-2 py-1 rounded text-[11px] font-semibold transition-all cursor-pointer"
+                                className="bg-rose-600/20 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-700/50 px-2 py-1 rounded text-[10px] font-semibold transition-all cursor-pointer"
                               >
-                                Delete
+                                Del
                               </button>
                             </div>
-                           </td>
+                          </td>
                         </tr>
                       );
                     })
