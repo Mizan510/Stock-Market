@@ -53,7 +53,7 @@ const BuyZone = () => {
     const signalUpper = signal.toUpperCase();
     
     if (signalUpper === "STRONG BULLISH" || signalUpper === "VERY STRONG BUYER") {
-      return "text-emerald- 400 font-bold";
+      return "text-emerald-400 font-bold";
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "text-emerald-300 font-bold";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
@@ -84,8 +84,20 @@ const BuyZone = () => {
     }
   };
 
-  // Get Company Name Style based on Pivot Signal
+  // Get Company Name Style based on:
+  // 1. Session Price vs Buy Entry (≤20% Zone) - HIGHEST PRIORITY
+  // 2. Pivot Signal (Bullish/Bearish/Neutral) - SECONDARY
   const getCompanyNameStyle = (row) => {
+    // Check if session price is in buy zone (≤20% Zone) - HIGHEST PRIORITY
+    const currentPrice = parseNumber(row.closingPrice);
+    const buyZone = calcZone(row.low, row.high, row.buyPercent);
+    
+    // If price is in buy zone, always show green with bold (HIGHEST PRIORITY)
+    if (currentPrice !== undefined && buyZone !== "" && currentPrice <= parseFloat(buyZone)) {
+      return "text-emerald-400 font-bold";
+    }
+    
+    // Otherwise, use pivot signal for color
     const pivotSignal = getPivotSignal(row);
     const signalUpper = pivotSignal.toUpperCase();
     
@@ -442,10 +454,14 @@ const BuyZone = () => {
                 const sellZone = calcZone(row.low, row.high, row.sellPercent);
                 const companyNameStyle = getCompanyNameStyle(row);
 
+                // Check if current price is in buy zone for highlighting
+                const currentPrice = parseNumber(row.closingPrice);
+                const isInBuyZone = currentPrice !== undefined && buyZone !== "" && currentPrice <= parseFloat(buyZone);
+
                 return (
                   <tr
                     key={row._id || index}
-                    className="group hover:bg-gray-900/50 transition-colors"
+                    className={`group hover:bg-gray-900/50 transition-colors ${isInBuyZone ? "bg-emerald-950/10" : ""}`}
                   >
                     <td className="p-1 bg-gray-950 border-r border-gray-800 font-medium sticky left-0 z-10 group-hover:bg-gray-900 transition-colors shadow-[2px_0_5px_rgba(0,0,0,0.4)] truncate">
                       {row.isEditing ? (
@@ -539,7 +555,7 @@ const BuyZone = () => {
                           className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[13px] focus:outline-hidden"
                         />
                       ) : (
-                        <div className="py-0.5">
+                        <div className={`py-0.5 ${isInBuyZone ? "text-emerald-400 font-bold" : ""}`}>
                           {formatValue(row.closingPrice)}
                         </div>
                       )}
@@ -598,11 +614,11 @@ const BuyZone = () => {
                     </td>
 
                     <td className="p-1 bg-orange-950/10 border-r border-gray-800 text-emerald-400 font-bold">
-                      {buyZone !== "" ? `≤${buyZone.toFixed(2)}` : ""}
+                      {buyZone !== "" ? `≤${parseFloat(buyZone).toFixed(2)}` : ""}
                     </td>
 
                     <td className="p-1 bg-orange-950/10 border-r border-gray-800 text-rose-400 font-bold">
-                      {sellZone !== "" ? `≥${sellZone.toFixed(2)}` : ""}
+                      {sellZone !== "" ? `≥${parseFloat(sellZone).toFixed(2)}` : ""}
                     </td>
 
                     <td className="p-1 bg-slate-900/40">

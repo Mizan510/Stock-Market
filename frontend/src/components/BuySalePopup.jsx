@@ -12,6 +12,7 @@ const BuySalePopup = ({
   const [saleRows, setSaleRows] = useState([]);
   const [localLoading, setLocalLoading] = useState(false);
   const [pivotData, setPivotData] = useState({});
+  const [volumeData, setVolumeData] = useState({});
 
   const cleanString = (str) =>
     String(str || "")
@@ -69,21 +70,29 @@ const BuySalePopup = ({
 
         // Get pivot points from database (already calculated by backend)
         const pivots = {};
+        const volumes = {};
+
         rawZones.forEach((zone) => {
           const company =
             zone.company || zone.companyName || zone.stockName || "";
-          if (
-            company &&
-            zone.pivotPoint !== undefined &&
-            zone.pivotPoint !== null
-          ) {
-            pivots[company] = zone.pivotPoint;
-            console.log(`${company} pivot from DB:`, zone.pivotPoint);
+          if (company) {
+            // Store pivot
+            if (zone.pivotPoint !== undefined && zone.pivotPoint !== null) {
+              pivots[company] = zone.pivotPoint;
+              console.log(`${company} pivot from DB:`, zone.pivotPoint);
+            }
+            // Store volume signal
+            if (zone.volumeSignal || zone.customSignal) {
+              volumes[company] = zone.volumeSignal || zone.customSignal;
+              console.log(`${company} volume signal:`, volumes[company]);
+            }
           }
         });
 
         console.log("=== All Pivots from DB ===", pivots);
+        console.log("=== All Volume Signals from DB ===", volumes);
         setPivotData(pivots);
+        setVolumeData(volumes);
 
         // Create buy rows with proper data
         const mappedBuyData = rawZones
@@ -117,6 +126,8 @@ const BuySalePopup = ({
               buyPercent: row.buyPercent ?? 20,
               // Use pivot from database
               pivot: row.pivotPoint || null,
+              // Volume signal from database
+              volumeSignal: row.volumeSignal || row.customSignal || null,
             };
           })
           .sort((a, b) =>
@@ -270,6 +281,22 @@ const BuySalePopup = ({
     );
   });
 
+  // Volume Signal Buy - Uses volume signal from database
+  const volumeBuyList = buyRows.filter((row) => {
+    const volumeSignal = row.volumeSignal || volumeData[row.company];
+    // Check if volume signal indicates buy (Strong Bullish, Bullish, Strong Buyer, Weak Buyer, etc.)
+    const buySignals = [
+      "STRONG BULLISH",
+      "BULLISH",
+      "MILD BULLISH",
+      "STRONG BUYER",
+      "BUYER",
+      "WEAK BUYER",
+    ];
+    const signalUpper = volumeSignal?.toUpperCase() || "";
+    return buySignals.some((signal) => signalUpper.includes(signal));
+  });
+
   const redSaleList = saleRows.filter(
     (row) =>
       row.remainQtn > 0 &&
@@ -283,6 +310,52 @@ const BuySalePopup = ({
       row.closingPrice > 0 &&
       row.closingPrice >= row.targetPrice,
   );
+
+  // Get Volume Signal Style
+  const getVolumeSignalStyle = (signal) => {
+    if (!signal || signal === "N/A") return "text-gray-400";
+    
+    const signalUpper = signal.toUpperCase();
+    
+    if (signalUpper === "STRONG BULLISH" || signalUpper === "VERY STRONG BUYER") {
+      return "text-emerald-400 font-bold";
+    } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
+      return "text-emerald-300 font-bold";
+    } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
+      return "text-emerald-200";
+    } else if (signalUpper === "STRONG BEARISH" || signalUpper === "VERY STRONG SELLER") {
+      return "text-rose-400 font-bold";
+    } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
+      return "text-rose-300 font-bold";
+    } else if (signalUpper === "MILD BEARISH" || signalUpper === "WEAK SELLER") {
+      return "text-rose-200";
+    } else {
+      return "text-gray-400";
+    }
+  };
+
+  // Get Volume Signal Badge Style
+  const getVolumeSignalBadge = (signal) => {
+    if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
+    
+    const signalUpper = signal.toUpperCase();
+    
+    if (signalUpper === "STRONG BULLISH" || signalUpper === "VERY STRONG BUYER") {
+      return "bg-emerald-600 text-white";
+    } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
+      return "bg-emerald-500 text-white";
+    } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
+      return "bg-emerald-300 text-emerald-900";
+    } else if (signalUpper === "STRONG BEARISH" || signalUpper === "VERY STRONG SELLER") {
+      return "bg-rose-600 text-white";
+    } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
+      return "bg-rose-500 text-white";
+    } else if (signalUpper === "MILD BEARISH" || signalUpper === "WEAK SELLER") {
+      return "bg-rose-300 text-rose-900";
+    } else {
+      return "bg-gray-700 text-gray-300";
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2">
@@ -389,7 +462,7 @@ const BuySalePopup = ({
                       )}
                     </div>
 
-                    {/* Pivot Point Buy Section - BOTTOM */}
+                    {/* Pivot Point Buy Section - MIDDLE */}
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
@@ -443,10 +516,65 @@ const BuySalePopup = ({
                                     </span>
                                   </span>
                                 </div>
-                                {/* Debug info - shows session values used for pivot */}
-                                <div className="text-[8px] text-gray-500 mt-1">
-                                  Low: {row.sessionLow}, High: {row.sessionHigh}
-                                  , Close: {row.closingPrice}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* NEW: Volume Signal Buy Section - BOTTOM */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                        <h3 className="font-semibold text-gray-200 text-sm">
+                          📈 Volume Signal Buy
+                        </h3>
+                        {volumeBuyList.length > 0 && (
+                          <span className="text-xs bg-purple-900 text-purple-300 px-1.5 py-0.5 rounded-full">
+                            {volumeBuyList.length}
+                          </span>
+                        )}
+                      </div>
+
+                      {volumeBuyList.length === 0 ? (
+                        <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+                          <p className="text-gray-500 text-xs">
+                            No volume buy signals
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {volumeBuyList.map((row, idx) => {
+                            const currentPrice = parseNumber(row.closingPrice);
+                            const volumeSignal =
+                              row.volumeSignal || volumeData[row.company] || "Neutral";
+                            const signalStyle = getVolumeSignalStyle(volumeSignal);
+                            const badgeStyle = getVolumeSignalBadge(volumeSignal);
+
+                            return (
+                              <div
+                                key={idx}
+                                className="bg-purple-900/20 border border-purple-800/50 rounded-lg p-2 hover:bg-purple-900/30 transition-colors"
+                              >
+                                <div className="flex justify-between items-start mb-1">
+                                  <span className="font-semibold text-purple-300 text-xs sm:text-sm truncate flex-1">
+                                    {row.company}
+                                  </span>
+                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}>
+                                    {volumeSignal}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between text-[10px] mt-1">
+                                  <span className="text-gray-400">
+                                    Current:{" "}
+                                    <span className="text-gray-300 font-medium">
+                                      ৳{currentPrice?.toFixed(2)}
+                                    </span>
+                                  </span>
+                                  <span className={signalStyle}>
+                                    Signal: {volumeSignal}
+                                  </span>
                                 </div>
                               </div>
                             );
@@ -457,7 +585,7 @@ const BuySalePopup = ({
                   </div>
                 </div>
 
-                {/* SALE ZONE - Right Side */}
+                {/* SALE ZONE - Right Side - NO CHANGES */}
                 <div className="flex-1 w-1/2 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-1 h-4 bg-red-500 rounded-full"></div>
