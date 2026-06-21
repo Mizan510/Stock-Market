@@ -53,7 +53,7 @@ const BuyZone = () => {
     const signalUpper = signal.toUpperCase();
     
     if (signalUpper === "STRONG BULLISH" || signalUpper === "VERY STRONG BUYER") {
-      return "text-emerald-400 font-bold";
+      return "text-emerald- 400 font-bold";
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "text-emerald-300 font-bold";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
@@ -81,6 +81,20 @@ const BuyZone = () => {
       return "text-rose-400 font-bold";
     } else {
       return "text-gray-400";
+    }
+  };
+
+  // Get Company Name Style based on Pivot Signal
+  const getCompanyNameStyle = (row) => {
+    const pivotSignal = getPivotSignal(row);
+    const signalUpper = pivotSignal.toUpperCase();
+    
+    if (signalUpper === "BULLISH") {
+      return "text-emerald-400";
+    } else if (signalUpper === "BEARISH") {
+      return "text-rose-400";
+    } else {
+      return "text-white";
     }
   };
 
@@ -304,17 +318,6 @@ const BuyZone = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4">
-      <style>{`
-        @keyframes strongBlinkGreen {
-          0%, 100% { color: #10b981; opacity: 1; text-shadow: 0 0 10px rgba(16,185,129,0.4); }
-          50% { color: transparent; opacity: 0.2; }
-        }
-        @keyframes strongBlinkRed {
-          0%, 100% { color: #f43f5e; opacity: 1; text-shadow: 0 0 10px rgba(244,63,94,0.4); }
-          50% { color: transparent; opacity: 0.2; }
-        }
-      `}</style>
-
       <div className="flex flex-row items-center justify-between gap-4 mb-2 border-b border-gray-900 pb-2">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-white">
@@ -437,27 +440,7 @@ const BuyZone = () => {
                 const volumeSignal = getVolumeSignal(row);
                 const buyZone = calcZone(row.low, row.high, row.buyPercent);
                 const sellZone = calcZone(row.low, row.high, row.sellPercent);
-                const closePriceNum = parseNumber(row.closingPrice);
-
-                let inlineBlinkStyle = {};
-
-                if (closePriceNum !== undefined) {
-                  if (typeof buyZone === "number" && closePriceNum <= buyZone) {
-                    inlineBlinkStyle = {
-                      animation: "strongBlinkGreen 1s infinite steps(1, start)",
-                      fontWeight: "700",
-                    };
-                  } else if (
-                    typeof sellZone === "number" &&
-                    closePriceNum >= sellZone
-                  ) {
-                    inlineBlinkStyle = {
-                      color: "#f43f5e",
-                      textShadow: "0 0 10px rgba(244,63,94,0.4)",
-                      fontWeight: "700",
-                    };
-                  }
-                }
+                const companyNameStyle = getCompanyNameStyle(row);
 
                 return (
                   <tr
@@ -475,10 +458,7 @@ const BuyZone = () => {
                           className="w-full bg-gray-800 border border-gray-700 py-0.5 px-1 rounded text-center text-[13px] font-semibold focus:outline-hidden focus:border-blue-500 text-white"
                         />
                       ) : (
-                        <div
-                          style={inlineBlinkStyle}
-                          className="py-0.5 px-0.5 truncate block w-full text-center text-white text-[13px]"
-                        >
+                        <div className={`py-0.5 px-0.5 truncate block w-full text-center text-[13px] font-bold ${companyNameStyle}`}>
                           {formatValue(row.company)}
                         </div>
                       )}
@@ -559,10 +539,7 @@ const BuyZone = () => {
                           className="w-full bg-gray-800 border border-gray-700 py-0.5 px-0.5 rounded text-center text-white text-[13px] focus:outline-hidden"
                         />
                       ) : (
-                        <div
-                          style={inlineBlinkStyle}
-                          className="py-0.5 transition-all"
-                        >
+                        <div className="py-0.5">
                           {formatValue(row.closingPrice)}
                         </div>
                       )}
