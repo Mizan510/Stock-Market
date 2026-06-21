@@ -36,19 +36,42 @@ const UpdatePrice = () => {
     avgVolume1M: "",
   });
 
-  // Helper function to convert company names to uppercase
   const toUpperCaseName = (name) => {
     if (!name) return name;
     return name.toUpperCase().trim();
   };
 
-  // Calculate pivot and support/resistance levels
   const calculateIndicators = (data) => {
-    const h = parseFloat(data.todaysHigh);
-    const l = parseFloat(data.todaysLow);
-    const c = parseFloat(data.closingPrice);
-    const volume = parseFloat(data.todayVolume);
-    const avgVolume = parseFloat(data.avgVolume1M);
+    const h =
+      data.todaysHigh !== undefined &&
+      data.todaysHigh !== null &&
+      data.todaysHigh !== ""
+        ? parseFloat(data.todaysHigh)
+        : null;
+    const l =
+      data.todaysLow !== undefined &&
+      data.todaysLow !== null &&
+      data.todaysLow !== ""
+        ? parseFloat(data.todaysLow)
+        : null;
+    const c =
+      data.closingPrice !== undefined &&
+      data.closingPrice !== null &&
+      data.closingPrice !== ""
+        ? parseFloat(data.closingPrice)
+        : null;
+    const volume =
+      data.todayVolume !== undefined &&
+      data.todayVolume !== null &&
+      data.todayVolume !== ""
+        ? parseFloat(data.todayVolume)
+        : null;
+    const avgVolume =
+      data.avgVolume1M !== undefined &&
+      data.avgVolume1M !== null &&
+      data.avgVolume1M !== ""
+        ? parseFloat(data.avgVolume1M)
+        : null;
 
     let pivot = null;
     let r1 = null;
@@ -57,15 +80,18 @@ const UpdatePrice = () => {
     let pivotSignal = "Neutral";
     let customSignal = "Neutral";
 
-    // Calculate Pivot - requires all three values
-    if (h && l && c) {
+    if (
+      h !== null &&
+      l !== null &&
+      c !== null &&
+      !isNaN(h) &&
+      !isNaN(l) &&
+      !isNaN(c)
+    ) {
       pivot = parseFloat(((h + l + c) / 3).toFixed(2));
-
-      // Calculate R1 and S1
       r1 = parseFloat((2 * pivot - l).toFixed(2));
       s1 = parseFloat((2 * pivot - h).toFixed(2));
 
-      // Calculate Pivot Signal (Close vs Pivot)
       if (c > pivot) {
         pivotSignal = "Bullish";
       } else if (c < pivot) {
@@ -75,29 +101,40 @@ const UpdatePrice = () => {
       }
     }
 
-    // Calculate Volume Ratio
-    if (volume && avgVolume && avgVolume > 0) {
+    if (
+      volume !== null &&
+      avgVolume !== null &&
+      avgVolume > 0 &&
+      !isNaN(volume) &&
+      !isNaN(avgVolume)
+    ) {
       volRatio = parseFloat((volume / avgVolume).toFixed(2));
     }
 
-    // Calculate Custom Signal - requires all values
-    if (c && pivot && r1 && s1 && volRatio) {
-      const priceDiffPercent = Math.abs((c - pivot) / pivot);
-
-      if (priceDiffPercent <= 0.005) {
-        customSignal = "Neutral";
-      } else if (c > r1 && volRatio > 2) {
-        customSignal = "Very Strong Buyer";
+    if (
+      c !== null &&
+      pivot !== null &&
+      r1 !== null &&
+      s1 !== null &&
+      volRatio !== null &&
+      !isNaN(c) &&
+      !isNaN(pivot) &&
+      !isNaN(r1) &&
+      !isNaN(s1) &&
+      !isNaN(volRatio)
+    ) {
+      if (c > r1 || (c > pivot && volRatio > 2.5)) {
+        customSignal = "Strong Bullish";
       } else if (c > pivot && volRatio > 1.5) {
-        customSignal = "Strong Buyer";
+        customSignal = "Bullish";
       } else if (c > pivot) {
-        customSignal = "Weak Buyer";
-      } else if (c < s1 && volRatio > 2) {
-        customSignal = "Very Strong Seller";
+        customSignal = "Mild Bullish";
+      } else if (c < s1 || (c < pivot && volRatio > 2.5)) {
+        customSignal = "Strong Bearish";
       } else if (c < pivot && volRatio > 1.5) {
-        customSignal = "Strong Seller";
+        customSignal = "Bearish";
       } else if (c < pivot) {
-        customSignal = "Weak Seller";
+        customSignal = "Mild Bearish";
       } else {
         customSignal = "Neutral";
       }
@@ -113,7 +150,6 @@ const UpdatePrice = () => {
     };
   };
 
-  // Initial load
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -156,7 +192,6 @@ const UpdatePrice = () => {
     fetchInitialData();
   }, []);
 
-  // Alphabetical sorting computation logic (A to Z)
   const sortedZoneData = useMemo(() => {
     return [...zoneData].sort((a, b) => {
       const companyA = (a.company || "").trim();
@@ -260,7 +295,6 @@ const UpdatePrice = () => {
           existing.company?.toLowerCase() === uppercasedCompany?.toLowerCase(),
       );
 
-      // Calculate indicators for uploaded data
       const indicators = calculateIndicators(uploaded);
 
       if (!existing) {
@@ -456,7 +490,6 @@ const UpdatePrice = () => {
           _processed: true,
         };
 
-        // Calculate all indicators
         const indicators = calculateIndicators(data);
 
         return {
@@ -518,7 +551,6 @@ const UpdatePrice = () => {
         const companyKey = item.company.toLowerCase();
         const existingItem = updatedZoneMap.get(companyKey);
 
-        // Calculate indicators for the payload
         const indicators = calculateIndicators(item);
 
         const payload = {
@@ -1001,7 +1033,6 @@ const UpdatePrice = () => {
         };
       });
 
-      // Apply styles to data rows with different colors for each column
       ws.eachRow((row, rowNumber) => {
         if (rowNumber > 1) {
           row.height = 24;
@@ -1030,7 +1061,6 @@ const UpdatePrice = () => {
               right: { style: "thin", color: { argb: "FFD9D9D9" } },
             };
 
-            // Number formatting
             if (colNumber >= 2 && colNumber <= 6) {
               cell.numFmt = "0.00";
             } else if (colNumber >= 7 && colNumber <= 8) {
@@ -1039,9 +1069,7 @@ const UpdatePrice = () => {
               cell.numFmt = "0.00";
             }
 
-            // Column-specific background colors
             if (colNumber === 1) {
-              // Company Name - Light blue background
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
@@ -1049,42 +1077,36 @@ const UpdatePrice = () => {
               };
               cell.font = { ...cell.font, bold: true };
             } else if (colNumber >= 2 && colNumber <= 3) {
-              // 1Y Low & 1Y High - Light blue
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
                 fgColor: { argb: "FFD4E6F1" },
               };
             } else if (colNumber >= 4 && colNumber <= 6) {
-              // Session columns - Light green
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
                 fgColor: { argb: "FFD5F5E3" },
               };
             } else if (colNumber >= 7 && colNumber <= 8) {
-              // Volume columns - Light orange
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
                 fgColor: { argb: "FFFDEBD0" },
               };
             } else if (colNumber >= 9 && colNumber <= 11) {
-              // Pivot, R1, S1 - Light purple
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
                 fgColor: { argb: "FFE8DAEF" },
               };
             } else if (colNumber === 12) {
-              // Volume Ratio - Light cyan
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
                 fgColor: { argb: "FFD4F1F9" },
               };
             } else if (colNumber === 13) {
-              // Pivot Signal - Color coded
               cell.alignment = { horizontal: "center", vertical: "middle" };
               cell.font = { ...cell.font, bold: true, size: 11 };
 
@@ -1092,9 +1114,9 @@ const UpdatePrice = () => {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FFC6EFCE" },
+                  fgColor: { argb: "FF22C55E" },
                 };
-                cell.font.color = { argb: "FF006100" };
+                cell.font.color = { argb: "FFFFFFFF" };
               } else if (
                 pivotSignal === "BEARISH" ||
                 pivotSignal === "Bearish"
@@ -1102,73 +1124,72 @@ const UpdatePrice = () => {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FFFFC7CE" },
+                  fgColor: { argb: "FFF43F5E" },
                 };
-                cell.font.color = { argb: "FF9C0006" };
+                cell.font.color = { argb: "FFFFFFFF" };
               } else {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FFFFEB9C" },
+                  fgColor: { argb: "FF6B7280" },
                 };
-                cell.font.color = { argb: "FF9C6500" };
+                cell.font.color = { argb: "FFFFFFFF" };
               }
             } else if (colNumber === 14) {
-              // Custom Signal - Color coded
               cell.alignment = { horizontal: "center", vertical: "middle" };
               cell.font = { ...cell.font, bold: true, size: 11 };
 
               const signal = String(customSignal).toUpperCase();
 
-              if (signal === "VERY STRONG BUYER") {
+              if (signal === "STRONG BULLISH") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FF006100" },
+                  fgColor: { argb: "FF15803D" },
                 };
                 cell.font.color = { argb: "FFFFFFFF" };
-              } else if (signal === "STRONG BUYER") {
+              } else if (signal === "BULLISH") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FF92D050" },
-                };
-                cell.font.color = { argb: "FF000000" };
-              } else if (signal === "WEAK BUYER") {
-                cell.fill = {
-                  type: "pattern",
-                  pattern: "solid",
-                  fgColor: { argb: "FFC6EFCE" },
-                };
-                cell.font.color = { argb: "FF006100" };
-              } else if (signal === "VERY STRONG SELLER") {
-                cell.fill = {
-                  type: "pattern",
-                  pattern: "solid",
-                  fgColor: { argb: "FF9C0006" },
+                  fgColor: { argb: "FF22C55E" },
                 };
                 cell.font.color = { argb: "FFFFFFFF" };
-              } else if (signal === "STRONG SELLER") {
+              } else if (signal === "MILD BULLISH") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FFFFC7CE" },
+                  fgColor: { argb: "FF86EFAC" },
                 };
-                cell.font.color = { argb: "FF9C0006" };
-              } else if (signal === "WEAK SELLER") {
+                cell.font.color = { argb: "FF14532D" };
+              } else if (signal === "STRONG BEARISH") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FFFFC7CE" },
+                  fgColor: { argb: "FFBE123C" },
                 };
-                cell.font.color = { argb: "FF9C0006" };
+                cell.font.color = { argb: "FFFFFFFF" };
+              } else if (signal === "BEARISH") {
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFF43F5E" },
+                };
+                cell.font.color = { argb: "FFFFFFFF" };
+              } else if (signal === "MILD BEARISH") {
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FFFECDD3" },
+                };
+                cell.font.color = { argb: "FF881337" };
               } else {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FFFFEB9C" },
+                  fgColor: { argb: "FF6B7280" },
                 };
-                cell.font.color = { argb: "FF9C6500" };
+                cell.font.color = { argb: "FFFFFFFF" };
               }
             }
           });
@@ -1193,39 +1214,41 @@ const UpdatePrice = () => {
   };
 
   const getSignalStyle = (signal) => {
-    if (!signal) return "bg-gray-800/60 text-gray-400";
+    if (!signal)
+      return "bg-gray-600 text-gray-200 px-3 py-1 rounded text-xs font-bold";
 
     const signalUpper = signal.toUpperCase();
 
-    if (signalUpper === "VERY STRONG BUYER") {
-      return "bg-emerald-950/90 text-emerald-300 border border-emerald-600 font-bold";
-    } else if (signalUpper === "STRONG BUYER") {
-      return "bg-emerald-900/80 text-emerald-300 border border-emerald-700";
-    } else if (signalUpper === "WEAK BUYER") {
-      return "bg-emerald-800/70 text-emerald-300 border border-emerald-800/50";
-    } else if (signalUpper === "VERY STRONG SELLER") {
-      return "bg-rose-950/90 text-rose-300 border border-rose-600 font-bold";
-    } else if (signalUpper === "STRONG SELLER") {
-      return "bg-rose-900/80 text-rose-300 border border-rose-700";
-    } else if (signalUpper === "WEAK SELLER") {
-      return "bg-rose-800/70 text-rose-300 border border-rose-800/50";
+    if (signalUpper === "STRONG BULLISH") {
+      return "bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold shadow-lg shadow-emerald-500/30";
+    } else if (signalUpper === "BULLISH") {
+      return "bg-emerald-500 text-white px-3 py-1 rounded text-xs font-bold";
+    } else if (signalUpper === "MILD BULLISH") {
+      return "bg-emerald-300 text-emerald-900 px-3 py-1 rounded text-xs font-bold";
+    } else if (signalUpper === "STRONG BEARISH") {
+      return "bg-rose-700 text-white px-3 py-1 rounded text-xs font-bold shadow-lg shadow-rose-500/30";
+    } else if (signalUpper === "BEARISH") {
+      return "bg-rose-500 text-white px-3 py-1 rounded text-xs font-bold";
+    } else if (signalUpper === "MILD BEARISH") {
+      return "bg-rose-300 text-rose-900 px-3 py-1 rounded text-xs font-bold";
+    } else {
+      return "bg-gray-600 text-gray-200 px-3 py-1 rounded text-xs font-bold";
     }
-
-    return "bg-gray-800/60 text-gray-400";
   };
 
   const getPivotSignalStyle = (signal) => {
-    if (!signal) return "bg-gray-800/60 text-gray-400";
+    if (!signal)
+      return "bg-gray-600 text-gray-200 px-3 py-1 rounded text-xs font-bold";
 
     const signalUpper = signal.toUpperCase();
 
     if (signalUpper === "BULLISH") {
-      return "bg-emerald-950/60 text-emerald-400 border border-emerald-800/50";
+      return "bg-emerald-500 text-white px-3 py-1 rounded text-xs font-bold";
     } else if (signalUpper === "BEARISH") {
-      return "bg-rose-950/60 text-rose-400 border border-rose-800/50";
+      return "bg-rose-500 text-white px-3 py-1 rounded text-xs font-bold";
     }
 
-    return "bg-gray-800/60 text-gray-400";
+    return "bg-gray-600 text-gray-200 px-3 py-1 rounded text-xs font-bold";
   };
 
   const isValueChanged = (companyName, field, newValue) => {
@@ -1436,7 +1459,6 @@ const UpdatePrice = () => {
             )}
           </div>
 
-          {/* INPUT BOXES - Reordered to match header order */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-xs font-semibold text-gray-400 mb-1.5">
@@ -1573,7 +1595,6 @@ const UpdatePrice = () => {
         {showReport && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-2xl overflow-hidden">
             <div className="flex flex-row items-center justify-between gap-4 mb-4 w-full">
-              {/* Left side - Title */}
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-bold tracking-tight text-gray-200">
                   Report Summary
@@ -1584,8 +1605,6 @@ const UpdatePrice = () => {
                   </span>
                 )}
               </div>
-
-              {/* Right side - Button */}
               <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={exportReportToExcel}
@@ -1597,7 +1616,6 @@ const UpdatePrice = () => {
               </div>
             </div>
 
-            {/* Table Container with max height for scrolling */}
             <div
               className="overflow-auto rounded-xl border border-gray-800"
               style={{ maxHeight: "600px" }}
@@ -1640,12 +1658,6 @@ const UpdatePrice = () => {
                     </th>
                     <th className="p-2.5 font-semibold text-right text-cyan-400 whitespace-nowrap">
                       Volume Ratio
-                    </th>
-                    <th className="p-2.5 font-semibold text-center text-emerald-400 whitespace-nowrap">
-                      Pivot Signal
-                    </th>
-                    <th className="p-2.5 font-semibold text-center text-cyan-400 whitespace-nowrap">
-                      Custom Signal
                     </th>
                     <th className="p-2.5 font-semibold text-center min-w-25 whitespace-nowrap">
                       Action Control
@@ -1759,20 +1771,6 @@ const UpdatePrice = () => {
                                 : "-"}
                             </td>
                             <td className="p-2.5 text-center whitespace-nowrap">
-                              <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getPivotSignalStyle(item.pivotSignal)}`}
-                              >
-                                {item.pivotSignal || "Neutral"}
-                              </span>
-                            </td>
-                            <td className="p-2.5 text-center whitespace-nowrap">
-                              <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getSignalStyle(item.customSignal)}`}
-                              >
-                                {item.customSignal || "Neutral"}
-                              </span>
-                            </td>
-                            <td className="p-2.5 text-center whitespace-nowrap">
                               {!isNewRecord && item.existing && (
                                 <button
                                   onClick={() => {
@@ -1856,20 +1854,6 @@ const UpdatePrice = () => {
                               {item.volRatio
                                 ? Number(item.volRatio).toFixed(2)
                                 : "-"}
-                            </td>
-                            <td className="p-2.5 text-center whitespace-nowrap">
-                              <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getPivotSignalStyle(item.pivotSignal)}`}
-                              >
-                                {item.pivotSignal || "Neutral"}
-                              </span>
-                            </td>
-                            <td className="p-2.5 text-center whitespace-nowrap">
-                              <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getSignalStyle(item.customSignal)}`}
-                              >
-                                {item.customSignal || "Neutral"}
-                              </span>
                             </td>
                             <td className="p-2.5 text-center whitespace-nowrap">
                               <div className="flex gap-1 justify-center">

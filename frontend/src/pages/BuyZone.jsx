@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2"; // IMPORTED: Direct SweetAlert2 import for custom configuration
+import Swal from "sweetalert2";
 import api from "../api";
 import { showAlert, showErrorAlert } from "../utils/sweetAlert";
 
@@ -18,24 +18,19 @@ const BuyZone = () => {
     return value === undefined || value === null ? "" : value;
   };
 
-  const computePivotPoint = (row) => {
-    const low = parseNumber(row.todaysLow);
-    const high = parseNumber(row.todaysHigh);
-    const close = parseNumber(row.closingPrice);
-
-    if (low === undefined || high === undefined || close === undefined) {
-      return undefined;
-    }
-
-    return parseFloat(((low + high + close) / 3).toFixed(2));
+  // Get Pivot Signal from backend (already calculated)
+  const getPivotSignal = (row) => {
+    return row.pivotSignal || "Neutral";
   };
 
-  const computeNextDayPlan = (pivotPoint, row) => {
-    const close = parseNumber(row.closingPrice);
-    if (pivotPoint === undefined || close === undefined) return "";
-    if (pivotPoint < close) return "Bullish";
-    if (pivotPoint > close) return "Bearish";
-    return "Neutral";
+  // Get Volume Signal from backend (already calculated)
+  const getVolumeSignal = (row) => {
+    return row.volumeSignal || row.customSignal || "Neutral";
+  };
+
+  // Get Pivot Point from backend (already calculated)
+  const getPivotPoint = (row) => {
+    return row.pivotPoint || null;
   };
 
   const calcZone = (low, high, percent) => {
@@ -49,6 +44,44 @@ const BuyZone = () => {
     )
       return "";
     return lowValue + ((highValue - lowValue) * percentValue) / 100;
+  };
+
+  // Get Volume Signal Style
+  const getVolumeSignalStyle = (signal) => {
+    if (!signal || signal === "N/A") return "text-gray-400";
+    
+    const signalUpper = signal.toUpperCase();
+    
+    if (signalUpper === "STRONG BULLISH" || signalUpper === "VERY STRONG BUYER") {
+      return "text-emerald-400 font-bold";
+    } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
+      return "text-emerald-300 font-bold";
+    } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
+      return "text-emerald-200";
+    } else if (signalUpper === "STRONG BEARISH" || signalUpper === "VERY STRONG SELLER") {
+      return "text-rose-400 font-bold";
+    } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
+      return "text-rose-300 font-bold";
+    } else if (signalUpper === "MILD BEARISH" || signalUpper === "WEAK SELLER") {
+      return "text-rose-200";
+    } else {
+      return "text-gray-400";
+    }
+  };
+
+  // Get Pivot Signal Style
+  const getPivotSignalStyle = (signal) => {
+    if (!signal) return "text-gray-400";
+    
+    const signalUpper = signal.toUpperCase();
+    
+    if (signalUpper === "BULLISH") {
+      return "text-emerald-400 font-bold";
+    } else if (signalUpper === "BEARISH") {
+      return "text-rose-400 font-bold";
+    } else {
+      return "text-gray-400";
+    }
   };
 
   useEffect(() => {
@@ -80,10 +113,21 @@ const BuyZone = () => {
             row.closingPrice !== undefined && row.closingPrice !== null
               ? row.closingPrice
               : "",
+          todayVolume:
+            row.todayVolume !== undefined && row.todayVolume !== null
+              ? row.todayVolume
+              : "",
+          avgVolume1M:
+            row.avgVolume1M !== undefined && row.avgVolume1M !== null
+              ? row.avgVolume1M
+              : "",
+          // Use backend calculated values
+          pivotPoint: row.pivotPoint || null,
+          pivotSignal: row.pivotSignal || row.originalSignal || "Neutral",
+          volumeSignal: row.volumeSignal || row.customSignal || "Neutral",
           isEditing: false,
         }));
 
-        // SORT ALPHABETICALLY: Case-insensitive sorting from A to Z
         const sortedData = mappedData.sort((a, b) =>
           a.company.localeCompare(b.company, undefined, { sensitivity: "base" })
         );
@@ -130,10 +174,9 @@ const BuyZone = () => {
       todaysHigh: parseNumber(row.todaysHigh),
       todaysLow: parseNumber(row.todaysLow),
       closingPrice: parseNumber(row.closingPrice),
+      todayVolume: parseNumber(row.todayVolume),
+      avgVolume1M: parseNumber(row.avgVolume1M),
     };
-
-    const pivotPoint = computePivotPoint(row);
-    if (pivotPoint !== undefined) payload.pivotPoint = pivotPoint;
 
     return Object.fromEntries(
       Object.entries(payload).filter(
@@ -172,12 +215,12 @@ const BuyZone = () => {
                   res.data.buyPercent !== undefined &&
                   res.data.buyPercent !== null
                     ? res.data.buyPercent
-                    : 20, // FIX: Preserved default fallbacks
+                    : 20,
                 sellPercent:
                   res.data.sellPercent !== undefined &&
                   res.data.sellPercent !== null
                     ? res.data.sellPercent
-                    : 70, // FIX: Preserved default fallbacks
+                    : 70,
                 todaysHigh:
                   res.data.todaysHigh !== undefined &&
                   res.data.todaysHigh !== null
@@ -193,6 +236,19 @@ const BuyZone = () => {
                   res.data.closingPrice !== null
                     ? res.data.closingPrice
                     : "",
+                todayVolume:
+                  res.data.todayVolume !== undefined &&
+                  res.data.todayVolume !== null
+                    ? res.data.todayVolume
+                    : "",
+                avgVolume1M:
+                  res.data.avgVolume1M !== undefined &&
+                  res.data.avgVolume1M !== null
+                    ? res.data.avgVolume1M
+                    : "",
+                pivotPoint: res.data.pivotPoint || null,
+                pivotSignal: res.data.pivotSignal || res.data.originalSignal || "Neutral",
+                volumeSignal: res.data.volumeSignal || res.data.customSignal || "Neutral",
                 isEditing: false,
               }
             : item,
@@ -227,7 +283,6 @@ const BuyZone = () => {
     if (row._id) {
       try {
         await api.delete(`/zone/${row._id}`);
-        // FIX: Solved race condition by filtering on unique ID instead of dynamic index matching
         setRows((prev) => prev.filter((item) => item._id !== row._id));
 
         Swal.fire({
@@ -249,7 +304,6 @@ const BuyZone = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-4">
-      {/* Dynamic Global Style Injection for Strict High-Intensity Blinking */}
       <style>{`
         @keyframes strongBlinkGreen {
           0%, 100% { color: #10b981; opacity: 1; text-shadow: 0 0 10px rgba(16,185,129,0.4); }
@@ -261,7 +315,6 @@ const BuyZone = () => {
         }
       `}</style>
 
-      {/* Header layout aligned for tight distribution */}
       <div className="flex flex-row items-center justify-between gap-4 mb-2 border-b border-gray-900 pb-2">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-white">
@@ -291,91 +344,97 @@ const BuyZone = () => {
           <table className="w-full table-fixed min-w-max text-[13px] text-center border-collapse">
             <thead>
               <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold tracking-tight text-[13px]">
-                {/* FIX: Replaced arbitrary Tailwind classes with raw width definitions to remove Linter 9+ warnings */}
                 <th
                   className="p-1.5 border-r border-gray-800 sticky top-0 left-0 bg-gray-900 z-30 shadow-[2px_0_5px_rgba(0,0,0,0.5)] truncate"
-                  style={{ width: "130px" }}
+                  style={{ width: "110px" }}
                 >
                   Company Name
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "55px" }}
+                  style={{ width: "50px" }}
                 >
                   1Y Low
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#131b2e] text-blue-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "55px" }}
+                  style={{ width: "50px" }}
                 >
                   1Y High
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "65px" }}
+                  style={{ width: "60px" }}
                 >
                   Session Low
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "65px" }}
+                  style={{ width: "60px" }}
                 >
                   Session High
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#112022] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "65px" }}
+                  style={{ width: "60px" }}
                 >
                   Session Close
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "60px" }}
+                  style={{ width: "55px" }}
                 >
                   Pivot Point
                 </th>
                 <th
-                  className="p-1.5 border-r border-gray-800 bg-[#1b1c21] text-amber-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  className="p-1.5 border-r border-gray-800 bg-[#1a2e1a] text-emerald-300 sticky top-0 z-20 whitespace-normal leading-tight"
+                  style={{ width: "55px" }}
+                >
+                  Pivot Signal
+                </th>
+                <th
+                  className="p-1.5 border-r border-gray-800 bg-[#2e1a1a] text-rose-300 sticky top-0 z-20 whitespace-normal leading-tight"
                   style={{ width: "65px" }}
                 >
-                  Forecast Matrix
+                  Volume Signal
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "55px" }}
+                  style={{ width: "50px" }}
                 >
-                  Buy % Target
+                  Buy %
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#161a2c] text-purple-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "55px" }}
+                  style={{ width: "50px" }}
                 >
-                  Sell % Target
+                  Sell %
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "75px" }}
+                  style={{ width: "70px" }}
                 >
-                  Buy Action Entry
+                  Buy Entry
                 </th>
                 <th
                   className="p-1.5 border-r border-gray-800 bg-[#1c1a22] text-orange-300 sticky top-0 z-20 whitespace-normal leading-tight"
-                  style={{ width: "75px" }}
+                  style={{ width: "70px" }}
                 >
-                  Sell Action Target
+                  Sell Target
                 </th>
                 <th
                   className="p-1.5 bg-gray-900 sticky top-0 z-20"
-                  style={{ width: "100px" }}
+                  style={{ width: "90px" }}
                 >
-                  Action Control
+                  Action
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
               {rows.map((row, index) => {
-                const pivotPoint = computePivotPoint(row);
-                const nextDayPlan = computeNextDayPlan(pivotPoint, row);
+                const pivotPoint = getPivotPoint(row);
+                const pivotSignal = getPivotSignal(row);
+                const volumeSignal = getVolumeSignal(row);
                 const buyZone = calcZone(row.low, row.high, row.buyPercent);
                 const sellZone = calcZone(row.low, row.high, row.sellPercent);
                 const closePriceNum = parseNumber(row.closingPrice);
@@ -386,7 +445,6 @@ const BuyZone = () => {
                   if (typeof buyZone === "number" && closePriceNum <= buyZone) {
                     inlineBlinkStyle = {
                       animation: "strongBlinkGreen 1s infinite steps(1, start)",
-
                       fontWeight: "700",
                     };
                   } else if (
@@ -395,9 +453,7 @@ const BuyZone = () => {
                   ) {
                     inlineBlinkStyle = {
                       color: "#f43f5e",
-
                       textShadow: "0 0 10px rgba(244,63,94,0.4)",
-
                       fontWeight: "700",
                     };
                   }
@@ -428,7 +484,6 @@ const BuyZone = () => {
                       )}
                     </td>
 
-                    {/* Numeric Columns */}
                     <td className="p-1 bg-blue-950/10 border-r border-gray-800">
                       {row.isEditing ? (
                         <input
@@ -514,22 +569,20 @@ const BuyZone = () => {
                     </td>
 
                     <td className="p-1 bg-amber-950/10 border-r border-gray-800 text-amber-400 font-bold">
-                      {pivotPoint !== undefined ? pivotPoint.toFixed(2) : ""}
+                      {pivotPoint !== null ? pivotPoint.toFixed(2) : ""}
                     </td>
 
-                    <td className="p-1 bg-amber-950/10 border-r border-gray-800">
-                      <div className="text-[10px] font-bold tracking-tighter uppercase">
-                        {nextDayPlan === "Bullish" ? (
-                          <span className="text-emerald-400">
-                            {nextDayPlan}
-                          </span>
-                        ) : nextDayPlan === "Bearish" ? (
-                          <span className="text-rose-400">{nextDayPlan}</span>
-                        ) : nextDayPlan === "Neutral" ? (
-                          <span className="text-gray-400">{nextDayPlan}</span>
-                        ) : (
-                          ""
-                        )}
+                    {/* Pivot Signal Cell - using backend value */}
+                    <td className="p-1 bg-emerald-950/10 border-r border-gray-800">
+                      <div className={`text-[10px] font-bold tracking-tighter uppercase ${getPivotSignalStyle(pivotSignal)}`}>
+                        {pivotSignal}
+                      </div>
+                    </td>
+
+                    {/* Volume Signal Cell - using backend value */}
+                    <td className="p-1 bg-rose-950/10 border-r border-gray-800">
+                      <div className={`text-[10px] font-bold tracking-tighter ${getVolumeSignalStyle(volumeSignal)}`}>
+                        {volumeSignal}
                       </div>
                     </td>
 
@@ -575,7 +628,6 @@ const BuyZone = () => {
                       {sellZone !== "" ? `≥${sellZone.toFixed(2)}` : ""}
                     </td>
 
-                    {/* Action Panel Buttons Layout */}
                     <td className="p-1 bg-slate-900/40">
                       <div className="flex gap-1 justify-center items-center">
                         {row.isEditing ? (
