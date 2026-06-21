@@ -1572,8 +1572,9 @@ const UpdatePrice = () => {
 
         {showReport && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-2xl overflow-hidden">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-              <div>
+            <div className="flex flex-row items-center justify-between gap-4 mb-4 w-full">
+              {/* Left side - Title */}
+              <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-bold tracking-tight text-gray-200">
                   Report Summary
                 </h2>
@@ -1583,7 +1584,9 @@ const UpdatePrice = () => {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+
+              {/* Right side - Button */}
+              <div className="flex items-center gap-3 shrink-0">
                 <button
                   onClick={exportReportToExcel}
                   disabled={sortedZoneData.length === 0}
