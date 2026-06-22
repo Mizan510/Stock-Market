@@ -314,20 +314,29 @@ const BuySalePopup = ({
   // Get Volume Signal Style
   const getVolumeSignalStyle = (signal) => {
     if (!signal || signal === "N/A") return "text-gray-400";
-    
+
     const signalUpper = signal.toUpperCase();
-    
-    if (signalUpper === "STRONG BULLISH" || signalUpper === "VERY STRONG BUYER") {
+
+    if (
+      signalUpper === "STRONG BULLISH" ||
+      signalUpper === "VERY STRONG BUYER"
+    ) {
       return "text-emerald-400 font-bold";
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "text-emerald-300 font-bold";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
       return "text-emerald-200";
-    } else if (signalUpper === "STRONG BEARISH" || signalUpper === "VERY STRONG SELLER") {
+    } else if (
+      signalUpper === "STRONG BEARISH" ||
+      signalUpper === "VERY STRONG SELLER"
+    ) {
       return "text-rose-400 font-bold";
     } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
       return "text-rose-300 font-bold";
-    } else if (signalUpper === "MILD BEARISH" || signalUpper === "WEAK SELLER") {
+    } else if (
+      signalUpper === "MILD BEARISH" ||
+      signalUpper === "WEAK SELLER"
+    ) {
       return "text-rose-200";
     } else {
       return "text-gray-400";
@@ -337,20 +346,29 @@ const BuySalePopup = ({
   // Get Volume Signal Badge Style
   const getVolumeSignalBadge = (signal) => {
     if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
-    
+
     const signalUpper = signal.toUpperCase();
-    
-    if (signalUpper === "STRONG BULLISH" || signalUpper === "VERY STRONG BUYER") {
+
+    if (
+      signalUpper === "STRONG BULLISH" ||
+      signalUpper === "VERY STRONG BUYER"
+    ) {
       return "bg-emerald-600 text-white";
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "bg-emerald-500 text-white";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
       return "bg-emerald-300 text-emerald-900";
-    } else if (signalUpper === "STRONG BEARISH" || signalUpper === "VERY STRONG SELLER") {
+    } else if (
+      signalUpper === "STRONG BEARISH" ||
+      signalUpper === "VERY STRONG SELLER"
+    ) {
       return "bg-rose-600 text-white";
     } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
       return "bg-rose-500 text-white";
-    } else if (signalUpper === "MILD BEARISH" || signalUpper === "WEAK SELLER") {
+    } else if (
+      signalUpper === "MILD BEARISH" ||
+      signalUpper === "WEAK SELLER"
+    ) {
       return "bg-rose-300 text-rose-900";
     } else {
       return "bg-gray-700 text-gray-300";
@@ -395,14 +413,32 @@ const BuySalePopup = ({
               <div className="flex gap-3 min-w-0">
                 {/* BUY ZONE - Left Side */}
                 <div className="flex-1 w-1/2 min-w-0">
+                  {/* Buy Section Questions - Top */}
+                  <div className="flex flex-col gap-1 mb-3 bg-gray-800/30 p-2 rounded-lg border border-gray-700/50">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400">Buy Zone:</span>
+                      <span className="text-amber-400 font-medium">
+                        Follow or Not?
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400 text-[11px]">
+                        Pyramid Rules:
+                      </span>
+
+                      <span className="text-amber-400 text-[11px] font-medium">
+                        Follow or Not?
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="space-y-4">
                     {/* Yearly Low Buy Section - TOP */}
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-1 h-4 bg-green-500 rounded-full"></div>
-                        <h3 className="font-semibold text-center text-gray-200 text-sm">
-                          📉 Yearly Low Buy <br />
-                          (≤20% Zone)
+                        <h3 className="font-semibold text-gray-200 text-sm">
+                          📉 Yearly Low Buy (≤20% Zone)
                         </h3>
                         {yearlyLowBuyList.length > 0 && (
                           <span className="text-xs bg-green-900 text-green-300 px-1.5 py-0.5 rounded-full">
@@ -523,7 +559,7 @@ const BuySalePopup = ({
                       )}
                     </div>
 
-                    {/* NEW: Volume Signal Buy Section - BOTTOM */}
+                    {/* Volume Signal Buy Section - BOTTOM */}
                     <div>
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
@@ -548,9 +584,13 @@ const BuySalePopup = ({
                           {volumeBuyList.map((row, idx) => {
                             const currentPrice = parseNumber(row.closingPrice);
                             const volumeSignal =
-                              row.volumeSignal || volumeData[row.company] || "Neutral";
-                            const signalStyle = getVolumeSignalStyle(volumeSignal);
-                            const badgeStyle = getVolumeSignalBadge(volumeSignal);
+                              row.volumeSignal ||
+                              volumeData[row.company] ||
+                              "Neutral";
+                            const signalStyle =
+                              getVolumeSignalStyle(volumeSignal);
+                            const badgeStyle =
+                              getVolumeSignalBadge(volumeSignal);
 
                             return (
                               <div
@@ -561,7 +601,9 @@ const BuySalePopup = ({
                                   <span className="font-semibold text-purple-300 text-xs sm:text-sm truncate flex-1">
                                     {row.company}
                                   </span>
-                                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}>
+                                  <span
+                                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}
+                                  >
                                     {volumeSignal}
                                   </span>
                                 </div>
@@ -585,18 +627,38 @@ const BuySalePopup = ({
                   </div>
                 </div>
 
-                {/* SALE ZONE - Right Side - NO CHANGES */}
+                {/* SALE ZONE - Right Side */}
                 <div className="flex-1 w-1/2 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                    <h3 className="font-semibold text-gray-200 text-sm">
-                      🔴 Sale Signals
-                    </h3>
-                    {redSaleList.length + greenSaleList.length > 0 && (
-                      <span className="text-xs bg-red-900 text-red-300 px-1.5 py-0.5 rounded-full">
-                        {redSaleList.length + greenSaleList.length}
+                  {/* Sale Section Questions - Top */}
+                  <div className="flex flex-col gap-1 mb-3 bg-gray-800/30 p-2 rounded-lg border border-gray-700/50">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400">3% Stop Loss:</span>
+                      <span className="text-amber-400 font-medium">
+                        Follow or Not?
                       </span>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-gray-400 text-[10px]">
+                        3% of High Price:
+                      </span>
+                      <span className="text-amber-400 text-[11px] font-medium">
+                        Follow or Not?
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-4 bg-red-500 rounded-full"></div>
+                      <h3 className="font-semibold text-gray-200 text-sm">
+                        🔴 Sale Signals
+                      </h3>
+                      {redSaleList.length + greenSaleList.length > 0 && (
+                        <span className="text-xs bg-red-900 text-red-300 px-1.5 py-0.5 rounded-full">
+                          {redSaleList.length + greenSaleList.length}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {redSaleList.length === 0 && greenSaleList.length === 0 ? (
