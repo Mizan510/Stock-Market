@@ -810,7 +810,7 @@ const BuySalePopup = ({
         <div className="border-t border-gray-700 px-3 py-2 flex justify-center bg-gray-800/50">
           <button
             onClick={onClose}
-            className="px-10 py-1.5 bg-blue-800 hover:bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg transition"
+            className="px-10 py-1.5 bg-blue-800 hover:bg-blue-600 text-white text-xl font-medium rounded-lg transition"
           >
             Go to Dashboard
           </button>
