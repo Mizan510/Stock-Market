@@ -971,8 +971,6 @@ const UpdatePrice = () => {
         { header: "Resistance (R1)", key: "r1", width: 16 },
         { header: "Support (S1)", key: "s1", width: 16 },
         { header: "Volume Ratio", key: "vol_ratio", width: 16 },
-        { header: "Pivot Signal", key: "pivot_signal", width: 18 },
-        { header: "Custom Signal", key: "custom_signal", width: 20 },
       ];
 
       sortedZoneData.forEach((item) => {

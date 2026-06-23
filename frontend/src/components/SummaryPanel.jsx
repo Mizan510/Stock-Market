@@ -130,8 +130,10 @@ const SummaryPanel = ({
       <div>
         <div
           className={`${cardPadding} ${cardRadius} border border-amber-500/30 bg-amber-400/90 backdrop-blur-sm hover:scale-[1.01] transition-all duration-200 shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 flex flex-col justify-between overflow-hidden`}
-         >
-          <h3 className={`${cardTitleSize} text-slate-950 text-[16px] leading-none`}>
+        >
+          <h3
+            className={`${cardTitleSize} text-slate-950 text-[16px] leading-none`}
+          >
             📈 ROI (Return on Investment)
           </h3>
 
@@ -259,7 +261,7 @@ const SummaryPanel = ({
             title="As per LBSL Cost Amount"
             subtitle="As per LBSL Report"
             value={formatMoney(lbslCurrentAssetsValue)}
-            bgColor="bg-slate-100"
+            bgColor="bg-yellow-300"
             borderColor="border-slate-300"
             accent="text-slate-950"
             textColor="text-slate-950"
@@ -291,6 +293,11 @@ const SummaryPanel = ({
             title="As per LBSL (Current Assets) / PP"
             subtitle="As per LBSL Report"
             value={formatMoney(lbslCostAmountValue)}
+            bgColor="bg-yellow-300"
+            borderColor="border-slate-300"
+            accent="text-slate-950"
+            textColor="text-slate-950"
+            subtitleColor="text-slate-600"
           />
           <Card
             title="Liquidity Deviation"
