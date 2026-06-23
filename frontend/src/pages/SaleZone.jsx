@@ -36,7 +36,7 @@ const SaleZone = () => {
           const rawSales = saleResponse.data?.data || saleResponse.data || [];
           const rawZones = zoneResponse.data?.data || zoneResponse.data || [];
 
-          // Create a map of company -> session close from zone data (EXACTLY like Buy Zone)
+          // Create a map of company -> session close from zone data
           const zoneMap = new Map();
           rawZones.forEach((z) => {
             const company = (
@@ -51,7 +51,6 @@ const SaleZone = () => {
               .toUpperCase();
             
             if (company) {
-              // Get session close - same logic as Buy Zone
               const sessionClose = Number(
                 z.closingPrice ??
                 z.close ??
@@ -62,7 +61,6 @@ const SaleZone = () => {
               
               zoneMap.set(company, {
                 sessionClose: !isNaN(sessionClose) ? sessionClose : null,
-                // Also store other zone data if needed for future
                 sessionLow: z.todaysLow ?? z.sessionLow ?? z.low ?? null,
                 sessionHigh: z.todaysHigh ?? z.sessionHigh ?? z.high ?? null,
               });
@@ -90,7 +88,6 @@ const SaleZone = () => {
               item.sharePrice ?? item.buyPerShareValue ?? item.price ?? 0,
             );
 
-            // Get session close from zone map (just like Buy Zone uses row.closingPrice)
             const zoneData = zoneMap.get(company);
             const closingPrice = zoneData?.sessionClose ?? null;
 
@@ -101,7 +98,7 @@ const SaleZone = () => {
               company,
               qty,
               price,
-              closingPrice, // Now from zone data, not from buy record
+              closingPrice,
               slPercent,
               tpPercent,
               type: "buy",
@@ -158,7 +155,6 @@ const SaleZone = () => {
                   trade.type === "buy" && trade.tpPercent !== undefined
                     ? trade.tpPercent * trade.qty
                     : 0,
-                // Store closing price from zone
                 closingPrice: trade.type === "buy" ? trade.closingPrice : null,
               });
             } else {
@@ -169,7 +165,6 @@ const SaleZone = () => {
                 existing.totalCommission += trade.price * trade.qty * 0.004;
                 existing.weightedSlPercentSum += trade.slPercent * trade.qty;
                 existing.weightedTpPercentSum += trade.tpPercent * trade.qty;
-                // Keep the closing price from zone
                 if (existing.closingPrice === null && trade.closingPrice !== null) {
                   existing.closingPrice = trade.closingPrice;
                 }
@@ -211,7 +206,7 @@ const SaleZone = () => {
                 qty: totalBuyQty,
                 remainQty: remainQty,
                 price: avgBasePrice,
-                closingPrice: agg.closingPrice, // From zone data
+                closingPrice: agg.closingPrice,
                 slPercent: avgSlPercent,
                 slPrice,
                 totalLoss,
@@ -235,15 +230,15 @@ const SaleZone = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6">
+    <div className="min-h-screen bg-gray-950 text-white p-4">
       <div className="mx-auto max-w-7xl">
         {/* HEADER */}
-        <div className="flex flex-row items-center justify-between gap-4 mb-6 border-b border-gray-900 pb-4">
+        <div className="flex flex-row items-center justify-between gap-4 mb-4 border-b border-gray-900 pb-3">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-white">
               Sale Zone
             </h1>
-            <p className="mt-1 text-sm font-semibold tracking-wide bg-linear-to-r from-red-400 via-gray-300 to-emerald-400 bg-clip-text text-transparent inline-block">
+            <p className="mt-0.5 text-[0.7rem] font-semibold tracking-wide bg-linear-to-r from-red-400 via-gray-300 to-emerald-400 bg-clip-text text-transparent inline-block">
               Red = Loss Sale | Green = Profit Sale | White = Middle Range (Active Only)
             </p>
           </div>
@@ -251,7 +246,7 @@ const SaleZone = () => {
           <div className="flex items-center shrink-0">
             <button
               onClick={() => navigate(-1)}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
             >
               Back
             </button>
@@ -260,7 +255,7 @@ const SaleZone = () => {
 
         {/* TABLE */}
         {loading ? (
-          <p className="text-center text-gray-400 py-20 text-base">
+          <p className="text-center text-gray-400 py-20 text-sm">
             Loading trading profiles...
           </p>
         ) : trades.length === 0 ? (
@@ -269,40 +264,40 @@ const SaleZone = () => {
           </div>
         ) : (
           <div className="overflow-auto max-h-[75vh] rounded-xl border border-gray-800">
-            <table className="w-full text-sm text-center border-collapse">
+            <table className="w-full text-[0.7rem] text-center border-collapse">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold uppercase tracking-wider">
                   <th
-                    className="sticky left-0 z-20 bg-gray-900 p-2.5 border-r border-gray-800 text-left pl-4 min-w-120px"
+                    className="sticky left-0 z-20 bg-gray-900 p-2 border-r border-gray-800 text-left pl-3 min-w-110px"
                     style={{ backgroundColor: "#111827" }}
                   >
                     Company Name
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-indigo-950/30 text-indigo-300 min-w-100px">
+                  <th className="p-2 border-r border-gray-800 bg-indigo-950/30 text-indigo-300 min-w-85px">
                     Buy (Total Qtn)
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-indigo-950/30 text-purple-300 min-w-100px  ">
+                  <th className="p-2 border-r border-gray-800 bg-indigo-950/30 text-purple-300 min-w-85px">
                     Remain Qtn
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-sky-950/30 text-sky-300 min-w-130px">
+                  <th className="p-2 border-r border-gray-800 bg-sky-950/30 text-sky-300 min-w-115px">
                     Buy Per Share + Commission
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-sky-950/40 text-teal-300 min-w-100px font-bold">
+                  <th className="p-2 border-r border-gray-800 bg-sky-950/40 text-teal-300 min-w-85px font-bold">
                     Session Close
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-90px">
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-75px">
                     Stop Loss %
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-110px">
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-95px">
                     Exit Floor Price
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-120px">
+                  <th className="p-2 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-105px">
                     Max Risk Capital
                   </th>
-                  <th className="p-2.5 border-r border-gray-800 bg-emerald-950/40 text-emerald-300 min-w-90px">
+                  <th className="p-2 border-r border-gray-800 bg-emerald-950/40 text-emerald-300 min-w-75px">
                     Target %
                   </th>
-                  <th className="p-2.5 bg-emerald-950/40 text-emerald-300 min-w-110px">
+                  <th className="p-2 bg-emerald-950/40 text-emerald-300 min-w-95px">
                     Target Price
                   </th>
                 </tr>
@@ -332,38 +327,40 @@ const SaleZone = () => {
                       className="hover:bg-gray-900/50 transition-colors"
                     >
                       <td
-                        className={`sticky left-0 z-10 p-2.5 border-r border-gray-800 text-left pl-4 font-bold tracking-wide ${companyColorClass} ${stickyBg}`}
-                        style={{ backgroundColor: "black" }}
+                        className={`sticky left-0 z-10 p-2 border-r border-gray-800 text-left pl-3 font-bold tracking-wide ${companyColorClass} ${stickyBg}`}
+                        style={{ backgroundColor: "rgba(0, 0, 0, 0.85)" }}
                       >
-                        {t.company || "-"}
+                        <span className="block truncate">
+                          {t.company || "-"}
+                        </span>
                       </td>
-                      <td className="p-2.5 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
+                      <td className="p-2 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold">
                         {t.qty}
                       </td>
-                      <td className="p-2.5 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold text-base">
+                      <td className="p-2 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold">
                         {t.remainQty}
                       </td>
-                      <td className="p-2.5 bg-sky-950/10 border-r border-gray-800 text-sky-400 font-mono font-bold text-base">
+                      <td className="p-2 bg-sky-950/10 border-r border-gray-800 text-sky-400 font-mono font-bold">
                         {formatCurrency(t.priceWithCommission)}
                       </td>
-                      <td className="p-2.5 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10 text-base font-mono">
+                      <td className="p-2 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10 font-mono">
                         {t.closingPrice !== null && !isNaN(t.closingPrice)
                           ? formatCurrency(t.closingPrice)
                           : "-"}
                       </td>
-                      <td className="p-2.5 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
+                      <td className="p-2 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
                         {t.slPercent.toFixed(1)}%
                       </td>
-                      <td className="p-2.5 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold text-base font-mono">
+                      <td className="p-2 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold font-mono">
                         {formatCurrency(t.slPrice)}
                       </td>
-                      <td className="p-2.5 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
+                      <td className="p-2 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
                         {formatCurrency(t.totalLoss)}
                       </td>
-                      <td className="p-2.5 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold font-mono">
+                      <td className="p-2 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold font-mono">
                         {t.tpPercent.toFixed(1)}%
                       </td>
-                      <td className="p-2.5 bg-emerald-950/10 text-emerald-400 font-bold text-base font-mono">
+                      <td className="p-2 bg-emerald-950/10 text-emerald-400 font-bold font-mono">
                         {formatCurrency(t.tpPrice)}
                       </td>
                     </tr>
