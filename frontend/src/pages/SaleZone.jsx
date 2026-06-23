@@ -333,7 +333,7 @@ const SaleZone = () => {
                     >
                       <td
                         className={`sticky left-0 z-10 p-2.5 border-r border-gray-800 text-left pl-4 font-bold tracking-wide ${companyColorClass} ${stickyBg}`}
-                        style={{ backgroundColor: "inherit" }}
+                        style={{ backgroundColor: "black" }}
                       >
                         {t.company || "-"}
                       </td>
