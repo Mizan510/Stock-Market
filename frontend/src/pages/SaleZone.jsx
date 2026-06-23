@@ -235,15 +235,15 @@ const SaleZone = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4">
+    <div className="min-h-screen bg-gray-950 text-white p-6">
       <div className="mx-auto max-w-7xl">
         {/* HEADER */}
-        <div className="flex flex-row items-center justify-between gap-4 mb-4 border-b border-gray-900 pb-3">
+        <div className="flex flex-row items-center justify-between gap-4 mb-6 border-b border-gray-900 pb-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-3xl font-bold tracking-tight text-white">
               Sale Zone
             </h1>
-            <p className="mt-0.5 text-[0.7rem] font-semibold tracking-wide bg-linear-to-r from-red-400 via-gray-300 to-emerald-400 bg-clip-text text-transparent inline-block">
+            <p className="mt-1 text-sm font-semibold tracking-wide bg-linear-to-r from-red-400 via-gray-300 to-emerald-400 bg-clip-text text-transparent inline-block">
               Red = Loss Sale | Green = Profit Sale | White = Middle Range (Active Only)
             </p>
           </div>
@@ -251,7 +251,7 @@ const SaleZone = () => {
           <div className="flex items-center shrink-0">
             <button
               onClick={() => navigate(-1)}
-              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer"
+              className="bg-gray-800 hover:bg-gray-700 border border-gray-700 transition px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
             >
               Back
             </button>
@@ -260,7 +260,7 @@ const SaleZone = () => {
 
         {/* TABLE */}
         {loading ? (
-          <p className="text-center text-gray-400 py-20 text-sm">
+          <p className="text-center text-gray-400 py-20 text-base">
             Loading trading profiles...
           </p>
         ) : trades.length === 0 ? (
@@ -269,40 +269,40 @@ const SaleZone = () => {
           </div>
         ) : (
           <div className="overflow-auto max-h-[75vh] rounded-xl border border-gray-800">
-            <table className="w-full text-[0.65rem] text-center border-collapse">
+            <table className="w-full text-sm text-center border-collapse">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-gray-900 border-b border-gray-800 text-gray-300 font-semibold uppercase tracking-wider">
                   <th
-                    className="sticky left-0 z-20 bg-gray-900 p-1.5 border-r border-gray-800 text-left pl-2 min-w-100px"
+                    className="sticky left-0 z-20 bg-gray-900 p-2.5 border-r border-gray-800 text-left pl-4 min-w-120px"
                     style={{ backgroundColor: "#111827" }}
                   >
                     Company Name
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-indigo-950/30 text-indigo-300 min-w-80px">
+                  <th className="p-2.5 border-r border-gray-800 bg-indigo-950/30 text-indigo-300 min-w-100px">
                     Buy (Total Qtn)
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-indigo-950/30 text-purple-300 min-w-80px">
+                  <th className="p-2.5 border-r border-gray-800 bg-indigo-950/30 text-purple-300 min-w-100px  ">
                     Remain Qtn
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-sky-950/30 text-sky-300 min-w-100px">
+                  <th className="p-2.5 border-r border-gray-800 bg-sky-950/30 text-sky-300 min-w-130px">
                     Buy Per Share + Commission
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-sky-950/40 text-teal-300 min-w-80px">
+                  <th className="p-2.5 border-r border-gray-800 bg-sky-950/40 text-teal-300 min-w-100px font-bold">
                     Session Close
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-70px">
+                  <th className="p-2.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-90px">
                     Stop Loss %
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-90px">
+                  <th className="p-2.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-110px">
                     Exit Floor Price
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-90px">
+                  <th className="p-2.5 border-r border-gray-800 bg-red-950/40 text-red-400 min-w-120px">
                     Max Risk Capital
                   </th>
-                  <th className="p-1.5 border-r border-gray-800 bg-emerald-950/40 text-emerald-300 min-w-70px">
+                  <th className="p-2.5 border-r border-gray-800 bg-emerald-950/40 text-emerald-300 min-w-90px">
                     Target %
                   </th>
-                  <th className="p-1.5 bg-emerald-950/40 text-emerald-300 min-w-90px">
+                  <th className="p-2.5 bg-emerald-950/40 text-emerald-300 min-w-110px">
                     Target Price
                   </th>
                 </tr>
@@ -332,38 +332,38 @@ const SaleZone = () => {
                       className="hover:bg-gray-900/50 transition-colors"
                     >
                       <td
-                        className={`sticky left-0 z-10 p-1.5 border-r border-gray-800 text-left pl-2 font-bold tracking-wide ${companyColorClass} ${stickyBg}`}
+                        className={`sticky left-0 z-10 p-2.5 border-r border-gray-800 text-left pl-4 font-bold tracking-wide ${companyColorClass} ${stickyBg}`}
                         style={{ backgroundColor: "inherit" }}
                       >
                         {t.company || "-"}
                       </td>
-                      <td className="p-1.5 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold">
+                      <td className="p-2.5 bg-indigo-950/10 border-r border-gray-800 text-indigo-400 font-mono font-bold text-base">
                         {t.qty}
                       </td>
-                      <td className="p-1.5 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold">
+                      <td className="p-2.5 bg-indigo-950/10 border-r border-gray-800 text-purple-400 font-mono font-bold text-base">
                         {t.remainQty}
                       </td>
-                      <td className="p-1.5 bg-sky-950/10 border-r border-gray-800 text-sky-400 font-mono font-bold">
+                      <td className="p-2.5 bg-sky-950/10 border-r border-gray-800 text-sky-400 font-mono font-bold text-base">
                         {formatCurrency(t.priceWithCommission)}
                       </td>
-                      <td className="p-1.5 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10 font-mono">
+                      <td className="p-2.5 border-r border-gray-800 text-teal-400 font-bold bg-teal-950/10 text-base font-mono">
                         {t.closingPrice !== null && !isNaN(t.closingPrice)
                           ? formatCurrency(t.closingPrice)
                           : "-"}
                       </td>
-                      <td className="p-1.5 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
+                      <td className="p-2.5 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
                         {t.slPercent.toFixed(1)}%
                       </td>
-                      <td className="p-1.5 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold font-mono">
+                      <td className="p-2.5 bg-red-950/10 border-r border-gray-800 text-red-500 font-bold text-base font-mono">
                         {formatCurrency(t.slPrice)}
                       </td>
-                      <td className="p-1.5 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
+                      <td className="p-2.5 bg-red-950/10 border-r border-gray-800 text-red-400 font-semibold font-mono">
                         {formatCurrency(t.totalLoss)}
                       </td>
-                      <td className="p-1.5 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold font-mono">
+                      <td className="p-2.5 bg-emerald-950/10 border-r border-gray-800 text-emerald-400 font-semibold font-mono">
                         {t.tpPercent.toFixed(1)}%
                       </td>
-                      <td className="p-1.5 bg-emerald-950/10 text-emerald-400 font-bold font-mono">
+                      <td className="p-2.5 bg-emerald-950/10 text-emerald-400 font-bold text-base font-mono">
                         {formatCurrency(t.tpPrice)}
                       </td>
                     </tr>
