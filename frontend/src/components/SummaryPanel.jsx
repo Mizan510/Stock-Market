@@ -34,7 +34,7 @@ const SummaryPanel = ({
     const numericValue = Number(amount || 0);
     return `৳ ${numericValue.toLocaleString("en-US", {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 0,
     })}`;
   };
 

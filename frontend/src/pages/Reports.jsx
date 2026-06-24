@@ -17,10 +17,7 @@ const Reports = () => {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
-  // Active state tracking which company row is expanded for inline editing
   const [expandedEditCompany, setExpandedEditCompany] = useState(null);
-
-  // Track inputs for the specific sub-transaction being edited inline
   const [editingRowId, setEditingRowId] = useState(null);
   const [editStockName, setEditStockName] = useState("");
   const [editQuantity, setEditQuantity] = useState("");
@@ -46,7 +43,7 @@ const Reports = () => {
   const [reportLoading, setReportLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [showReport, setShowReport] = useState(false);
+  const [showReport, setShowReport] = useState(true); // Changed to true
   const [selectedCompany, setSelectedCompany] = useState("All");
 
   const formatDateString = (date) => {
@@ -116,6 +113,7 @@ const Reports = () => {
         return itemDateStr >= earliestDate && itemDateStr <= toDate;
       });
       setFilteredList(filtered);
+      setShowReport(true); // Auto show data
     } catch (err) {
       console.log("Fetch error:", err);
     } finally {
@@ -155,7 +153,7 @@ const Reports = () => {
         return itemDateStr >= newFromDate && itemDateStr <= newToDate;
       });
       setFilteredList(filtered);
-      setShowReport(false);
+      setShowReport(true); // Keep showing data after reset
     } finally {
       setResetLoading(false);
     }
@@ -579,268 +577,273 @@ const Reports = () => {
           resetLoading={resetLoading}
         />
 
-        {/* SUMMARY */}
-        {showReport ? (
-          <>
-            <div className="overflow-x-auto bg-gray-900 rounded-2xl border border-gray-700 mb-8">
-              <table className="w-full text-center text-sm">
-                <thead className="bg-gray-800">
-                  <tr>
-                    <th className="p-4 border">Company Name</th>
-                    <th className="p-4 border">Buy (Total Qtn)</th>
-                    <th className="p-4 border">
-                      Buy (Total Value with commission)
-                    </th>
-                    <th className="p-4 border">Sale (Total Qtn)</th>
-                    <th className="p-4 border">
-                      Sale (Total Value with commission)
-                    </th>
-                    <th className="p-4 border">Remain Qtn</th>
-                    <th className="p-4 border">Buy Per Share+ Commission</th>
-                    <th className="p-4 border">Sell Per Share+ Commission</th>
-                    <th className="p-4 border">Remain Qtn Value</th>
-                    <th className="p-4 border">PER SHARE Profit/Loss</th>
-                    <th className="p-4 border">Net Profit/Loss</th>
-                    <th className="p-4 border">Actions</th>
-                  </tr>
-                </thead>
+        {/* SUMMARY - With Frozen Header and First Column */}
+{showReport ? (
+  <>
+    <div className="overflow-x-auto bg-gray-900 rounded-2xl border border-gray-700 mb-8">
+      <div className="max-h-150 overflow-auto relative">
+        <table className="w-full text-center text-sm border-separate" style={{ borderSpacing: 0 }}>
+          <thead className="sticky top-0 z-20">
+            <tr className="bg-gray-800">
+              <th className="sticky left-0 z-30 bg-gray-800 p-4 border-r border-b border-gray-700 min-w-25">
+                Company Name
+              </th>
+              <th className="p-4 border border-gray-700 min-w-30">Buy (Total Qtn)</th>
+              <th className="p-4 border border-gray-700 min-w-45">
+                Buy (Total Value with commission)
+              </th>
+              <th className="p-4 border border-gray-700 min-w-30">Sale (Total Qtn)</th>
+              <th className="p-4 border border-gray-700 min-w-45">
+                Sale (Total Value with commission)
+              </th>
+              <th className="p-4 border border-gray-700 min-w-30">Remain Qtn</th>
+              <th className="p-4 border border-gray-700 min-w-40">Buy Per Share+ Commission</th>
+              <th className="p-4 border border-gray-700 min-w-40">Sell Per Share+ Commission</th>
+              <th className="p-4 border border-gray-700 min-w-35">Remain Qtn Value</th>
+              <th className="p-4 border border-gray-700 min-w-38">PER SHARE Profit/Loss</th>
+              <th className="p-4 border border-gray-700 min-w-35">Net Profit/Loss</th>
+              <th className="p-4 border border-gray-700 min-w-25">Actions</th>
+            </tr>
+          </thead>
 
-                <tbody>
-                  {companyReports.map((item, index) => (
-                    <React.Fragment key={index}>
-                      <tr className="font-semibold border hover:bg-gray-800/50 transition-colors">
-                        <td className="p-4 border text-cyan-300 text-left">
-                          {item.stockName}
-                        </td>
-                        <td className="p-4 border text-green-300">
-                          {item.buyQty || "-"}
-                        </td>
-                        <td className="p-4 border text-green-300">
-                          ৳ {item.buyNet.toFixed(2)}
-                        </td>
-                        <td className="p-4 border text-red-300">
-                          {item.saleQty || "-"}
-                        </td>
-                        <td className="p-4 border text-red-300">
-                          ৳ {item.saleNet.toFixed(2)}
-                        </td>
-                        <td className="p-4 border text-yellow-300">
-                          {item.remainQty}
-                        </td>
-                        <td className="p-4 border text-blue-300">
-                          ৳ {item.buyEffective.toFixed(2)}
-                        </td>
-                        <td className="p-4 border text-blue-300">
-                          {item.saleQty
-                            ? `৳ ${item.sellEffective.toFixed(2)}`
-                            : "-"}
-                        </td>
-                        <td className="p-4 border text-emerald-300">
-                          ৳ {item.remainQtyValue.toFixed(2)}
-                        </td>
-                        <td className="p-4 border text-pink-300">
-                          {item.saleQty
-                            ? `৳ ${item.perShareProfitLoss.toFixed(2)}`
-                            : "-"}
-                        </td>
-                        <td className="p-4 border text-pink-300">
-                          {item.saleQty
-                            ? `৳ ${item.netProfitLoss.toFixed(2)}`
-                            : "-"}
-                        </td>
-                        <td className="p-4 border">
-                          <button
-                            onClick={() => {
-                              setExpandedEditCompany(
-                                expandedEditCompany === index ? null : index,
-                              );
-                              setEditingRowId(null);
-                            }}
-                            className="rounded bg-blue-600 px-3 py-1 text-xs font-bold text-white hover:bg-blue-500 shadow-sm"
-                          >
-                            Edit
-                          </button>
-                        </td>
-                      </tr>
+          <tbody>
+            {companyReports.map((item, index) => (
+              <React.Fragment key={index}>
+                <tr className="font-semibold border hover:bg-gray-800/50 transition-colors">
+                  <td className="sticky left-0 z-10 bg-gray-900 p-4 border-r border-b border-gray-700 text-cyan-300 text-left min-w-25">
+                    {item.stockName}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-green-300">
+                    {item.buyQty || "-"}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-green-300">
+                    ৳ {item.buyNet.toFixed(2)}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-red-300">
+                    {item.saleQty || "-"}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-red-300">
+                    ৳ {item.saleNet.toFixed(2)}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-yellow-300">
+                    {item.remainQty}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-blue-300">
+                    ৳ {item.buyEffective.toFixed(2)}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-blue-300">
+                    {item.saleQty
+                      ? `৳ ${item.sellEffective.toFixed(2)}`
+                      : "-"}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-emerald-300">
+                    ৳ {item.remainQtyValue.toFixed(2)}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-pink-300">
+                    {item.saleQty
+                      ? `৳ ${item.perShareProfitLoss.toFixed(2)}`
+                      : "-"}
+                  </td>
+                  <td className="p-4 border border-gray-700 text-pink-300">
+                    {item.saleQty
+                      ? `৳ ${item.netProfitLoss.toFixed(2)}`
+                      : "-"}
+                  </td>
+                  <td className="p-4 border border-gray-700">
+                    <button
+                      onClick={() => {
+                        setExpandedEditCompany(
+                          expandedEditCompany === index ? null : index,
+                        );
+                        setEditingRowId(null);
+                      }}
+                      className="rounded bg-blue-600 px-3 py-1 text-xs font-bold text-white hover:bg-blue-500 shadow-sm"
+                    >
+                      Edit
+                    </button>
+                  </td>
+                </tr>
 
-                      {/* INLINE TABLE EXPANSE FOR TRANSACTION BREAKDOWN AND FORM EDITING */}
-                      {expandedEditCompany === index && (
-                        <tr className="bg-gray-950 border-x">
-                          <td colSpan="12" className="p-4">
-                            <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 shadow-inner max-w-4xl mx-auto">
-                              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 text-left">
-                                Individual Transactions for {item.stockName}
-                              </h3>
-                              <table className="w-full text-left text-xs border border-gray-800">
-                                <thead className="bg-gray-800 text-gray-300 font-semibold">
-                                  <tr>
-                                    <th className="p-2 border border-gray-800">
-                                      Type
-                                    </th>
-                                    <th className="p-2 border border-gray-800">
-                                      Stock Name
-                                    </th>
-                                    <th className="p-2 border border-gray-800">
-                                      Quantity
-                                    </th>
-                                    <th className="p-2 border border-gray-800">
-                                      Price (৳)
-                                    </th>
-                                    <th className="p-2 border border-gray-800 text-center">
-                                      Actions
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {item.rawItems.map((raw) => (
-                                    <tr
-                                      key={raw._id}
-                                      className="border-b border-gray-800 hover:bg-gray-850"
+                {/* INLINE TABLE EXPANSE FOR TRANSACTION BREAKDOWN AND FORM EDITING */}
+                {expandedEditCompany === index && (
+                  <tr className="bg-gray-950 border-x">
+                    <td colSpan="12" className="p-4">
+                      <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 shadow-inner max-w-4xl mx-auto">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3 text-left">
+                          Individual Transactions for {item.stockName}
+                        </h3>
+                        <table className="w-full text-left text-xs border border-gray-800">
+                          <thead className="bg-gray-800 text-gray-300 font-semibold">
+                            <tr>
+                              <th className="p-2 border border-gray-800">
+                                Type
+                              </th>
+                              <th className="p-2 border border-gray-800">
+                                Stock Name
+                              </th>
+                              <th className="p-2 border border-gray-800">
+                                Quantity
+                              </th>
+                              <th className="p-2 border border-gray-800">
+                                Price (৳)
+                              </th>
+                              <th className="p-2 border border-gray-800 text-center">
+                                Actions
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {item.rawItems.map((raw) => (
+                              <tr
+                                key={raw._id}
+                                className="border-b border-gray-800 hover:bg-gray-850"
+                              >
+                                {editingRowId === raw._id ? (
+                                  <>
+                                    <td className="p-2 border border-gray-800 font-bold capitalize text-amber-400">
+                                      {raw.type}
+                                    </td>
+                                    <td className="p-2 border border-gray-800">
+                                      <input
+                                        type="text"
+                                        value={editStockName}
+                                        onChange={(e) =>
+                                          setEditStockName(e.target.value)
+                                        }
+                                        className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-full focus:outline-none focus:border-blue-500"
+                                      />
+                                    </td>
+                                    <td className="p-2 border border-gray-800">
+                                      <input
+                                        type="number"
+                                        value={editQuantity}
+                                        onChange={(e) =>
+                                          setEditQuantity(e.target.value)
+                                        }
+                                        className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-24 focus:outline-none focus:border-blue-500"
+                                      />
+                                    </td>
+                                    <td className="p-2 border border-gray-800">
+                                      <input
+                                        type="number"
+                                        step="any"
+                                        value={editPrice}
+                                        onChange={(e) =>
+                                          setEditPrice(e.target.value)
+                                        }
+                                        className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-24 focus:outline-none focus:border-blue-500"
+                                      />
+                                    </td>
+                                    <td className="p-2 border border-gray-800 text-center">
+                                      <div className="flex justify-center gap-2">
+                                        <button
+                                          disabled={
+                                            actionLoading === raw._id
+                                          }
+                                          onClick={() =>
+                                            handleInlineSave(raw)
+                                          }
+                                          className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-500 font-semibold"
+                                        >
+                                          {actionLoading === raw._id
+                                            ? "Saving..."
+                                            : "Save"}
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            setEditingRowId(null)
+                                          }
+                                          className="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 font-semibold"
+                                        >
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </>
+                                ) : (
+                                  <>
+                                    <td
+                                      className={`p-2 border border-gray-800 font-bold capitalize ${raw.type === "buy" ? "text-green-400" : "text-red-400"}`}
                                     >
-                                      {editingRowId === raw._id ? (
-                                        <>
-                                          {/* Form Edit Option Fields Right on Table */}
-                                          <td className="p-2 border border-gray-800 font-bold capitalize text-amber-400">
-                                            {raw.type}
-                                          </td>
-                                          <td className="p-2 border border-gray-800">
-                                            <input
-                                              type="text"
-                                              value={editStockName}
-                                              onChange={(e) =>
-                                                setEditStockName(e.target.value)
-                                              }
-                                              className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-full focus:outline-none focus:border-blue-500"
-                                            />
-                                          </td>
-                                          <td className="p-2 border border-gray-800">
-                                            <input
-                                              type="number"
-                                              value={editQuantity}
-                                              onChange={(e) =>
-                                                setEditQuantity(e.target.value)
-                                              }
-                                              className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-24 focus:outline-none focus:border-blue-500"
-                                            />
-                                          </td>
-                                          <td className="p-2 border border-gray-800">
-                                            <input
-                                              type="number"
-                                              step="any"
-                                              value={editPrice}
-                                              onChange={(e) =>
-                                                setEditPrice(e.target.value)
-                                              }
-                                              className="bg-gray-800 text-white rounded border border-gray-700 px-2 py-1 w-24 focus:outline-none focus:border-blue-500"
-                                            />
-                                          </td>
-                                          <td className="p-2 border border-gray-800 text-center">
-                                            <div className="flex justify-center gap-2">
-                                              <button
-                                                disabled={
-                                                  actionLoading === raw._id
-                                                }
-                                                onClick={() =>
-                                                  handleInlineSave(raw)
-                                                }
-                                                className="bg-green-600 text-white px-2 py-1 rounded hover:bg-green-500 font-semibold"
-                                              >
-                                                {actionLoading === raw._id
-                                                  ? "Saving..."
-                                                  : "Save"}
-                                              </button>
-                                              <button
-                                                onClick={() =>
-                                                  setEditingRowId(null)
-                                                }
-                                                className="bg-gray-700 text-white px-2 py-1 rounded hover:bg-gray-600 font-semibold"
-                                              >
-                                                Cancel
-                                              </button>
-                                            </div>
-                                          </td>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <td
-                                            className={`p-2 border border-gray-800 font-bold capitalize ${raw.type === "buy" ? "text-green-400" : "text-red-400"}`}
-                                          >
-                                            {raw.type}
-                                          </td>
-                                          <td className="p-2 border border-gray-800 font-medium text-gray-200">
-                                            {raw.stockName}
-                                          </td>
-                                          <td className="p-2 border border-gray-800 text-gray-300">
-                                            {getRecordQuantity(raw)}
-                                          </td>
-                                          <td className="p-2 border border-gray-800 font-mono text-gray-300">
-                                            ৳
-                                            {raw.perShareValue ??
-                                              raw.price ??
-                                              0}
-                                          </td>
-                                          <td className="p-2 border border-gray-800 text-center">
-                                            <button
-                                              onClick={() =>
-                                                startInlineEdit(raw)
-                                              }
-                                              className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-600 font-medium transition-colors"
-                                            >
-                                              Edit
-                                            </button>
-                                          </td>
-                                        </>
-                                      )}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
+                                      {raw.type}
+                                    </td>
+                                    <td className="p-2 border border-gray-800 font-medium text-gray-200">
+                                      {raw.stockName}
+                                    </td>
+                                    <td className="p-2 border border-gray-800 text-gray-300">
+                                      {getRecordQuantity(raw)}
+                                    </td>
+                                    <td className="p-2 border border-gray-800 font-mono text-gray-300">
+                                      ৳
+                                      {raw.perShareValue ??
+                                        raw.price ??
+                                        0}
+                                    </td>
+                                    <td className="p-2 border border-gray-800 text-center">
+                                      <button
+                                        onClick={() =>
+                                          startInlineEdit(raw)
+                                        }
+                                        className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-600 font-medium transition-colors"
+                                      >
+                                        Edit
+                                      </button>
+                                    </td>
+                                  </>
+                                )}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            ))}
 
-                  {companyReports.length > 0 && (
-                    <tr className="bg-purple-950 font-bold text-white">
-                      <td className="p-4 border text-left">TOTAL</td>
-                      <td className="p-4 border text-green-300">
-                        {companySummary.buyQty}
-                      </td>
-                      <td className="p-4 border text-green-300">
-                        ৳ {companySummary.buyValue.toFixed(2)}
-                      </td>
-                      <td className="p-4 border text-red-300">
-                        {companySummary.saleQty}
-                      </td>
-                      <td className="p-4 border text-red-300">
-                        ৳ {companySummary.saleValue.toFixed(2)}
-                      </td>
-                      <td className="p-4 border text-yellow-300">
-                        {companySummary.remainQty}
-                      </td>
-                      <td className="p-4 border">&nbsp;</td>
-                      <td className="p-4 border">&nbsp;</td>
-                      <td className="p-4 border text-emerald-300">
-                        ৳ {companySummary.remainValue.toFixed(2)}
-                      </td>
-                      <td className="p-4 border">&nbsp;</td>
-                      <td className="p-4 border text-pink-300">
-                        ৳ {companySummary.netProfitLoss.toFixed(2)}
-                      </td>
-                      <td className="p-4 border">&nbsp;</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <div className="text-center text-gray-400 py-16">
-            Click View to show report data.
-          </div>
-        )}
+            {companyReports.length > 0 && (
+              <tr className="bg-purple-950 font-bold text-white">
+                <td className="sticky left-0 z-10 bg-purple-950 p-4 border-r border-b border-gray-700 text-left min-w-25">
+                  TOTAL
+                </td>
+                <td className="p-4 border border-gray-700 text-green-300">
+                  {companySummary.buyQty}
+                </td>
+                <td className="p-4 border border-gray-700 text-green-300">
+                  ৳ {companySummary.buyValue.toFixed(2)}
+                </td>
+                <td className="p-4 border border-gray-700 text-red-300">
+                  {companySummary.saleQty}
+                </td>
+                <td className="p-4 border border-gray-700 text-red-300">
+                  ৳ {companySummary.saleValue.toFixed(2)}
+                </td>
+                <td className="p-4 border border-gray-700 text-yellow-300">
+                  {companySummary.remainQty}
+                </td>
+                <td className="p-4 border border-gray-700">&nbsp;</td>
+                <td className="p-4 border border-gray-700">&nbsp;</td>
+                <td className="p-4 border border-gray-700 text-emerald-300">
+                  ৳ {companySummary.remainValue.toFixed(2)}
+                </td>
+                <td className="p-4 border border-gray-700">&nbsp;</td>
+                <td className="p-4 border border-gray-700 text-pink-300">
+                  ৳ {companySummary.netProfitLoss.toFixed(2)}
+                </td>
+                <td className="p-4 border border-gray-700">&nbsp;</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </>
+) : (
+  <div className="text-center text-gray-400 py-16">
+    Click View to show report data.
+  </div>
+)}
       </div>
     </div>
   );

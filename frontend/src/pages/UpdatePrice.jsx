@@ -1278,23 +1278,16 @@ const UpdatePrice = () => {
         </div>
 
         <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-xl mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-row items-center justify-between gap-4 w-full">
             <div>
-              <h2 className="text-sm font-bold text-gray-200 uppercase tracking-wider">
-                📥 Batch Excel Import
-              </h2>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <h2 className="text-lg font-semibold">EXCEL IMPORT</h2>
+              <p className="text-sm text-gray-500">
                 Import multiple records at once via Excel file upload
               </p>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={downloadExcelTemplate}
-                className="text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all cursor-pointer flex items-center gap-2"
-              >
-                <span>📥</span> Download Excel Template
-              </button>
-            </div>
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors whitespace-nowrap">
+              Template
+            </button>
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-800">
