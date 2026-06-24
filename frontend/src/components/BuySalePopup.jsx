@@ -281,21 +281,28 @@ const BuySalePopup = ({
     );
   });
 
-  // Volume Signal Buy - Uses volume signal from database
-  const volumeBuyList = buyRows.filter((row) => {
-    const volumeSignal = row.volumeSignal || volumeData[row.company];
-    // Check if volume signal indicates buy (Strong Bullish, Bullish, Strong Buyer, Weak Buyer, etc.)
-    const buySignals = [
-      "STRONG BULLISH",
-      "BULLISH",
-      "MILD BULLISH",
-      "STRONG BUYER",
-      "BUYER",
-      "WEAK BUYER",
-    ];
-    const signalUpper = volumeSignal?.toUpperCase() || "";
-    return buySignals.some((signal) => signalUpper.includes(signal));
-  });
+  // Create a set of pivot buy company names for highlighting
+  const pivotCompanySet = new Set(pivotBuyList.map((row) => row.company));
+
+  // Volume Signal Buy - Uses volume signal from database with highlight check
+  const volumeBuyListWithHighlight = buyRows
+    .filter((row) => {
+      const volumeSignal = row.volumeSignal || volumeData[row.company];
+      const buySignals = [
+        "STRONG BULLISH",
+        "BULLISH",
+        "MILD BULLISH",
+        "STRONG BUYER",
+        "BUYER",
+        "WEAK BUYER",
+      ];
+      const signalUpper = volumeSignal?.toUpperCase() || "";
+      return buySignals.some((signal) => signalUpper.includes(signal));
+    })
+    .map((row) => ({
+      ...row,
+      isHighlighted: pivotCompanySet.has(row.company),
+    }));
 
   const redSaleList = saleRows.filter(
     (row) =>
@@ -559,21 +566,40 @@ const BuySalePopup = ({
                       )}
                     </div>
 
-                    {/* Volume Signal Buy Section - BOTTOM */}
+                    {/* Volume Signal Buy Section - BOTTOM with Highlight */}
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                        <h3 className="font-semibold text-gray-200 text-sm">
-                          📈 Volume Signal Buy
-                        </h3>
-                        {volumeBuyList.length > 0 && (
-                          <span className="text-xs bg-purple-900 text-purple-300 px-1.5 py-0.5 rounded-full">
-                            {volumeBuyList.length}
-                          </span>
+                      <div className="flex flex-col gap-1 mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                          <h3 className="font-semibold text-gray-200 text-[10px]">
+                            📈 Volume Signal Buy
+                          </h3>
+                          {volumeBuyListWithHighlight.length > 0 && (
+                            <span className="text-[10px] bg-purple-900 text-purple-300 px-1.5 py-0.5 rounded-full">
+                              {volumeBuyListWithHighlight.length}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Double Signal on separate line */}
+                        {volumeBuyListWithHighlight.filter(
+                          (row) => row.isHighlighted,
+                        ).length > 0 && (
+                          <div className="ml-3">
+                            <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full animate-pulse font-bold inline-flex items-center gap-1">
+                              ⚡{" "}
+                              {
+                                volumeBuyListWithHighlight.filter(
+                                  (row) => row.isHighlighted,
+                                ).length
+                              }{" "}
+                              Double Signal
+                            </span>
+                          </div>
                         )}
                       </div>
 
-                      {volumeBuyList.length === 0 ? (
+                      {volumeBuyListWithHighlight.length === 0 ? (
                         <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
                           <p className="text-gray-500 text-xs">
                             No volume buy signals
@@ -581,7 +607,7 @@ const BuySalePopup = ({
                         </div>
                       ) : (
                         <div className="space-y-1.5">
-                          {volumeBuyList.map((row, idx) => {
+                          {volumeBuyListWithHighlight.map((row, idx) => {
                             const currentPrice = parseNumber(row.closingPrice);
                             const volumeSignal =
                               row.volumeSignal ||
@@ -591,32 +617,65 @@ const BuySalePopup = ({
                               getVolumeSignalStyle(volumeSignal);
                             const badgeStyle =
                               getVolumeSignalBadge(volumeSignal);
+                            const isHighlighted = row.isHighlighted;
 
                             return (
                               <div
                                 key={idx}
-                                className="bg-purple-900/20 border border-purple-800/50 rounded-lg p-2 hover:bg-purple-900/30 transition-colors"
+                                className={`border rounded-lg p-2 transition-all duration-300 ${
+                                  isHighlighted
+                                    ? "bg-amber-900/30 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60 hover:ring-amber-500/80"
+                                    : "bg-purple-900/20 border-purple-800/50 hover:bg-purple-900/30"
+                                }`}
                               >
-                                <div className="flex justify-between items-start mb-1">
-                                  <span className="font-semibold text-purple-300 text-xs sm:text-sm truncate flex-1">
-                                    {row.company}
-                                  </span>
-                                  <span
-                                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}
-                                  >
-                                    {volumeSignal}
-                                  </span>
-                                </div>
-                                <div className="flex justify-between text-[10px] mt-1">
-                                  <span className="text-gray-400">
-                                    Current:{" "}
-                                    <span className="text-gray-300 font-medium">
-                                      ৳{currentPrice?.toFixed(2)}
+                                <div className="flex flex-col gap-1">
+                                  {/* Company Name - Full width, no truncate */}
+                                  <div className="flex items-center justify-between w-full">
+                                    <span
+                                      className={`font-semibold text-xs sm:text-sm ${
+                                        isHighlighted
+                                          ? "text-amber-300"
+                                          : "text-purple-300"
+                                      }`}
+                                    >
+                                      {row.company}
                                     </span>
-                                  </span>
-                                  <span className={signalStyle}>
-                                    Signal: {volumeSignal}
-                                  </span>
+                                    {isHighlighted && (
+                                      <span className="text-[8px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                                        DOUBLE
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Signal Badge and Price */}
+                                  <div className="flex items-center justify-between">
+                                    <span
+                                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}
+                                    >
+                                      {volumeSignal}
+                                    </span>
+                                    <span className="text-gray-400 text-[9px]">
+                                      Current:{" "}
+                                      <span
+                                        className={`font-medium ${
+                                          isHighlighted
+                                            ? "text-amber-300"
+                                            : "text-gray-300"
+                                        }`}
+                                      >
+                                        ৳{currentPrice?.toFixed(2)}
+                                      </span>
+                                    </span>
+                                  </div>
+
+                                  {/* Additional info if needed */}
+                                  <div className="flex items-center justify-between">
+                                    <span
+                                      className={signalStyle + " text-[8px]"}
+                                    >
+                                      Signal: {volumeSignal}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             );

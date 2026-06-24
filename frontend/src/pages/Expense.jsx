@@ -20,16 +20,24 @@ const Expense = () => {
   const confirm = useConfirm();
 
   // =========================
-  // DATE (Bangladesh Time)
+  // DATE (No timezone issues)
   // =========================
   const getBDDate = () => {
     const now = new Date();
-    const bd = new Date(
-      now.toLocaleString("en-US", {
-        timeZone: "Asia/Dhaka",
-      }),
-    );
-    return bd.toISOString().split("T")[0];
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // =========================
+  // GET FIRST DAY OF CURRENT MONTH
+  // =========================
+  const getFirstDayOfMonth = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}-01`;
   };
 
   // =========================
@@ -51,9 +59,9 @@ const Expense = () => {
   const [showReport, setShowReport] = useState(false);
 
   // =========================
-  // FILTER STATE
+  // FILTER STATE - Default: 1st day of month to today
   // =========================
-  const [fromDate, setFromDate] = useState(getBDDate());
+  const [fromDate, setFromDate] = useState(getFirstDayOfMonth());
   const [toDate, setToDate] = useState(getBDDate());
 
   // =========================
@@ -70,15 +78,27 @@ const Expense = () => {
   useEffect(() => {
     if (!userId) return navigate("/login", { replace: true });
     fetchExpenses();
-    // show data on initial load
-    setShowReport(true);
   }, []);
 
   const fetchExpenses = async () => {
     try {
       const res = await api.get(`/expense/${userId}`);
       setList(res.data);
-      setFilteredList(res.data);
+      
+      // Filter to current month (1st day to today) by default
+      const firstDay = getFirstDayOfMonth();
+      const today = getBDDate();
+      
+      setFromDate(firstDay);
+      setToDate(today);
+      
+      const currentMonthData = res.data.filter((item) => {
+        const itemDate = new Date(item.date).toISOString().split("T")[0];
+        return itemDate >= firstDay && itemDate <= today;
+      });
+      
+      setFilteredList(currentMonthData);
+      setShowReport(true);
     } catch (err) {
       console.log(err);
     }
@@ -126,24 +146,30 @@ const Expense = () => {
 
       if (editingId) {
         const res = await api.put(`/expense/update/${editingId}`, payload);
-
         const updated = res.data.data;
 
         setList((prev) =>
           prev.map((i) => (i._id === updated._id ? updated : i)),
         );
-        setFilteredList((prev) =>
-          prev.map((i) => (i._id === updated._id ? updated : i)),
-        );
+        
+        const itemDate = new Date(updated.date).toISOString().split("T")[0];
+        if (itemDate >= fromDate && itemDate <= toDate) {
+          setFilteredList((prev) =>
+            prev.map((i) => (i._id === updated._id ? updated : i)),
+          );
+        }
 
         showSuccessAlert("Expense updated successfully");
       } else {
         const res = await api.post("/expense/add", payload);
-
         const newExpense = res.data.data;
 
         setList((prev) => [newExpense, ...prev]);
-        setFilteredList((prev) => [newExpense, ...prev]);
+        
+        const itemDate = new Date(newExpense.date).toISOString().split("T")[0];
+        if (itemDate >= fromDate && itemDate <= toDate) {
+          setFilteredList((prev) => [newExpense, ...prev]);
+        }
 
         showSuccessAlert("Expense saved successfully");
       }
@@ -168,8 +194,6 @@ const Expense = () => {
     setAmount(String(item.amount));
     setNote(item.note || "");
     setDate(new Date(item.date).toISOString().split("T")[0]);
-
-    // Scroll to form
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -182,10 +206,8 @@ const Expense = () => {
 
     try {
       await api.delete(`/expense/delete/${id}`);
-
       setList((prev) => prev.filter((i) => i._id !== id));
       setFilteredList((prev) => prev.filter((i) => i._id !== id));
-
       showSuccessAlert("Expense deleted");
     } catch (err) {
       console.log(err);
@@ -194,15 +216,14 @@ const Expense = () => {
   };
 
   // =========================
-  // FILTER REPORT
+  // FILTER REPORT - Show data based on selected dates
   // =========================
-  const handleReport = () => {
+  const handleView = () => {
     setViewLoading(true);
 
     setTimeout(() => {
       const filtered = list.filter((item) => {
         const itemDate = new Date(item.date).toISOString().split("T")[0];
-
         return itemDate >= fromDate && itemDate <= toDate;
       });
 
@@ -220,7 +241,6 @@ const Expense = () => {
 
     try {
       const data = filteredList.length ? filteredList : list;
-
       const sorted = [...data].sort(
         (a, b) => new Date(a.date) - new Date(b.date),
       );
@@ -242,7 +262,6 @@ const Expense = () => {
         right: { style: "thin" },
       };
 
-      // header
       const headerRow = sheet.addRow([
         "Date",
         "Title",
@@ -263,7 +282,6 @@ const Expense = () => {
         cell.border = borderStyle;
       });
 
-      // data rows
       sorted.forEach((item) => {
         const amt = Number(item.amount || 0);
         totalAmount += amt;
@@ -284,7 +302,6 @@ const Expense = () => {
         row.height = 40;
       });
 
-      // total row
       const totalRow = sheet.addRow(["TOTAL", "-", "-", "-", totalAmount, "-"]);
       totalRow.eachCell((cell) => {
         cell.font = { bold: true };
@@ -312,11 +329,9 @@ const Expense = () => {
       ];
 
       const buffer = await workbook.xlsx.writeBuffer();
-
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-
       saveAs(blob, "expense_report.xlsx");
     } catch (err) {
       console.log(err);
@@ -327,16 +342,25 @@ const Expense = () => {
   };
 
   // =========================
-  // RESET FILTER
+  // RESET FILTER - Reset to 1st day of month to today and show data
   // =========================
   const handleReset = () => {
     setResetLoading(true);
 
     setTimeout(() => {
-      setFromDate(getBDDate());
-      setToDate(getBDDate());
-      setFilteredList(list);
-      setShowReport(false);
+      const firstDay = getFirstDayOfMonth();
+      const today = getBDDate();
+      
+      setFromDate(firstDay);
+      setToDate(today);
+      
+      const filtered = list.filter((item) => {
+        const itemDate = new Date(item.date).toISOString().split("T")[0];
+        return itemDate >= firstDay && itemDate <= today;
+      });
+      
+      setFilteredList(filtered);
+      setShowReport(true);
       setResetLoading(false);
     }, 300);
   };
@@ -348,6 +372,7 @@ const Expense = () => {
     (sum, item) => sum + Number(item.amount || 0),
     0,
   );
+  
   // =========================
   // THIS MONTH TOTAL
   // =========================
@@ -357,11 +382,9 @@ const Expense = () => {
 
   const thisMonthTotal = list.reduce((sum, item) => {
     const d = new Date(item.date);
-
     if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
       return sum + Number(item.amount || 0);
     }
-
     return sum;
   }, 0);
 
@@ -396,7 +419,6 @@ const Expense = () => {
               <span className="text-sm sm:text-base font-medium text-red-400">
                 This Month Total
               </span>
-
               <span className="text-red-500 font-extrabold text-xl sm:text-2xl">
                 ৳{thisMonthTotal.toLocaleString()}
               </span>
@@ -476,22 +498,22 @@ const Expense = () => {
           </div>
         </div>
 
-        {/* FILTER */}
+        {/* FILTER - Only filter controls, no table */}
         <ExpenseFilter
           fromDate={fromDate}
           toDate={toDate}
           setFromDate={setFromDate}
           setToDate={setToDate}
-          handleView={handleReport}
+          handleView={handleView}
           handleReset={handleReset}
+          handleExport={handleExport}
           viewLoading={viewLoading}
           resetLoading={resetLoading}
-          handleExport={handleExport}
           exportLoading={exportLoading}
           totalExpense={totalExpense}
         />
 
-        {/* HISTORY */}
+        {/* HISTORY - Only table, no filter */}
         <ExpenseHistory
           showReport={showReport}
           filteredList={filteredList}
