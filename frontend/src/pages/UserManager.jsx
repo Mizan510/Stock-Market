@@ -94,7 +94,6 @@ const UserManager = () => {
     }
   };
 
-  // Open edit modal
   const handleEditUser = (user) => {
     setEditingUser(user);
     setEditFormData({
@@ -107,7 +106,6 @@ const UserManager = () => {
     setShowEditModal(true);
   };
 
-  // Close edit modal
   const handleCloseModal = () => {
     setShowEditModal(false);
     setEditingUser(null);
@@ -121,24 +119,21 @@ const UserManager = () => {
     setPasswordError("");
   };
 
-  // Handle form input changes
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({ ...prev, [name]: value }));
     
-    // Clear password error when user types
     if (name === "password" || name === "confirmPassword") {
       setPasswordError("");
     }
   };
 
-  // Submit edit form
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     
     // Validate password if provided
     if (editFormData.password) {
-      if (editFormData.password.length < 1) {
+      if (editFormData.password.length < 6) {
         setPasswordError("Password must be at least 6 characters long!");
         return;
       }
@@ -156,14 +151,17 @@ const UserManager = () => {
         email: editFormData.email,
       };
       
-      // Only include password if it's provided
       if (editFormData.password) {
         updateData.password = editFormData.password;
       }
       
+      console.log("Sending update request:", updateData);
+      console.log("User ID:", editingUser._id);
+      
       const response = await api.put(`/users/${editingUser._id}`, updateData);
       
-      // Update user in the list
+      console.log("Update response:", response.data);
+      
       setUsers((prev) =>
         prev.map((item) =>
           item._id === editingUser._id
@@ -176,13 +174,9 @@ const UserManager = () => {
       handleCloseModal();
     } catch (error) {
       console.error("Update error:", error);
+      console.error("Error response:", error.response);
       const message = error.response?.data?.message || "Unable to update user";
       await alert(message);
-      
-      // If email is already taken, focus on email field
-      if (message.includes("Email already in use")) {
-        document.getElementById("edit-email")?.focus();
-      }
     } finally {
       setEditLoading(false);
     }
@@ -247,19 +241,13 @@ const UserManager = () => {
             <tbody className="divide-y divide-slate-800">
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-10 text-center text-slate-400"
-                  >
+                  <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
                     Loading users...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-10 text-center text-slate-400"
-                  >
+                  <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
                     No registered users found.
                   </td>
                 </tr>
@@ -361,7 +349,6 @@ const UserManager = () => {
                   Email Address *
                 </label>
                 <input
-                  id="edit-email"
                   type="email"
                   name="email"
                   value={editFormData.email}
