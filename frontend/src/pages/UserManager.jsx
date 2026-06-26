@@ -133,8 +133,8 @@ const UserManager = () => {
     
     // Validate password if provided
     if (editFormData.password) {
-      if (editFormData.password.length < 6) {
-        setPasswordError("Password must be at least 6 characters long!");
+      if (editFormData.password.length < 1) {
+        setPasswordError("Password must be at least 1 characters long!");
         return;
       }
       if (editFormData.password !== editFormData.confirmPassword) {

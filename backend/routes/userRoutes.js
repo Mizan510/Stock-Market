@@ -104,10 +104,10 @@ router.put("/:id", async (req, res) => {
     if (email) user.email = email;
     
     if (password) {
-      if (password.length < 6) {
+      if (password.length < 1) {
         return res.status(400).json({
           success: false,
-          message: "Password must be at least 6 characters long"
+          message: "Password must be at least 1 characters long"
         });
       }
       const salt = await bcrypt.genSalt(10);
