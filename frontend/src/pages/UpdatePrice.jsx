@@ -1596,7 +1596,7 @@ const UpdatePrice = () => {
         {/* FIX 3: Table shows by default (showReport is true) */}
         {showReport && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-2xl overflow-hidden">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <div className="flex items-start justify-between gap-2">
               <div>
                 <h2 className="text-lg font-bold tracking-tight text-gray-200">
                   Report Summary
