@@ -532,7 +532,7 @@ const BuySalePopup = ({
                         onClick={togglePivot}
                       >
                         <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-                        <h3 className="font-semibold text-gray-200 text-sm">
+                        <h3 className="font-semibold text-gray-200 text-xs sm:text-sm">
                           📊 Pivot Point Buy
                         </h3>
                         {pivotBuyList.length > 0 && (
