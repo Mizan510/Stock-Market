@@ -604,7 +604,7 @@ const BuySalePopup = ({
                           onClick={toggleVolume}
                         >
                           <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                          <h3 className="font-semibold text-gray-200 text-[11px]">
+                          <h3 className="font-semibold text-gray-200 text-xs sm:text-sm">
                             📈 Volume Signal Buy
                           </h3>
                           {volumeBuyListWithHighlight.length > 0 && (
