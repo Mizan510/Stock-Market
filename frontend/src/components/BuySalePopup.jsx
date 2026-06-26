@@ -457,9 +457,9 @@ const BuySalePopup = ({
                         onClick={toggleYearlyLow}
                       >
                         <div className="w-1 h-4 bg-green-500 rounded-full"></div>
-                        <h3 className="font-semibold text-gray-200 text-sm">
-                          📉 Yearly Low Buy (≤20% Zone)
-                        </h3>
+                        <h3 className="font-semibold text-gray-200 text-xs sm:text-sm">
+  📉 Yearly Low Buy (≤20% Zone)
+</h3>
                         {yearlyLowBuyList.length > 0 && (
                           <span className="text-xs bg-green-900 text-green-300 px-1.5 py-0.5 rounded-full">
                             {yearlyLowBuyList.length}
@@ -604,7 +604,7 @@ const BuySalePopup = ({
                           onClick={toggleVolume}
                         >
                           <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                          <h3 className="font-semibold text-gray-200 text-[10px]">
+                          <h3 className="font-semibold text-gray-200 text-[11px]">
                             📈 Volume Signal Buy
                           </h3>
                           {volumeBuyListWithHighlight.length > 0 && (
