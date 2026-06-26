@@ -13,6 +13,11 @@ const BuySalePopup = ({
   const [localLoading, setLocalLoading] = useState(false);
   const [pivotData, setPivotData] = useState({});
   const [volumeData, setVolumeData] = useState({});
+  
+  // State for section visibility - all hidden by default
+  const [showYearlyLow, setShowYearlyLow] = useState(false);
+  const [showPivot, setShowPivot] = useState(false);
+  const [showVolume, setShowVolume] = useState(false);
 
   const cleanString = (str) =>
     String(str || "")
@@ -382,6 +387,11 @@ const BuySalePopup = ({
     }
   };
 
+  // Toggle functions
+  const toggleYearlyLow = () => setShowYearlyLow(!showYearlyLow);
+  const togglePivot = () => setShowPivot(!showPivot);
+  const toggleVolume = () => setShowVolume(!showVolume);
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2">
       <div className="w-full max-w-5xl max-h-[95vh] bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
@@ -440,9 +450,12 @@ const BuySalePopup = ({
                   </div>
 
                   <div className="space-y-4">
-                    {/* Yearly Low Buy Section - TOP */}
+                    {/* Yearly Low Buy Section - TOP - Collapsible */}
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div 
+                        className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                        onClick={toggleYearlyLow}
+                      >
                         <div className="w-1 h-4 bg-green-500 rounded-full"></div>
                         <h3 className="font-semibold text-gray-200 text-sm">
                           📉 Yearly Low Buy (≤20% Zone)
@@ -452,62 +465,72 @@ const BuySalePopup = ({
                             {yearlyLowBuyList.length}
                           </span>
                         )}
+                        <span className="ml-auto text-gray-500 text-xs">
+                          {showYearlyLow ? '▼' : '▶'}
+                        </span>
                       </div>
 
-                      {yearlyLowBuyList.length === 0 ? (
-                        <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                          <p className="text-gray-500 text-xs">
-                            No yearly low buy signals
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {yearlyLowBuyList.map((row, idx) => {
-                            const currentPrice = parseNumber(row.closingPrice);
-                            const yearlyHigh = row.yearlyHigh || row.high || 0;
-                            const yearlyLow = row.yearlyLow || row.low || 0;
-                            const buyZone = calcZone(
-                              yearlyLow,
-                              yearlyHigh,
-                              row.buyPercent,
-                            );
-                            return (
-                              <div
-                                key={idx}
-                                className="bg-green-900/20 border border-green-800/50 rounded-lg p-2 hover:bg-green-900/30 transition-colors"
-                              >
-                                <div className="flex justify-between items-start mb-1">
-                                  <span className="font-semibold text-green-300 text-xs sm:text-sm truncate flex-1">
-                                    {row.company}
-                                  </span>
-                                  <span className="text-xs bg-green-800 text-green-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
-                                    Buy
-                                  </span>
-                                </div>
-                                <div className="flex justify-between text-[10px] mt-1">
-                                  <span className="text-gray-400 text-[9px]">
-                                    Current:{" "}
-                                    <span className="text-gray-300 font-medium">
-                                      ৳{currentPrice?.toFixed(2)}
-                                    </span>
-                                  </span>
-                                  <span className="text-green-400 text-[9px]">
-                                    ≤20% Zone:{" "}
-                                    <span className="font-medium">
-                                      ৳{buyZone?.toFixed(2)}
-                                    </span>
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                      {showYearlyLow && (
+                        <>
+                          {yearlyLowBuyList.length === 0 ? (
+                            <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+                              <p className="text-gray-500 text-xs">
+                                No yearly low buy signals
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {yearlyLowBuyList.map((row, idx) => {
+                                const currentPrice = parseNumber(row.closingPrice);
+                                const yearlyHigh = row.yearlyHigh || row.high || 0;
+                                const yearlyLow = row.yearlyLow || row.low || 0;
+                                const buyZone = calcZone(
+                                  yearlyLow,
+                                  yearlyHigh,
+                                  row.buyPercent,
+                                );
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="bg-green-900/20 border border-green-800/50 rounded-lg p-2 hover:bg-green-900/30 transition-colors"
+                                  >
+                                    <div className="flex justify-between items-start mb-1">
+                                      <span className="font-semibold text-green-300 text-xs sm:text-sm truncate flex-1">
+                                        {row.company}
+                                      </span>
+                                      <span className="text-xs bg-green-800 text-green-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                        Buy
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] mt-1">
+                                      <span className="text-gray-400 text-[9px]">
+                                        Current:{" "}
+                                        <span className="text-gray-300 font-medium">
+                                          ৳{currentPrice?.toFixed(2)}
+                                        </span>
+                                      </span>
+                                      <span className="text-green-400 text-[9px]">
+                                        ≤20% Zone:{" "}
+                                        <span className="font-medium">
+                                          ৳{buyZone?.toFixed(2)}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 
-                    {/* Pivot Point Buy Section - MIDDLE */}
+                    {/* Pivot Point Buy Section - MIDDLE - Collapsible */}
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div 
+                        className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                        onClick={togglePivot}
+                      >
                         <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
                         <h3 className="font-semibold text-gray-200 text-sm">
                           📊 Pivot Point Buy
@@ -517,59 +540,69 @@ const BuySalePopup = ({
                             {pivotBuyList.length}
                           </span>
                         )}
+                        <span className="ml-auto text-gray-500 text-xs">
+                          {showPivot ? '▼' : '▶'}
+                        </span>
                       </div>
 
-                      {pivotBuyList.length === 0 ? (
-                        <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                          <p className="text-gray-500 text-xs">
-                            No pivot buy signals
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {pivotBuyList.map((row, idx) => {
-                            const currentPrice = parseNumber(row.closingPrice);
-                            const pivotValue =
-                              row.pivot || pivotData[row.company];
+                      {showPivot && (
+                        <>
+                          {pivotBuyList.length === 0 ? (
+                            <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+                              <p className="text-gray-500 text-xs">
+                                No pivot buy signals
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {pivotBuyList.map((row, idx) => {
+                                const currentPrice = parseNumber(row.closingPrice);
+                                const pivotValue =
+                                  row.pivot || pivotData[row.company];
 
-                            return (
-                              <div
-                                key={idx}
-                                className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-2 hover:bg-blue-900/30 transition-colors"
-                              >
-                                <div className="flex justify-between items-start mb-1">
-                                  <span className="font-semibold text-blue-300 text-xs sm:text-sm truncate flex-1">
-                                    {row.company}
-                                  </span>
-                                  <span className="text-xs bg-blue-800 text-blue-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
-                                    Buy
-                                  </span>
-                                </div>
-                                <div className="flex justify-between text-[10px] mt-1">
-                                  <span className="text-gray-400">
-                                    Current:{" "}
-                                    <span className="text-gray-300 font-medium">
-                                      ৳{currentPrice?.toFixed(2)}
-                                    </span>
-                                  </span>
-                                  <span className="text-blue-300">
-                                    Pivot:{" "}
-                                    <span className="font-medium">
-                                      ৳{pivotValue?.toFixed(2)}
-                                    </span>
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-2 hover:bg-blue-900/30 transition-colors"
+                                  >
+                                    <div className="flex justify-between items-start mb-1">
+                                      <span className="font-semibold text-blue-300 text-xs sm:text-sm truncate flex-1">
+                                        {row.company}
+                                      </span>
+                                      <span className="text-xs bg-blue-800 text-blue-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                        Buy
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] mt-1">
+                                      <span className="text-gray-400">
+                                        Current:{" "}
+                                        <span className="text-gray-300 font-medium">
+                                          ৳{currentPrice?.toFixed(2)}
+                                        </span>
+                                      </span>
+                                      <span className="text-blue-300">
+                                        Pivot:{" "}
+                                        <span className="font-medium">
+                                          ৳{pivotValue?.toFixed(2)}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 
-                    {/* Volume Signal Buy Section - BOTTOM with Highlight */}
+                    {/* Volume Signal Buy Section - BOTTOM with Highlight - Collapsible */}
                     <div>
                       <div className="flex flex-col gap-1 mb-2">
-                        <div className="flex items-center gap-2">
+                        <div 
+                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                          onClick={toggleVolume}
+                        >
                           <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
                           <h3 className="font-semibold text-gray-200 text-[10px]">
                             📈 Volume Signal Buy
@@ -579,10 +612,13 @@ const BuySalePopup = ({
                               {volumeBuyListWithHighlight.length}
                             </span>
                           )}
+                          <span className="ml-auto text-gray-500 text-[10px]">
+                            {showVolume ? '▼' : '▶'}
+                          </span>
                         </div>
 
-                        {/* Double Signal on separate line */}
-                        {volumeBuyListWithHighlight.filter(
+                        {/* Double Signal on separate line - only show when expanded */}
+                        {showVolume && volumeBuyListWithHighlight.filter(
                           (row) => row.isHighlighted,
                         ).length > 0 && (
                           <div className="ml-3">
@@ -599,88 +635,92 @@ const BuySalePopup = ({
                         )}
                       </div>
 
-                      {volumeBuyListWithHighlight.length === 0 ? (
-                        <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                          <p className="text-gray-500 text-xs">
-                            No volume buy signals
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-1.5">
-                          {volumeBuyListWithHighlight.map((row, idx) => {
-                            const currentPrice = parseNumber(row.closingPrice);
-                            const volumeSignal =
-                              row.volumeSignal ||
-                              volumeData[row.company] ||
-                              "Neutral";
-                            const signalStyle =
-                              getVolumeSignalStyle(volumeSignal);
-                            const badgeStyle =
-                              getVolumeSignalBadge(volumeSignal);
-                            const isHighlighted = row.isHighlighted;
+                      {showVolume && (
+                        <>
+                          {volumeBuyListWithHighlight.length === 0 ? (
+                            <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+                              <p className="text-gray-500 text-xs">
+                                No volume buy signals
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {volumeBuyListWithHighlight.map((row, idx) => {
+                                const currentPrice = parseNumber(row.closingPrice);
+                                const volumeSignal =
+                                  row.volumeSignal ||
+                                  volumeData[row.company] ||
+                                  "Neutral";
+                                const signalStyle =
+                                  getVolumeSignalStyle(volumeSignal);
+                                const badgeStyle =
+                                  getVolumeSignalBadge(volumeSignal);
+                                const isHighlighted = row.isHighlighted;
 
-                            return (
-                              <div
-                                key={idx}
-                                className={`border rounded-lg p-2 transition-all duration-300 ${
-                                  isHighlighted
-                                    ? "bg-amber-900/30 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60 hover:ring-amber-500/80"
-                                    : "bg-purple-900/20 border-purple-800/50 hover:bg-purple-900/30"
-                                }`}
-                              >
-                                <div className="flex flex-col gap-1">
-                                  {/* Company Name - Full width, no truncate */}
-                                  <div className="flex items-center justify-between w-full">
-                                    <span
-                                      className={`font-semibold text-xs sm:text-sm ${
-                                        isHighlighted
-                                          ? "text-amber-300"
-                                          : "text-purple-300"
-                                      }`}
-                                    >
-                                      {row.company}
-                                    </span>
-                                    {isHighlighted && (
-                                      <span className="text-[8px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
-                                        DOUBLE
-                                      </span>
-                                    )}
-                                  </div>
+                                return (
+                                  <div
+                                    key={idx}
+                                    className={`border rounded-lg p-2 transition-all duration-300 ${
+                                      isHighlighted
+                                        ? "bg-amber-900/30 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60 hover:ring-amber-500/80"
+                                        : "bg-purple-900/20 border-purple-800/50 hover:bg-purple-900/30"
+                                    }`}
+                                  >
+                                    <div className="flex flex-col gap-1">
+                                      {/* Company Name - Full width, no truncate */}
+                                      <div className="flex items-center justify-between w-full">
+                                        <span
+                                          className={`font-semibold text-xs sm:text-sm ${
+                                            isHighlighted
+                                              ? "text-amber-300"
+                                              : "text-purple-300"
+                                          }`}
+                                        >
+                                          {row.company}
+                                        </span>
+                                        {isHighlighted && (
+                                          <span className="text-[8px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                                            DOUBLE
+                                          </span>
+                                        )}
+                                      </div>
 
-                                  {/* Signal Badge and Price */}
-                                  <div className="flex items-center justify-between">
-                                    <span
-                                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}
-                                    >
-                                      {volumeSignal}
-                                    </span>
-                                    <span className="text-gray-400 text-[9px]">
-                                      Current:{" "}
-                                      <span
-                                        className={`font-medium ${
-                                          isHighlighted
-                                            ? "text-amber-300"
-                                            : "text-gray-300"
-                                        }`}
-                                      >
-                                        ৳{currentPrice?.toFixed(2)}
-                                      </span>
-                                    </span>
-                                  </div>
+                                      {/* Signal Badge and Price */}
+                                      <div className="flex items-center justify-between">
+                                        <span
+                                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}
+                                        >
+                                          {volumeSignal}
+                                        </span>
+                                        <span className="text-gray-400 text-[9px]">
+                                          Current:{" "}
+                                          <span
+                                            className={`font-medium ${
+                                              isHighlighted
+                                                ? "text-amber-300"
+                                                : "text-gray-300"
+                                            }`}
+                                          >
+                                            ৳{currentPrice?.toFixed(2)}
+                                          </span>
+                                        </span>
+                                      </div>
 
-                                  {/* Additional info if needed */}
-                                  <div className="flex items-center justify-between">
-                                    <span
-                                      className={signalStyle + " text-[8px]"}
-                                    >
-                                      Signal: {volumeSignal}
-                                    </span>
+                                      {/* Additional info if needed */}
+                                      <div className="flex items-center justify-between">
+                                        <span
+                                          className={signalStyle + " text-[8px]"}
+                                        >
+                                          Signal: {volumeSignal}
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
