@@ -46,8 +46,8 @@ const Register = () => {
           localStorage.setItem("auth", JSON.stringify(authObj));
         }
 
-        await alert("Account created and logged in!");
-        navigate("/dashboard", { replace: true });
+        await alert("Account created and ready to logged in!");
+        navigate("/login", { replace: true });
         return;
       }
 
