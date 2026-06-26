@@ -18,9 +18,6 @@ const BuySalePopup = ({
   const [showYearlyLow, setShowYearlyLow] = useState(false);
   const [showPivot, setShowPivot] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
-  
-  // Master toggle state - all hidden by default
-  const [showAllSections, setShowAllSections] = useState(false);
 
   const cleanString = (str) =>
     String(str || "")
@@ -292,22 +289,8 @@ const BuySalePopup = ({
   // Create a set of pivot buy company names for highlighting
   const pivotCompanySet = new Set(pivotBuyList.map((row) => row.company));
 
-  // Volume Signal Buy - Filter for STRONG BUYER and VERY STRONG BUYER only
-  const volumeBuyList = buyRows
-    .filter((row) => {
-      const volumeSignal = row.volumeSignal || volumeData[row.company];
-      const signalUpper = volumeSignal?.toUpperCase() || "";
-      // Only show STRONG BUYER or VERY STRONG BUYER
-      return signalUpper.includes("STRONG BUYER") || 
-             signalUpper.includes("VERY STRONG BUYER");
-    })
-    .map((row) => ({
-      ...row,
-      isHighlighted: pivotCompanySet.has(row.company),
-    }));
-
-  // Full volume list for count (all buy signals)
-  const allVolumeBuyList = buyRows
+  // Volume Signal Buy - Uses volume signal from database with highlight check
+  const volumeBuyListWithHighlight = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
       const buySignals = [
@@ -320,6 +303,19 @@ const BuySalePopup = ({
       ];
       const signalUpper = volumeSignal?.toUpperCase() || "";
       return buySignals.some((signal) => signalUpper.includes(signal));
+    })
+    .map((row) => ({
+      ...row,
+      isHighlighted: pivotCompanySet.has(row.company),
+    }));
+
+  // Ready for Buy - Only STRONG BUYER and VERY STRONG BUYER
+  const readyForBuyList = buyRows
+    .filter((row) => {
+      const volumeSignal = row.volumeSignal || volumeData[row.company];
+      const signalUpper = volumeSignal?.toUpperCase() || "";
+      return signalUpper.includes("STRONG BUYER") || 
+             signalUpper.includes("VERY STRONG BUYER");
     })
     .map((row) => ({
       ...row,
@@ -408,15 +404,6 @@ const BuySalePopup = ({
   const toggleYearlyLow = () => setShowYearlyLow(!showYearlyLow);
   const togglePivot = () => setShowPivot(!showPivot);
   const toggleVolume = () => setShowVolume(!showVolume);
-  
-  // Master toggle function
-  const toggleAllSections = () => {
-    const newState = !showAllSections;
-    setShowAllSections(newState);
-    setShowYearlyLow(newState);
-    setShowPivot(newState);
-    setShowVolume(newState);
-  };
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2">
@@ -475,24 +462,103 @@ const BuySalePopup = ({
                     </div>
                   </div>
 
-                  {/* Master Toggle - Show/Hide All Sections */}
-                  <div className="mb-3 bg-gray-800/40 p-2 rounded-lg border border-gray-700/50">
-                    <div 
-                      className="flex items-center justify-between cursor-pointer hover:bg-gray-700/30 p-1 rounded-lg transition-colors"
-                      onClick={toggleAllSections}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-amber-400">
-                          🔽 Show/Hide All Signals
+                  {/* READY FOR BUY - Always visible, no toggle */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
+                      <h3 className="font-semibold text-amber-400 text-xs sm:text-sm">
+                        🚀 Ready for Buy
+                      </h3>
+                      {readyForBuyList.length > 0 && (
+                        <span className="text-xs bg-amber-900 text-amber-300 px-1.5 py-0.5 rounded-full">
+                          {readyForBuyList.length}
                         </span>
-                        <span className="text-xs text-gray-400">
-                          ({showAllSections ? 'Hide All' : 'Show All'})
-                        </span>
-                      </div>
-                      <span className="text-gray-500 text-xs">
-                        {showAllSections ? '▼' : '▶'}
-                      </span>
+                      )}
                     </div>
+
+                    {readyForBuyList.length === 0 ? (
+                      <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+                        <p className="text-gray-500 text-xs">
+                          No strong buyer signals
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {readyForBuyList.map((row, idx) => {
+                          const currentPrice = parseNumber(row.closingPrice);
+                          const volumeSignal =
+                            row.volumeSignal ||
+                            volumeData[row.company] ||
+                            "Neutral";
+                          const signalStyle =
+                            getVolumeSignalStyle(volumeSignal);
+                          const badgeStyle =
+                            getVolumeSignalBadge(volumeSignal);
+                          const isHighlighted = row.isHighlighted;
+
+                          return (
+                            <div
+                              key={idx}
+                              className={`border rounded-lg p-2 transition-all duration-300 ${
+                                isHighlighted
+                                  ? "bg-amber-900/40 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60"
+                                  : "bg-amber-900/20 border-amber-700/50 hover:bg-amber-900/30"
+                              }`}
+                            >
+                              <div className="flex flex-col gap-1">
+                                {/* Company Name */}
+                                <div className="flex items-center justify-between w-full">
+                                  <span
+                                    className={`font-semibold text-xs sm:text-sm ${
+                                      isHighlighted
+                                        ? "text-amber-300"
+                                        : "text-amber-200"
+                                    }`}
+                                  >
+                                    {row.company}
+                                  </span>
+                                  {isHighlighted && (
+                                    <span className="text-[8px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                                      DOUBLE
+                                    </span>
+                                  )}
+                                </div>
+
+                                {/* Signal Badge and Price */}
+                                <div className="flex items-center justify-between">
+                                  <span
+                                    className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${badgeStyle}`}
+                                  >
+                                    {volumeSignal}
+                                  </span>
+                                  <span className="text-gray-400 text-[9px]">
+                                    Current:{" "}
+                                    <span
+                                      className={`font-medium ${
+                                        isHighlighted
+                                          ? "text-amber-300"
+                                          : "text-gray-300"
+                                      }`}
+                                    >
+                                      ৳{currentPrice?.toFixed(2)}
+                                    </span>
+                                  </span>
+                                </div>
+
+                                {/* Additional info */}
+                                <div className="flex items-center justify-between">
+                                  <span
+                                    className={signalStyle + " text-[8px]"}
+                                  >
+                                    Signal: {volumeSignal}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-4">
@@ -653,9 +719,9 @@ const BuySalePopup = ({
                           <h3 className="font-semibold text-gray-200 text-xs sm:text-sm">
                             📈 Volume Signal Buy
                           </h3>
-                          {volumeBuyList.length > 0 && (
+                          {volumeBuyListWithHighlight.length > 0 && (
                             <span className="text-[10px] bg-purple-900 text-purple-300 px-1.5 py-0.5 rounded-full">
-                              {volumeBuyList.length}
+                              {volumeBuyListWithHighlight.length}
                             </span>
                           )}
                           <span className="ml-auto text-gray-500 text-[10px]">
@@ -664,14 +730,14 @@ const BuySalePopup = ({
                         </div>
 
                         {/* Double Signal on separate line - only show when expanded */}
-                        {showVolume && volumeBuyList.filter(
+                        {showVolume && volumeBuyListWithHighlight.filter(
                           (row) => row.isHighlighted,
                         ).length > 0 && (
                           <div className="ml-3">
                             <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full animate-pulse font-bold inline-flex items-center gap-1">
                               ⚡{" "}
                               {
-                                volumeBuyList.filter(
+                                volumeBuyListWithHighlight.filter(
                                   (row) => row.isHighlighted,
                                 ).length
                               }{" "}
@@ -683,15 +749,15 @@ const BuySalePopup = ({
 
                       {showVolume && (
                         <>
-                          {volumeBuyList.length === 0 ? (
+                          {volumeBuyListWithHighlight.length === 0 ? (
                             <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
                               <p className="text-gray-500 text-xs">
-                                No strong buyer signals
+                                No volume buy signals
                               </p>
                             </div>
                           ) : (
                             <div className="space-y-1.5">
-                              {volumeBuyList.map((row, idx) => {
+                              {volumeBuyListWithHighlight.map((row, idx) => {
                                 const currentPrice = parseNumber(row.closingPrice);
                                 const volumeSignal =
                                   row.volumeSignal ||
