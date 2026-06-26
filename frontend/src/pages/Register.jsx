@@ -33,27 +33,12 @@ const Register = () => {
         password,
       });
 
-      // if backend returned token, save auth and go to dashboard
-      if (res.data?.token) {
-        localStorage.setItem("token", res.data.token);
-        const userName = res.data.user || name;
-        const id = res.data.id || null;
-        const authObj = {
-          ...(id ? { id } : {}),
-          ...(userName ? { name: userName } : {}),
-        };
-        if (Object.keys(authObj).length > 0) {
-          localStorage.setItem("auth", JSON.stringify(authObj));
-        }
+      // Show success message
+      await alert("✅ Account created successfully! Please login to continue.");
 
-        await alert("Account created and ready to logged in!");
-        navigate("/login", { replace: true });
-        return;
-      }
-
-      await alert("Account created successfully!");
-
+      // Always navigate to login page after successful registration
       navigate("/login", { replace: true });
+
     } catch (error) {
       await alert(error.response?.data?.message || "Registration failed");
     } finally {
@@ -61,7 +46,7 @@ const Register = () => {
     }
   };
 
-  // ✅ Access verification for registration page
+  // Access verification for registration page
   const handleAccessSubmit = async (e) => {
     e.preventDefault();
     if (accessPassword === "11221122") {
