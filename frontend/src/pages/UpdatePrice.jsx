@@ -17,7 +17,7 @@ const UpdatePrice = () => {
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [zoneData, setZoneData] = useState([]);
-  const [showReport, setShowReport] = useState(false);
+  const [showReport, setShowReport] = useState(true); // CHANGED: default to true
   const [isNewCompany, setIsNewCompany] = useState(false);
   const [excelPreviewData, setExcelPreviewData] = useState(null);
   const [excelFileName, setExcelFileName] = useState("");
@@ -40,6 +40,12 @@ const UpdatePrice = () => {
   const toUpperCaseName = (name) => {
     if (!name) return name;
     return name.toUpperCase().trim();
+  };
+
+  // Helper function to round avg volume - FIX 1: Round avg volume
+  const roundAvgVolume = (value) => {
+    if (value === null || value === undefined || isNaN(value)) return null;
+    return Math.round(value);
   };
 
   // Calculate pivot and support/resistance levels
@@ -131,7 +137,8 @@ const UpdatePrice = () => {
             low: item.low || null,
             high: item.high || null,
             todayVolume: item.todayVolume || null,
-            avgVolume1M: item.avgVolume1M || null,
+            // FIX 1: Round avgVolume1M when loading
+            avgVolume1M: roundAvgVolume(item.avgVolume1M),
           };
           return {
             ...dataWithIndicators,
@@ -145,6 +152,9 @@ const UpdatePrice = () => {
           ...new Set(uppercasedZoneList.map((item) => item.company)),
         ].sort();
         setCompanies(uniqueCompanies);
+        
+        // FIX 3: Show table by default
+        setShowReport(true);
       } catch (err) {
         console.error(err);
         showErrorAlert("Failed to load initial data");
@@ -442,7 +452,8 @@ const UpdatePrice = () => {
         const yearLow = parseNum(oneYLow);
         const yearHigh = parseNum(oneYHigh);
         const volume = parseNum(todayVol);
-        const avgVolume = parseNum(avgVol);
+        // FIX 1: Round avg volume when processing Excel
+        const avgVolume = roundAvgVolume(parseNum(avgVol));
 
         const data = {
           company: compName,
@@ -518,8 +529,15 @@ const UpdatePrice = () => {
         const companyKey = item.company.toLowerCase();
         const existingItem = updatedZoneMap.get(companyKey);
 
+        // FIX 1: Round avg volume before saving
+        const roundedAvgVolume = roundAvgVolume(item.avgVolume1M);
+        
         // Calculate indicators for the payload
-        const indicators = calculateIndicators(item);
+        const payloadData = {
+          ...item,
+          avgVolume1M: roundedAvgVolume,
+        };
+        const indicators = calculateIndicators(payloadData);
 
         const payload = {
           company: item.company,
@@ -529,7 +547,7 @@ const UpdatePrice = () => {
           low: item.low,
           high: item.high,
           todayVolume: item.todayVolume,
-          avgVolume1M: item.avgVolume1M,
+          avgVolume1M: roundedAvgVolume,
           pivotPoint: indicators.pivot,
           r1: indicators.r1,
           s1: indicators.s1,
@@ -617,8 +635,10 @@ const UpdatePrice = () => {
         formData.closingPrice !== "" ? Number(formData.closingPrice) : null;
       const volume =
         formData.todayVolume !== "" ? Number(formData.todayVolume) : null;
-      const avgVolume =
-        formData.avgVolume1M !== "" ? Number(formData.avgVolume1M) : null;
+      // FIX 1: Round avg volume when submitting
+      const avgVolume = formData.avgVolume1M !== "" 
+        ? roundAvgVolume(Number(formData.avgVolume1M)) 
+        : null;
 
       const data = {
         todaysHigh: h,
@@ -960,7 +980,8 @@ const UpdatePrice = () => {
             ? Number(Number(item.closingPrice).toFixed(2))
             : null,
           today_volume: item.todayVolume ? Number(item.todayVolume) : null,
-          avg_volume: item.avgVolume1M ? Number(item.avgVolume1M) : null,
+          // FIX 1: Round avg volume in export
+          avg_volume: item.avgVolume1M ? Number(roundAvgVolume(item.avgVolume1M)) : null,
           pivot: item.pivotPoint
             ? Number(Number(item.pivotPoint).toFixed(2))
             : null,
@@ -1539,24 +1560,25 @@ const UpdatePrice = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+          {/* FIX 2: Buttons in one line with left, middle, right positioning */}
+          <div className="flex flex-row gap-3 pt-2">
             <button
               onClick={handleSubmit}
               disabled={submitLoading || loading}
-              className="flex-1 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer"
+              className="flex-1 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 py-2.5 rounded-lg font-bold text-sm tracking-wide transition-all cursor-pointer text-center"
             >
               {submitLoading
                 ? "Processing Variables..."
                 : formData._id
                   ? "Update Data"
-                  : "Submit Data"}
+                  : "Submit"}
             </button>
             <button
               onClick={() => setShowReport(true)}
               disabled={submitLoading || loading}
-              className="flex-1 bg-purple-900/40 hover:bg-purple-900/60 border border-purple-700 text-purple-300 py-2.5 rounded-lg font-semibold text-sm tracking-wide transition-all cursor-pointer"
+              className="flex-1 bg-purple-900/40 hover:bg-purple-900/60 border border-purple-700 text-purple-300 py-2.5 rounded-lg font-semibold text-sm tracking-wide transition-all cursor-pointer text-center"
             >
-              View Summary Report
+              View
             </button>
             <button
               onClick={() => {
@@ -1571,6 +1593,7 @@ const UpdatePrice = () => {
           </div>
         </div>
 
+        {/* FIX 3: Table shows by default (showReport is true) */}
         {showReport && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-2xl overflow-hidden">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">

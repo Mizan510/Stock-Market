@@ -13,6 +13,7 @@ const BuySalePopup = ({
   const [localLoading, setLocalLoading] = useState(false);
   const [pivotData, setPivotData] = useState({});
   const [volumeData, setVolumeData] = useState({});
+  const [volumeRatioData, setVolumeRatioData] = useState({});
   
   // State for section visibility - all hidden by default
   const [showYearlyLow, setShowYearlyLow] = useState(false);
@@ -44,6 +45,12 @@ const BuySalePopup = ({
     return lowValue + ((highValue - lowValue) * percentValue) / 100;
   };
 
+  // Helper function to calculate volume ratio
+  const calculateVolumeRatio = (todayVolume, avgVolume) => {
+    if (!todayVolume || !avgVolume || avgVolume === 0) return null;
+    return todayVolume / avgVolume;
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -73,9 +80,10 @@ const BuySalePopup = ({
 
         console.log("=== DEBUG: Raw Zone Data ===", rawZones);
 
-        // Get pivot points from database (already calculated by backend)
+        // Get pivot points, volume signals, and volume ratios from database
         const pivots = {};
         const volumes = {};
+        const volumeRatios = {};
 
         rawZones.forEach((zone) => {
           const company =
@@ -91,13 +99,23 @@ const BuySalePopup = ({
               volumes[company] = zone.volumeSignal || zone.customSignal;
               console.log(`${company} volume signal:`, volumes[company]);
             }
+            // Calculate and store volume ratio from today volume and avg volume
+            const todayVol = zone.todayVolume || 0;
+            const avgVol = zone.avgVolume1M || 0;
+            const ratio = calculateVolumeRatio(todayVol, avgVol);
+            if (ratio !== null) {
+              volumeRatios[company] = ratio;
+              console.log(`${company} volume ratio calculated:`, ratio);
+            }
           }
         });
 
         console.log("=== All Pivots from DB ===", pivots);
         console.log("=== All Volume Signals from DB ===", volumes);
+        console.log("=== All Volume Ratios from DB ===", volumeRatios);
         setPivotData(pivots);
         setVolumeData(volumes);
+        setVolumeRatioData(volumeRatios);
 
         // Create buy rows with proper data
         const mappedBuyData = rawZones
@@ -113,6 +131,11 @@ const BuySalePopup = ({
             // Yearly values
             const yearlyHigh = row.high || 0;
             const yearlyLow = row.low || 0;
+
+            // Calculate volume ratio directly from the row data
+            const todayVol = row.todayVolume || 0;
+            const avgVol = row.avgVolume1M || 0;
+            const calculatedRatio = calculateVolumeRatio(todayVol, avgVol);
 
             return {
               ...row,
@@ -133,6 +156,8 @@ const BuySalePopup = ({
               pivot: row.pivotPoint || null,
               // Volume signal from database
               volumeSignal: row.volumeSignal || row.customSignal || null,
+              // Volume ratio - use calculated value or from database
+              volumeRatio: calculatedRatio !== null ? calculatedRatio : row.volRatio || null,
             };
           })
           .sort((a, b) =>
@@ -141,7 +166,7 @@ const BuySalePopup = ({
             }),
           );
 
-        console.log("=== Mapped Buy Data ===", mappedBuyData);
+        console.log("=== Mapped Buy Data with Volume Ratios ===", mappedBuyData);
         setBuyRows(mappedBuyData);
 
         // Buy aggregation
@@ -269,16 +294,6 @@ const BuySalePopup = ({
     // Get pivot from database
     const pivotValue = row.pivot || pivotData[row.company];
 
-    console.log(`Checking ${row.company}:`, {
-      currentPrice,
-      pivotValue,
-      sessionHigh: row.sessionHigh,
-      sessionLow: row.sessionLow,
-      sessionClose: row.sessionClose,
-      yearlyHigh: row.yearlyHigh,
-      yearlyLow: row.yearlyLow,
-    });
-
     return (
       currentPrice !== undefined &&
       pivotValue !== undefined &&
@@ -405,6 +420,29 @@ const BuySalePopup = ({
   const togglePivot = () => setShowPivot(!showPivot);
   const toggleVolume = () => setShowVolume(!showVolume);
 
+  // Helper function to format volume ratio as decimal (no % sign)
+  const formatVolumeRatio = (ratio) => {
+    if (ratio === null || ratio === undefined || isNaN(ratio)) return null;
+    return ratio.toFixed(2);
+  };
+
+  // Helper function to get volume ratio for a company
+  const getVolumeRatio = (row) => {
+    // First try to get from the row
+    if (row.volumeRatio !== null && row.volumeRatio !== undefined) {
+      return row.volumeRatio;
+    }
+    // Then try from the volumeRatioData state
+    if (volumeRatioData[row.company] !== undefined) {
+      return volumeRatioData[row.company];
+    }
+    // Calculate from today volume and avg volume if available
+    if (row.todayVolume && row.avgVolume1M) {
+      return calculateVolumeRatio(row.todayVolume, row.avgVolume1M);
+    }
+    return null;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2">
       <div className="w-full max-w-5xl max-h-[95vh] bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
@@ -495,6 +533,9 @@ const BuySalePopup = ({
                           const badgeStyle =
                             getVolumeSignalBadge(volumeSignal);
                           const isHighlighted = row.isHighlighted;
+                          // Get volume ratio using helper
+                          const volumeRatio = getVolumeRatio(row);
+                          const formattedRatio = formatVolumeRatio(volumeRatio);
 
                           return (
                             <div
@@ -506,7 +547,7 @@ const BuySalePopup = ({
                               }`}
                             >
                               <div className="flex flex-col gap-1">
-                                {/* Company Name */}
+                                {/* Company Name with Volume Ratio - NO % sign */}
                                 <div className="flex items-center justify-between w-full">
                                   <span
                                     className={`font-semibold text-xs sm:text-sm ${
@@ -516,6 +557,13 @@ const BuySalePopup = ({
                                     }`}
                                   >
                                     {row.company}
+                                    {formattedRatio !== null && (
+                                      <span className={`ml-1.5 text-[10px] font-mono ${
+                                        isHighlighted ? "text-amber-400/80" : "text-amber-400/60"
+                                      }`}>
+                                        ({formattedRatio})
+                                      </span>
+                                    )}
                                   </span>
                                   {isHighlighted && (
                                     <span className="text-[8px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
@@ -552,6 +600,11 @@ const BuySalePopup = ({
                                   >
                                     Signal: {volumeSignal}
                                   </span>
+                                  {formattedRatio !== null && (
+                                    <span className="text-[8px] text-gray-500">
+                                      Vol Ratio: {formattedRatio}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -601,6 +654,10 @@ const BuySalePopup = ({
                                   yearlyHigh,
                                   row.buyPercent,
                                 );
+                                // Get volume ratio using helper
+                                const volumeRatio = getVolumeRatio(row);
+                                const formattedRatio = formatVolumeRatio(volumeRatio);
+
                                 return (
                                   <div
                                     key={idx}
@@ -609,6 +666,11 @@ const BuySalePopup = ({
                                     <div className="flex justify-between items-start mb-1">
                                       <span className="font-semibold text-green-300 text-xs sm:text-sm truncate flex-1">
                                         {row.company}
+                                        {formattedRatio !== null && (
+                                          <span className="ml-1.5 text-[10px] font-mono text-green-400/60">
+                                            ({formattedRatio})
+                                          </span>
+                                        )}
                                       </span>
                                       <span className="text-xs bg-green-800 text-green-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
                                         Buy
@@ -628,6 +690,13 @@ const BuySalePopup = ({
                                         </span>
                                       </span>
                                     </div>
+                                    {formattedRatio !== null && (
+                                      <div className="flex justify-end mt-0.5">
+                                        <span className="text-[8px] text-gray-500">
+                                          Vol Ratio: {formattedRatio}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -671,6 +740,9 @@ const BuySalePopup = ({
                                 const currentPrice = parseNumber(row.closingPrice);
                                 const pivotValue =
                                   row.pivot || pivotData[row.company];
+                                // Get volume ratio using helper
+                                const volumeRatio = getVolumeRatio(row);
+                                const formattedRatio = formatVolumeRatio(volumeRatio);
 
                                 return (
                                   <div
@@ -680,6 +752,11 @@ const BuySalePopup = ({
                                     <div className="flex justify-between items-start mb-1">
                                       <span className="font-semibold text-blue-300 text-xs sm:text-sm truncate flex-1">
                                         {row.company}
+                                        {formattedRatio !== null && (
+                                          <span className="ml-1.5 text-[10px] font-mono text-blue-400/60">
+                                            ({formattedRatio})
+                                          </span>
+                                        )}
                                       </span>
                                       <span className="text-xs bg-blue-800 text-blue-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
                                         Buy
@@ -699,6 +776,13 @@ const BuySalePopup = ({
                                         </span>
                                       </span>
                                     </div>
+                                    {formattedRatio !== null && (
+                                      <div className="flex justify-end mt-0.5">
+                                        <span className="text-[8px] text-gray-500">
+                                          Vol Ratio: {formattedRatio}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -768,6 +852,9 @@ const BuySalePopup = ({
                                 const badgeStyle =
                                   getVolumeSignalBadge(volumeSignal);
                                 const isHighlighted = row.isHighlighted;
+                                // Get volume ratio using helper
+                                const volumeRatio = getVolumeRatio(row);
+                                const formattedRatio = formatVolumeRatio(volumeRatio);
 
                                 return (
                                   <div
@@ -779,7 +866,7 @@ const BuySalePopup = ({
                                     }`}
                                   >
                                     <div className="flex flex-col gap-1">
-                                      {/* Company Name - Full width, no truncate */}
+                                      {/* Company Name with Volume Ratio - NO % sign */}
                                       <div className="flex items-center justify-between w-full">
                                         <span
                                           className={`font-semibold text-xs sm:text-sm ${
@@ -789,6 +876,13 @@ const BuySalePopup = ({
                                           }`}
                                         >
                                           {row.company}
+                                          {formattedRatio !== null && (
+                                            <span className={`ml-1.5 text-[10px] font-mono ${
+                                              isHighlighted ? "text-amber-400/80" : "text-purple-400/60"
+                                            }`}>
+                                              ({formattedRatio})
+                                            </span>
+                                          )}
                                         </span>
                                         {isHighlighted && (
                                           <span className="text-[8px] font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
@@ -818,13 +912,18 @@ const BuySalePopup = ({
                                         </span>
                                       </div>
 
-                                      {/* Additional info if needed */}
+                                      {/* Additional info */}
                                       <div className="flex items-center justify-between">
                                         <span
                                           className={signalStyle + " text-[8px]"}
                                         >
                                           Signal: {volumeSignal}
                                         </span>
+                                        {formattedRatio !== null && (
+                                          <span className="text-[8px] text-gray-500">
+                                            Vol Ratio: {formattedRatio}
+                                          </span>
+                                        )}
                                       </div>
                                     </div>
                                   </div>
@@ -890,56 +989,77 @@ const BuySalePopup = ({
                             </span>
                           </div>
                           <div className="space-y-1.5">
-                            {redSaleList.map((row, idx) => (
-                              <div
-                                key={idx}
-                                className="bg-red-900/20 border border-red-800/50 rounded-lg p-2"
-                              >
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="font-semibold text-red-300 text-xs sm:text-sm truncate flex-1">
-                                    {row.company}
-                                  </span>
-                                  <span className="text-xs bg-red-800 text-red-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
-                                    Loss
-                                  </span>
+                            {redSaleList.map((row, idx) => {
+                              // Get volume ratio for sale items
+                              const zoneRow = buyRows.find(
+                                (r) => r.company === row.company
+                              );
+                              const volumeRatio = zoneRow ? getVolumeRatio(zoneRow) : null;
+                              const formattedRatio = formatVolumeRatio(volumeRatio);
+
+                              return (
+                                <div
+                                  key={idx}
+                                  className="bg-red-900/20 border border-red-800/50 rounded-lg p-2"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <span className="font-semibold text-red-300 text-xs sm:text-sm truncate flex-1">
+                                      {row.company}
+                                      {formattedRatio !== null && (
+                                        <span className="ml-1.5 text-[10px] font-mono text-red-400/60">
+                                          ({formattedRatio})
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className="text-xs bg-red-800 text-red-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                      Loss
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1 text-[10px]">
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Buy Price:
+                                      </span>
+                                      <span className="text-gray-300 font-medium">
+                                        ৳
+                                        {row.avgBuyPriceWithCommission.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Session Price:
+                                      </span>
+                                      <span className="text-red-400 font-medium">
+                                        ৳{row.sessionPrice.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Quantity:
+                                      </span>
+                                      <span className="text-gray-300">
+                                        {row.remainQtn.toLocaleString()} shares
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Stop Loss:
+                                      </span>
+                                      <span className="text-red-400 font-medium">
+                                        ৳{row.exitFloorPrice.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    {formattedRatio !== null && (
+                                      <div className="flex justify-end">
+                                        <span className="text-[8px] text-gray-500">
+                                          Vol Ratio: {formattedRatio}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="space-y-1 text-[10px]">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Buy Price:
-                                    </span>
-                                    <span className="text-gray-300 font-medium">
-                                      ৳
-                                      {row.avgBuyPriceWithCommission.toFixed(2)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Session Price:
-                                    </span>
-                                    <span className="text-red-400 font-medium">
-                                      ৳{row.sessionPrice.toFixed(2)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Quantity:
-                                    </span>
-                                    <span className="text-gray-300">
-                                      {row.remainQtn.toLocaleString()} shares
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Stop Loss:
-                                    </span>
-                                    <span className="text-red-400 font-medium">
-                                      ৳{row.exitFloorPrice.toFixed(2)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -956,56 +1076,77 @@ const BuySalePopup = ({
                             </span>
                           </div>
                           <div className="space-y-1.5">
-                            {greenSaleList.map((row, idx) => (
-                              <div
-                                key={idx}
-                                className="bg-green-900/20 border border-green-800/50 rounded-lg p-2"
-                              >
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="font-semibold text-green-300 text-xs sm:text-sm truncate flex-1">
-                                    {row.company}
-                                  </span>
-                                  <span className="text-xs bg-green-800 text-green-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
-                                    Profit
-                                  </span>
+                            {greenSaleList.map((row, idx) => {
+                              // Get volume ratio for sale items
+                              const zoneRow = buyRows.find(
+                                (r) => r.company === row.company
+                              );
+                              const volumeRatio = zoneRow ? getVolumeRatio(zoneRow) : null;
+                              const formattedRatio = formatVolumeRatio(volumeRatio);
+
+                              return (
+                                <div
+                                  key={idx}
+                                  className="bg-green-900/20 border border-green-800/50 rounded-lg p-2"
+                                >
+                                  <div className="flex justify-between items-start mb-2">
+                                    <span className="font-semibold text-green-300 text-xs sm:text-sm truncate flex-1">
+                                      {row.company}
+                                      {formattedRatio !== null && (
+                                        <span className="ml-1.5 text-[10px] font-mono text-green-400/60">
+                                          ({formattedRatio})
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className="text-xs bg-green-800 text-green-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                      Profit
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1 text-[10px]">
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Buy Price:
+                                      </span>
+                                      <span className="text-gray-300 font-medium">
+                                        ৳
+                                        {row.avgBuyPriceWithCommission.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Session Price:
+                                      </span>
+                                      <span className="text-green-400 font-medium">
+                                        ৳{row.sessionPrice.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Quantity:
+                                      </span>
+                                      <span className="text-gray-300">
+                                        {row.remainQtn.toLocaleString()} shares
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-gray-400">
+                                        Target Price:
+                                      </span>
+                                      <span className="text-green-400 font-medium">
+                                        ৳{row.targetPrice.toFixed(2)}
+                                      </span>
+                                    </div>
+                                    {formattedRatio !== null && (
+                                      <div className="flex justify-end">
+                                        <span className="text-[8px] text-gray-500">
+                                          Vol Ratio: {formattedRatio}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="space-y-1 text-[10px]">
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Buy Price:
-                                    </span>
-                                    <span className="text-gray-300 font-medium">
-                                      ৳
-                                      {row.avgBuyPriceWithCommission.toFixed(2)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Session Price:
-                                    </span>
-                                    <span className="text-green-400 font-medium">
-                                      ৳{row.sessionPrice.toFixed(2)}
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Quantity:
-                                    </span>
-                                    <span className="text-gray-300">
-                                      {row.remainQtn.toLocaleString()} shares
-                                    </span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-gray-400">
-                                      Target Price:
-                                    </span>
-                                    <span className="text-green-400 font-medium">
-                                      ৳{row.targetPrice.toFixed(2)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </div>
                       )}
@@ -1021,7 +1162,7 @@ const BuySalePopup = ({
         <div className="border-t border-gray-700 px-3 py-2 flex justify-center bg-gray-800/50">
           <button
             onClick={onClose}
-            className="px-10 py-1.5 bg-blue-800 hover:bg-blue-600 text-white text-xl font-medium rounded-lg transition"
+            className="px-4 py-1 bg-blue-800 hover:bg-blue-600 text-white text-xl font-medium rounded-lg transition"
           >
             Go to Dashboard
           </button>
