@@ -1256,11 +1256,11 @@ const UpdatePrice = () => {
           </button>
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-xl mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+         <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-xl mb-6">
+          <div className="flex items-start justify-between gap-2">
             <div>
               <h2 className="text-sm font-bold text-gray-200 uppercase tracking-wider">
-                📥 Batch Excel Import
+                📥 Excel Import
               </h2>
               <p className="text-xs text-gray-400 mt-0.5">
                 Import multiple records at once via Excel file upload
@@ -1271,17 +1271,17 @@ const UpdatePrice = () => {
                 onClick={downloadExcelTemplate}
                 className="text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all cursor-pointer flex items-center gap-2"
               >
-                <span>📥</span> Download Excel Template
+                <span>📥</span> Template
               </button>
             </div>
           </div>
-
+          
           <div className="mt-4 pt-4 border-t border-gray-800">
             <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
               <label className="block text-sm font-semibold text-gray-300 mb-3">
                 📁 Upload Excel File (.xlsx, .xls)
               </label>
-              <div className="flex items-center gap-1">
+             <div className="flex flex-col gap-2">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1291,7 +1291,7 @@ const UpdatePrice = () => {
                   className="flex-1 text-sm text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 />
                 {excelFileName && (
-                  <span className="text-xs text-emerald-400 font-mono">
+                  <span className="text-sm text-emerald-400 font-mono break-all">
                     ✅ {excelFileName}
                   </span>
                 )}
@@ -1303,6 +1303,7 @@ const UpdatePrice = () => {
               </div>
             </div>
           </div>
+
 
           {comparisonData && comparisonData.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-800">
