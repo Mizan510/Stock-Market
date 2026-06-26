@@ -53,7 +53,7 @@ router.post("/login", async (req, res) => {
   if (user.isActive === false) {
     return res
       .status(403)
-      .json({ message: "Account inactive. Contact administrator." });
+      .json({ message: "Account inactive. Contact administrator with comanfake@gmail.com" });
   }
 
   const valid = await bcrypt.compare(password, user.password);
