@@ -10,6 +10,18 @@ const UserManager = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
+  
+  // State for edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -51,6 +63,10 @@ const UserManager = () => {
             : item,
         ),
       );
+      await alert(
+        `User ${user.isActive ? "deactivated" : "activated"} successfully!`,
+        "success"
+      );
     } catch (error) {
       console.error(error);
       await alert(
@@ -69,11 +85,106 @@ const UserManager = () => {
       setActionLoading(user._id);
       await api.delete(`/users/${user._id}`);
       setUsers((prev) => prev.filter((item) => item._id !== user._id));
+      await alert("User deleted successfully!", "success");
     } catch (error) {
       console.error(error);
       await alert(error.response?.data?.message || "Unable to delete user");
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  // Open edit modal
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setEditFormData({
+      name: user.name || "",
+      email: user.email || "",
+      password: "",
+      confirmPassword: "",
+    });
+    setPasswordError("");
+    setShowEditModal(true);
+  };
+
+  // Close edit modal
+  const handleCloseModal = () => {
+    setShowEditModal(false);
+    setEditingUser(null);
+    setEditFormData({
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
+    setEditLoading(false);
+    setPasswordError("");
+  };
+
+  // Handle form input changes
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear password error when user types
+    if (name === "password" || name === "confirmPassword") {
+      setPasswordError("");
+    }
+  };
+
+  // Submit edit form
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate password if provided
+    if (editFormData.password) {
+      if (editFormData.password.length < 1) {
+        setPasswordError("Password must be at least 6 characters long!");
+        return;
+      }
+      if (editFormData.password !== editFormData.confirmPassword) {
+        setPasswordError("Passwords do not match!");
+        return;
+      }
+    }
+
+    try {
+      setEditLoading(true);
+      
+      const updateData = {
+        name: editFormData.name,
+        email: editFormData.email,
+      };
+      
+      // Only include password if it's provided
+      if (editFormData.password) {
+        updateData.password = editFormData.password;
+      }
+      
+      const response = await api.put(`/users/${editingUser._id}`, updateData);
+      
+      // Update user in the list
+      setUsers((prev) =>
+        prev.map((item) =>
+          item._id === editingUser._id
+            ? { ...item, ...response.data.data }
+            : item,
+        ),
+      );
+      
+      await alert("User updated successfully!", "success");
+      handleCloseModal();
+    } catch (error) {
+      console.error("Update error:", error);
+      const message = error.response?.data?.message || "Unable to update user";
+      await alert(message);
+      
+      // If email is already taken, focus on email field
+      if (message.includes("Email already in use")) {
+        document.getElementById("edit-email")?.focus();
+      }
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -182,6 +293,13 @@ const UserManager = () => {
                       <div className="flex items-center justify-end gap-2 flex-nowrap whitespace-nowrap">
                         <button
                           disabled={actionLoading === user._id}
+                          onClick={() => handleEditUser(user)}
+                          className="rounded-2xl border border-blue-600 bg-blue-600/20 px-3 py-2 text-xs font-semibold text-blue-400 hover:bg-blue-600 hover:text-white transition disabled:opacity-50 whitespace-nowrap"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          disabled={actionLoading === user._id}
                           onClick={() => handleToggleActive(user)}
                           className="rounded-2xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:border-white transition disabled:opacity-50 whitespace-nowrap"
                         >
@@ -207,6 +325,128 @@ const UserManager = () => {
           </table>
         </div>
       </div>
+
+      {/* Edit User Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+            <div className="border-b border-slate-800 px-6 py-4">
+              <h3 className="text-xl font-bold text-white">
+                Edit User: {editingUser?.name}
+              </h3>
+              <p className="text-sm text-slate-400 mt-1">
+                Update user information. Leave password fields empty to keep current password.
+              </p>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+              {/* Name Field */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Full Name *
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={editFormData.name}
+                  onChange={handleEditChange}
+                  required
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Email Field */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  Email Address *
+                </label>
+                <input
+                  id="edit-email"
+                  type="email"
+                  name="email"
+                  value={editFormData.email}
+                  onChange={handleEditChange}
+                  required
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Password Field */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1">
+                  New Password
+                  <span className="text-slate-500 text-xs ml-2">
+                    (leave blank to keep current)
+                  </span>
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={editFormData.password}
+                  onChange={handleEditChange}
+                  placeholder="Enter new password"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Confirm Password Field */}
+              {editFormData.password && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={editFormData.confirmPassword}
+                    onChange={handleEditChange}
+                    placeholder="Confirm new password"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              {/* Password Error */}
+              {passwordError && (
+                <div className="bg-rose-950/30 border border-rose-800/50 rounded-lg p-3">
+                  <p className="text-rose-400 text-sm flex items-center gap-2">
+                    <span>⚠️</span> {passwordError}
+                  </p>
+                </div>
+              )}
+
+              {/* Modal Actions */}
+              <div className="flex gap-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  disabled={editLoading}
+                  className="flex-1 rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 transition disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {editLoading ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Updating...
+                    </>
+                  ) : (
+                    "Update User"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
