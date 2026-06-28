@@ -17,7 +17,6 @@ const BuySalePopup = ({
   
   // State for section visibility - all hidden by default
   const [showYearlyLow, setShowYearlyLow] = useState(false);
-  const [showPivot, setShowPivot] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
 
   const cleanString = (str) =>
@@ -288,21 +287,8 @@ const BuySalePopup = ({
     );
   });
 
-  // Pivot Point Buy - Uses pivot from database
-  const pivotBuyList = buyRows.filter((row) => {
-    const currentPrice = parseNumber(row.closingPrice);
-    // Get pivot from database
-    const pivotValue = row.pivot || pivotData[row.company];
-
-    return (
-      currentPrice !== undefined &&
-      pivotValue !== undefined &&
-      currentPrice > pivotValue
-    );
-  });
-
-  // Create a set of pivot buy company names for highlighting
-  const pivotCompanySet = new Set(pivotBuyList.map((row) => row.company));
+  // Create a set of yearly low buy company names for highlighting
+  const yearlyLowCompanySet = new Set(yearlyLowBuyList.map((row) => row.company));
 
   // Volume Signal Buy - Uses volume signal from database with highlight check
   const volumeBuyListWithHighlight = buyRows
@@ -321,7 +307,8 @@ const BuySalePopup = ({
     })
     .map((row) => ({
       ...row,
-      isHighlighted: pivotCompanySet.has(row.company),
+      // Highlight if stock is in Yearly Low Buy list
+      isHighlighted: yearlyLowCompanySet.has(row.company),
     }));
 
   // Ready for Buy - Only STRONG BUYER and VERY STRONG BUYER
@@ -334,7 +321,8 @@ const BuySalePopup = ({
     })
     .map((row) => ({
       ...row,
-      isHighlighted: pivotCompanySet.has(row.company),
+      // Highlight if stock is in Yearly Low Buy list
+      isHighlighted: yearlyLowCompanySet.has(row.company),
     }));
 
   const redSaleList = saleRows.filter(
@@ -417,7 +405,6 @@ const BuySalePopup = ({
 
   // Toggle functions
   const toggleYearlyLow = () => setShowYearlyLow(!showYearlyLow);
-  const togglePivot = () => setShowPivot(!showPivot);
   const toggleVolume = () => setShowVolume(!showVolume);
 
   // Helper function to format volume ratio as decimal (no % sign)
@@ -615,7 +602,7 @@ const BuySalePopup = ({
                   </div>
 
                   <div className="space-y-4">
-                    {/* Yearly Low Buy Section - TOP - Collapsible */}
+                    {/* Yearly Low Buy Section - Collapsible */}
                     <div>
                       <div 
                         className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
@@ -706,93 +693,7 @@ const BuySalePopup = ({
                       )}
                     </div>
 
-                    {/* Pivot Point Buy Section - MIDDLE - Collapsible */}
-                    <div>
-                      <div 
-                        className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
-                        onClick={togglePivot}
-                      >
-                        <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-                        <h3 className="font-semibold text-gray-200 text-xs sm:text-sm">
-                          📊 Pivot Point Buy
-                        </h3>
-                        {pivotBuyList.length > 0 && (
-                          <span className="text-xs bg-blue-900 text-blue-300 px-1.5 py-0.5 rounded-full">
-                            {pivotBuyList.length}
-                          </span>
-                        )}
-                        <span className="ml-auto text-gray-500 text-xs">
-                          {showPivot ? '▼' : '▶'}
-                        </span>
-                      </div>
-
-                      {showPivot && (
-                        <>
-                          {pivotBuyList.length === 0 ? (
-                            <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                              <p className="text-gray-500 text-xs">
-                                No pivot buy signals
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="space-y-1.5">
-                              {pivotBuyList.map((row, idx) => {
-                                const currentPrice = parseNumber(row.closingPrice);
-                                const pivotValue =
-                                  row.pivot || pivotData[row.company];
-                                // Get volume ratio using helper
-                                const volumeRatio = getVolumeRatio(row);
-                                const formattedRatio = formatVolumeRatio(volumeRatio);
-
-                                return (
-                                  <div
-                                    key={idx}
-                                    className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-2 hover:bg-blue-900/30 transition-colors"
-                                  >
-                                    <div className="flex justify-between items-start mb-1">
-                                      <span className="font-semibold text-blue-300 text-xs sm:text-sm truncate flex-1">
-                                        {row.company}
-                                        {formattedRatio !== null && (
-                                          <span className="ml-1.5 text-[10px] font-mono text-blue-400/60">
-                                            ({formattedRatio})
-                                          </span>
-                                        )}
-                                      </span>
-                                      <span className="text-xs bg-blue-800 text-blue-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
-                                        Buy
-                                      </span>
-                                    </div>
-                                    <div className="flex justify-between text-[10px] mt-1">
-                                      <span className="text-gray-400">
-                                        Current:{" "}
-                                        <span className="text-gray-300 font-medium">
-                                          ৳{currentPrice?.toFixed(2)}
-                                        </span>
-                                      </span>
-                                      <span className="text-blue-300">
-                                        Pivot:{" "}
-                                        <span className="font-medium">
-                                          ৳{pivotValue?.toFixed(2)}
-                                        </span>
-                                      </span>
-                                    </div>
-                                    {formattedRatio !== null && (
-                                      <div className="flex justify-end mt-0.5">
-                                        <span className="text-[8px] text-gray-500">
-                                          Vol Ratio: {formattedRatio}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </div>
-
-                    {/* Volume Signal Buy Section - BOTTOM with Highlight - Collapsible */}
+                    {/* Volume Signal Buy Section with Highlight - Collapsible */}
                     <div>
                       <div className="flex flex-col gap-1 mb-2">
                         <div 
