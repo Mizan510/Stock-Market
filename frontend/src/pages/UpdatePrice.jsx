@@ -17,7 +17,7 @@ const UpdatePrice = () => {
   const [loading, setLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [zoneData, setZoneData] = useState([]);
-  const [showReport, setShowReport] = useState(true); // CHANGED: default to true
+  const [showReport, setShowReport] = useState(true);
   const [isNewCompany, setIsNewCompany] = useState(false);
   const [excelPreviewData, setExcelPreviewData] = useState(null);
   const [excelFileName, setExcelFileName] = useState("");
@@ -34,6 +34,8 @@ const UpdatePrice = () => {
     high: "",
     todayVolume: "",
     avgVolume1M: "",
+    ma20: "",
+    rsi14: "",
   });
 
   // Helper function to convert company names to uppercase
@@ -42,7 +44,7 @@ const UpdatePrice = () => {
     return name.toUpperCase().trim();
   };
 
-  // Helper function to round avg volume - FIX 1: Round avg volume
+  // Helper function to round avg volume
   const roundAvgVolume = (value) => {
     if (value === null || value === undefined || isNaN(value)) return null;
     return Math.round(value);
@@ -137,8 +139,9 @@ const UpdatePrice = () => {
             low: item.low || null,
             high: item.high || null,
             todayVolume: item.todayVolume || null,
-            // FIX 1: Round avgVolume1M when loading
             avgVolume1M: roundAvgVolume(item.avgVolume1M),
+            ma20: item.ma20 !== undefined ? item.ma20 : null,
+            rsi14: item.rsi14 !== undefined ? item.rsi14 : null,
           };
           return {
             ...dataWithIndicators,
@@ -152,8 +155,7 @@ const UpdatePrice = () => {
           ...new Set(uppercasedZoneList.map((item) => item.company)),
         ].sort();
         setCompanies(uniqueCompanies);
-        
-        // FIX 3: Show table by default
+
         setShowReport(true);
       } catch (err) {
         console.error(err);
@@ -207,6 +209,8 @@ const UpdatePrice = () => {
         avgVolume1M: existingCompany.avgVolume1M
           ? String(existingCompany.avgVolume1M)
           : "",
+        ma20: existingCompany.ma20 ? String(existingCompany.ma20) : "",
+        rsi14: existingCompany.rsi14 ? String(existingCompany.rsi14) : "",
         _id: existingCompany._id,
       });
     }
@@ -292,6 +296,20 @@ const UpdatePrice = () => {
           field: "1Y Low",
           old: existing.low,
           new: uploaded.low,
+        });
+      }
+      if (Number(uploaded.ma20 || 0) !== Number(existing.ma20 || 0)) {
+        mismatches.push({
+          field: "MA20",
+          old: existing.ma20,
+          new: uploaded.ma20,
+        });
+      }
+      if (Number(uploaded.rsi14 || 0) !== Number(existing.rsi14 || 0)) {
+        mismatches.push({
+          field: "RSI14",
+          old: existing.rsi14,
+          new: uploaded.rsi14,
         });
       }
       if (Number(uploaded.high) !== Number(existing.high)) {
@@ -452,8 +470,11 @@ const UpdatePrice = () => {
         const yearLow = parseNum(oneYLow);
         const yearHigh = parseNum(oneYHigh);
         const volume = parseNum(todayVol);
-        // FIX 1: Round avg volume when processing Excel
         const avgVolume = roundAvgVolume(parseNum(avgVol));
+
+        const rawMa20 = item["MA20"] ?? item["MA 20"] ?? item["MA_20"] ?? null;
+        const rawRsi14 =
+          item["RSI14"] ?? item["RSI 14"] ?? item["RSI_14"] ?? null;
 
         const data = {
           company: compName,
@@ -464,6 +485,8 @@ const UpdatePrice = () => {
           high: yearHigh,
           todayVolume: volume,
           avgVolume1M: avgVolume,
+          ma20: rawMa20 !== null ? parseNum(rawMa20) : null,
+          rsi14: rawRsi14 !== null ? parseNum(rawRsi14) : null,
           _processed: true,
         };
 
@@ -529,9 +552,9 @@ const UpdatePrice = () => {
         const companyKey = item.company.toLowerCase();
         const existingItem = updatedZoneMap.get(companyKey);
 
-        // FIX 1: Round avg volume before saving
+        // FIX: Round avg volume before saving
         const roundedAvgVolume = roundAvgVolume(item.avgVolume1M);
-        
+
         // Calculate indicators for the payload
         const payloadData = {
           ...item,
@@ -548,11 +571,13 @@ const UpdatePrice = () => {
           high: item.high,
           todayVolume: item.todayVolume,
           avgVolume1M: roundedAvgVolume,
+          ma20: item.ma20 ?? null,
+          rsi14: item.rsi14 ?? null,
           pivotPoint: indicators.pivot,
           r1: indicators.r1,
           s1: indicators.s1,
           volRatio: indicators.volRatio,
-          pivotSignal: indicators.pivotSignal,
+          originalSignal: indicators.pivotSignal,
           customSignal: indicators.customSignal,
         };
 
@@ -635,10 +660,10 @@ const UpdatePrice = () => {
         formData.closingPrice !== "" ? Number(formData.closingPrice) : null;
       const volume =
         formData.todayVolume !== "" ? Number(formData.todayVolume) : null;
-      // FIX 1: Round avg volume when submitting
-      const avgVolume = formData.avgVolume1M !== "" 
-        ? roundAvgVolume(Number(formData.avgVolume1M)) 
-        : null;
+      const avgVolume =
+        formData.avgVolume1M !== ""
+          ? roundAvgVolume(Number(formData.avgVolume1M))
+          : null;
 
       const data = {
         todaysHigh: h,
@@ -657,11 +682,13 @@ const UpdatePrice = () => {
       const payload = {
         company: uppercasedCompany,
         ...data,
+        ma20: formData.ma20 !== "" ? Number(formData.ma20) : null,
+        rsi14: formData.rsi14 !== "" ? Number(formData.rsi14) : null,
         pivotPoint: indicators.pivot,
         r1: indicators.r1,
         s1: indicators.s1,
         volRatio: indicators.volRatio,
-        pivotSignal: indicators.pivotSignal,
+        originalSignal: indicators.pivotSignal,
         customSignal: indicators.customSignal,
       };
 
@@ -740,6 +767,8 @@ const UpdatePrice = () => {
       high: "",
       todayVolume: "",
       avgVolume1M: "",
+      ma20: "",
+      rsi14: "",
       _id: undefined,
     });
     setIsNewCompany(false);
@@ -756,6 +785,8 @@ const UpdatePrice = () => {
       high: item.high ? String(item.high) : "",
       todayVolume: item.todayVolume ? String(item.todayVolume) : "",
       avgVolume1M: item.avgVolume1M ? String(item.avgVolume1M) : "",
+      ma20: item.ma20 ? String(item.ma20) : "",
+      rsi14: item.rsi14 ? String(item.rsi14) : "",
       _id: item._id,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -795,6 +826,8 @@ const UpdatePrice = () => {
         { header: "Session Close", key: "session_close", width: 16 },
         { header: "Today Volume", key: "today_volume", width: 16 },
         { header: "Avg Volume (1M)", key: "avg_volume", width: 16 },
+        { header: "MA 20", key: "ma20", width: 12 },
+        { header: "RSI 14", key: "rsi14", width: 12 },
       ];
 
       ws.addRow({
@@ -806,6 +839,8 @@ const UpdatePrice = () => {
         session_close: 150.6,
         today_volume: 2500000,
         avg_volume: 1500000,
+        ma20: 120.5,
+        rsi14: 45.6,
       });
 
       ws.addRow({
@@ -817,6 +852,8 @@ const UpdatePrice = () => {
         session_close: 145.8,
         today_volume: 3200000,
         avg_volume: 1800000,
+        ma20: 110.2,
+        rsi14: 52.1,
       });
 
       const headerRow = ws.getRow(1);
@@ -865,7 +902,10 @@ const UpdatePrice = () => {
               right: { style: "thin", color: { argb: "FFD9D9D9" } },
             };
 
-            if (colNumber > 1 && colNumber <= 6) {
+            if (
+              colNumber > 1 &&
+              (colNumber <= 6 || colNumber === 9 || colNumber === 10)
+            ) {
               cell.numFmt = "0.00";
             } else if (colNumber > 6) {
               cell.numFmt = "#,##0";
@@ -955,6 +995,8 @@ const UpdatePrice = () => {
         { header: "Session Close", key: "session_close", width: 16 },
         { header: "Today Volume", key: "today_volume", width: 16 },
         { header: "Avg Volume (1M)", key: "avg_volume", width: 16 },
+        { header: "MA 20", key: "ma20", width: 12 },
+        { header: "RSI 14", key: "rsi14", width: 12 },
         { header: "Pivot Point", key: "pivot", width: 16 },
         { header: "Resistance (R1)", key: "r1", width: 16 },
         { header: "Support (S1)", key: "s1", width: 16 },
@@ -980,8 +1022,11 @@ const UpdatePrice = () => {
             ? Number(Number(item.closingPrice).toFixed(2))
             : null,
           today_volume: item.todayVolume ? Number(item.todayVolume) : null,
-          // FIX 1: Round avg volume in export
-          avg_volume: item.avgVolume1M ? Number(roundAvgVolume(item.avgVolume1M)) : null,
+          avg_volume: item.avgVolume1M
+            ? Number(roundAvgVolume(item.avgVolume1M))
+            : null,
+          ma20: item.ma20 ? Number(Number(item.ma20).toFixed(2)) : null,
+          rsi14: item.rsi14 ? Number(Number(item.rsi14).toFixed(2)) : null,
           pivot: item.pivotPoint
             ? Number(Number(item.pivotPoint).toFixed(2))
             : null,
@@ -990,7 +1035,7 @@ const UpdatePrice = () => {
           vol_ratio: item.volRatio
             ? Number(Number(item.volRatio).toFixed(2))
             : null,
-          pivot_signal: item.pivotSignal || "Neutral",
+          pivot_signal: item.originalSignal || "Neutral",
           custom_signal: item.customSignal || "Neutral",
         });
       });
@@ -1027,8 +1072,8 @@ const UpdatePrice = () => {
         if (rowNumber > 1) {
           row.height = 24;
 
-          const pivotSignal = row.getCell(13).value;
-          const customSignal = row.getCell(14).value;
+          const pivotSignal = row.getCell(15).value;
+          const customSignal = row.getCell(16).value;
 
           row.eachCell((cell, colNumber) => {
             if (typeof cell.value === "string") {
@@ -1056,7 +1101,7 @@ const UpdatePrice = () => {
               cell.numFmt = "0.00";
             } else if (colNumber >= 7 && colNumber <= 8) {
               cell.numFmt = "#,##0";
-            } else if (colNumber >= 9 && colNumber <= 12) {
+            } else if (colNumber >= 11 && colNumber <= 14) {
               cell.numFmt = "0.00";
             }
 
@@ -1090,21 +1135,21 @@ const UpdatePrice = () => {
                 pattern: "solid",
                 fgColor: { argb: "FFFDEBD0" },
               };
-            } else if (colNumber >= 9 && colNumber <= 11) {
+            } else if (colNumber >= 11 && colNumber <= 13) {
               // Pivot, R1, S1 - Light purple
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
                 fgColor: { argb: "FFE8DAEF" },
               };
-            } else if (colNumber === 12) {
+            } else if (colNumber === 14) {
               // Volume Ratio - Light cyan
               cell.fill = {
                 type: "pattern",
                 pattern: "solid",
                 fgColor: { argb: "FFD4F1F9" },
               };
-            } else if (colNumber === 13) {
+            } else if (colNumber === 15) {
               // Pivot Signal - Color coded
               cell.alignment = { horizontal: "center", vertical: "middle" };
               cell.font = { ...cell.font, bold: true, size: 11 };
@@ -1134,7 +1179,7 @@ const UpdatePrice = () => {
                 };
                 cell.font.color = { argb: "FF9C6500" };
               }
-            } else if (colNumber === 14) {
+            } else if (colNumber === 16) {
               // Custom Signal - Color coded
               cell.alignment = { horizontal: "center", vertical: "middle" };
               cell.font = { ...cell.font, bold: true, size: 11 };
@@ -1277,7 +1322,7 @@ const UpdatePrice = () => {
           </button>
         </div>
 
-         <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-xl mb-6">
+        <div className="bg-gray-900 border border-gray-800 p-4 rounded-xl shadow-xl mb-6">
           <div className="flex items-start justify-between gap-2">
             <div>
               <h2 className="text-sm font-bold text-gray-200 uppercase tracking-wider">
@@ -1296,13 +1341,13 @@ const UpdatePrice = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="mt-4 pt-4 border-t border-gray-800">
             <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
               <label className="block text-sm font-semibold text-gray-300 mb-3">
                 📁 Upload Excel File (.xlsx, .xls)
               </label>
-             <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1324,7 +1369,6 @@ const UpdatePrice = () => {
               </div>
             </div>
           </div>
-
 
           {comparisonData && comparisonData.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-800">
@@ -1558,9 +1602,37 @@ const UpdatePrice = () => {
                 className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
               />
             </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">
+                MA 20
+              </label>
+              <input
+                type="number"
+                name="ma20"
+                placeholder="0.00"
+                value={formData.ma20}
+                onChange={handleChange}
+                step="0.01"
+                className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-400 mb-1.5">
+                RSI 14
+              </label>
+              <input
+                type="number"
+                name="rsi14"
+                placeholder="0.0"
+                value={formData.rsi14}
+                onChange={handleChange}
+                step="0.1"
+                className="w-full p-2 bg-gray-950 border border-gray-800 rounded-lg text-sm text-white focus:border-blue-500 focus:outline-none"
+              />
+            </div>
           </div>
 
-          {/* FIX 2: Buttons in one line with left, middle, right positioning */}
+          {/* Buttons in one line */}
           <div className="flex flex-row gap-3 pt-2">
             <button
               onClick={handleSubmit}
@@ -1593,7 +1665,7 @@ const UpdatePrice = () => {
           </div>
         </div>
 
-        {/* FIX 3: Table shows by default (showReport is true) */}
+        {/* Table shows by default */}
         {showReport && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-2xl overflow-hidden">
             <div className="flex items-start justify-between gap-2">
@@ -1649,6 +1721,12 @@ const UpdatePrice = () => {
                     </th>
                     <th className="p-2.5 font-semibold text-right text-amber-400 whitespace-nowrap">
                       Avg Volume (1M)
+                    </th>
+                    <th className="p-2.5 font-semibold text-right text-yellow-300 whitespace-nowrap">
+                      MA 20
+                    </th>
+                    <th className="p-2.5 font-semibold text-right text-pink-300 whitespace-nowrap">
+                      RSI 14
                     </th>
                     <th className="p-2.5 font-semibold text-right text-purple-400 whitespace-nowrap">
                       Pivot Point
@@ -1763,6 +1841,20 @@ const UpdatePrice = () => {
                                 ? Number(item.avgVolume1M).toLocaleString()
                                 : "-"}
                             </td>
+                            <td
+                              className={`p-2.5 text-right font-mono ${getCellClass("ma20", item.ma20)}`}
+                            >
+                              {item.ma20 !== undefined && item.ma20 !== null
+                                ? Number(item.ma20).toFixed(2)
+                                : "-"}
+                            </td>
+                            <td
+                              className={`p-2.5 text-right font-mono ${getCellClass("rsi14", item.rsi14)}`}
+                            >
+                              {item.rsi14 !== undefined && item.rsi14 !== null
+                                ? Number(item.rsi14).toFixed(1)
+                                : "-"}
+                            </td>
                             <td className="p-2.5 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
                               {item.pivotPoint
                                 ? Number(item.pivotPoint).toFixed(2)
@@ -1781,9 +1873,9 @@ const UpdatePrice = () => {
                             </td>
                             <td className="p-2.5 text-center whitespace-nowrap">
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getPivotSignalStyle(item.pivotSignal)}`}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getPivotSignalStyle(item.originalSignal)}`}
                               >
-                                {item.pivotSignal || "Neutral"}
+                                {item.originalSignal || "Neutral"}
                               </span>
                             </td>
                             <td className="p-2.5 text-center whitespace-nowrap">
@@ -1862,6 +1954,16 @@ const UpdatePrice = () => {
                                 ? Number(item.avgVolume1M).toLocaleString()
                                 : "-"}
                             </td>
+                            <td className="p-2.5 text-right font-mono text-yellow-300">
+                              {item.ma20 !== undefined && item.ma20 !== null
+                                ? Number(item.ma20).toFixed(2)
+                                : "-"}
+                            </td>
+                            <td className="p-2.5 text-right font-mono text-pink-300">
+                              {item.rsi14 !== undefined && item.rsi14 !== null
+                                ? Number(item.rsi14).toFixed(1)
+                                : "-"}
+                            </td>
                             <td className="p-2.5 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
                               {item.pivotPoint
                                 ? Number(item.pivotPoint).toFixed(2)
@@ -1880,9 +1982,9 @@ const UpdatePrice = () => {
                             </td>
                             <td className="p-2.5 text-center whitespace-nowrap">
                               <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getPivotSignalStyle(item.pivotSignal)}`}
+                                className={`px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${getPivotSignalStyle(item.originalSignal)}`}
                               >
-                                {item.pivotSignal || "Neutral"}
+                                {item.originalSignal || "Neutral"}
                               </span>
                             </td>
                             <td className="p-2.5 text-center whitespace-nowrap">

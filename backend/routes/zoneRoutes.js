@@ -25,9 +25,9 @@ const calculateIndicators = (data) => {
 
   if (h !== null && l !== null && c !== null) {
     pivot = parseFloat(((h + l + c) / 3).toFixed(2));
-    r1 = parseFloat(((2 * pivot) - l).toFixed(2));
-    s1 = parseFloat(((2 * pivot) - h).toFixed(2));
-    
+    r1 = parseFloat((2 * pivot - l).toFixed(2));
+    s1 = parseFloat((2 * pivot - h).toFixed(2));
+
     if (c > pivot) originalSignal = "Bullish";
     else if (c < pivot) originalSignal = "Bearish";
   }
@@ -36,9 +36,15 @@ const calculateIndicators = (data) => {
     volRatio = parseFloat((volume / avgVolume).toFixed(2));
   }
 
-  if (c !== null && pivot !== null && r1 !== null && s1 !== null && volRatio !== null) {
+  if (
+    c !== null &&
+    pivot !== null &&
+    r1 !== null &&
+    s1 !== null &&
+    volRatio !== null
+  ) {
     const priceDiffPercent = Math.abs((c - pivot) / pivot);
-    
+
     if (priceDiffPercent <= 0.005) {
       customSignal = "Neutral";
     } else if (c > r1 && volRatio > 2) {
@@ -70,14 +76,25 @@ const buildZoneData = (data) => {
 
   // Include ALL fields including volume
   const fields = [
-    "low", "high", "buyPercent", "sellPercent", 
-    "todaysHigh", "todaysLow", "closingPrice",
-    "todayVolume", "avgVolume1M"  // THESE MUST BE INCLUDED
+    "low",
+    "high",
+    "buyPercent",
+    "sellPercent",
+    "todaysHigh",
+    "todaysLow",
+    "closingPrice",
+    "todayVolume",
+    "avgVolume1M",
+    "ma20",
+    "rsi14",
   ];
-  
+
   fields.forEach((key) => {
-    const value = parseNumber(data[key]);
-    if (value !== null) zoneData[key] = value;
+    if (Object.prototype.hasOwnProperty.call(data, key)) {
+      // Allow explicit nulls so client can clear values
+      const value = parseNumber(data[key]);
+      zoneData[key] = value;
+    }
   });
 
   // Calculate indicators
@@ -86,7 +103,7 @@ const buildZoneData = (data) => {
     todaysLow: zoneData.todaysLow,
     closingPrice: zoneData.closingPrice,
     todayVolume: zoneData.todayVolume,
-    avgVolume1M: zoneData.avgVolume1M
+    avgVolume1M: zoneData.avgVolume1M,
   });
 
   Object.assign(zoneData, indicators);
@@ -109,11 +126,11 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const zoneData = buildZoneData(req.body);
-    
+
     const existingZone = await Zone.findOne({ company: zoneData.company });
     if (existingZone) {
-      return res.status(400).json({ 
-        message: "Company already exists. Please use PUT to update." 
+      return res.status(400).json({
+        message: "Company already exists. Please use PUT to update.",
       });
     }
 
@@ -130,17 +147,16 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const zoneData = buildZoneData(req.body);
-    
-    const zone = await Zone.findByIdAndUpdate(
-      req.params.id,
-      zoneData,
-      { new: true, runValidators: true }
-    );
-    
+
+    const zone = await Zone.findByIdAndUpdate(req.params.id, zoneData, {
+      new: true,
+      runValidators: true,
+    });
+
     if (!zone) {
       return res.status(404).json({ message: "Zone not found" });
     }
-    
+
     res.json(zone);
   } catch (err) {
     console.error("Error updating zone:", err);
