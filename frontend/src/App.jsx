@@ -19,6 +19,7 @@ import Reports from "./pages/Reports";
 import Expense from "./pages/Expense";
 import LBSLReport from "./pages/LBSLReport";
 import UpdatePrice from "./pages/UpdatePrice";
+import DynamicWatchlist from "./pages/DynamicWatchlist";
 
 const App = () => {
   return (
@@ -45,6 +46,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <BuyZone />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dynamic-watchlist"
+          element={
+            <ProtectedRoute>
+              <DynamicWatchlist />
             </ProtectedRoute>
           }
         />
