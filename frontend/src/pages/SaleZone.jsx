@@ -49,16 +49,12 @@ const SaleZone = () => {
             )
               .trim()
               .toUpperCase();
-            
+
             if (company) {
               const sessionClose = Number(
-                z.closingPrice ??
-                z.close ??
-                z.sessionClose ??
-                z.price ??
-                null
+                z.closingPrice ?? z.close ?? z.sessionClose ?? z.price ?? null,
               );
-              
+
               zoneMap.set(company, {
                 sessionClose: !isNaN(sessionClose) ? sessionClose : null,
                 sessionLow: z.todaysLow ?? z.sessionLow ?? z.low ?? null,
@@ -165,7 +161,10 @@ const SaleZone = () => {
                 existing.totalCommission += trade.price * trade.qty * 0.004;
                 existing.weightedSlPercentSum += trade.slPercent * trade.qty;
                 existing.weightedTpPercentSum += trade.tpPercent * trade.qty;
-                if (existing.closingPrice === null && trade.closingPrice !== null) {
+                if (
+                  existing.closingPrice === null &&
+                  trade.closingPrice !== null
+                ) {
                   existing.closingPrice = trade.closingPrice;
                 }
               } else {
@@ -217,7 +216,18 @@ const SaleZone = () => {
             },
           );
 
-          setTrades(finalMergedTrades);
+          // Sort trades so that items with remainQty > 0 come first,
+          // and within those, sort by remainQty descending. Items with
+          // remainQty === 0 will be pushed to the bottom.
+          const sortedTrades = finalMergedTrades.sort((a, b) => {
+            const aHas = (a.remainQty || 0) > 0;
+            const bHas = (b.remainQty || 0) > 0;
+            if (aHas !== bHas) return aHas ? -1 : 1;
+            // both same group: sort by remainQty descending
+            return (b.remainQty || 0) - (a.remainQty || 0);
+          });
+
+          setTrades(sortedTrades);
         }
       } catch (err) {
         console.error("Error cross-referencing session matrices:", err);
@@ -239,7 +249,8 @@ const SaleZone = () => {
               Sale Zone
             </h1>
             <p className="mt-0.5 text-[0.7rem] font-semibold tracking-wide bg-linear-to-r from-red-400 via-gray-300 to-emerald-400 bg-clip-text text-transparent inline-block">
-              Red = Loss Sale | Green = Profit Sale | White = Middle Range (Active Only)
+              Red = Loss Sale | Green = Profit Sale | White = Middle Range
+              (Active Only)
             </p>
           </div>
 
@@ -308,7 +319,11 @@ const SaleZone = () => {
                   let companyColorClass = "text-white";
 
                   // Determine row/company color based on session close vs SL/TP
-                  if (t.remainQty > 0 && t.closingPrice !== null && !isNaN(t.closingPrice)) {
+                  if (
+                    t.remainQty > 0 &&
+                    t.closingPrice !== null &&
+                    !isNaN(t.closingPrice)
+                  ) {
                     if (t.closingPrice <= t.slPrice) {
                       companyColorClass = "text-red-500 font-black";
                     } else if (t.closingPrice >= t.tpPrice) {
@@ -316,10 +331,16 @@ const SaleZone = () => {
                     }
                   }
 
-                  const stickyBg = t.remainQty > 0 && t.closingPrice !== null && !isNaN(t.closingPrice)
-                    ? (t.closingPrice <= t.slPrice ? "bg-red-950/20" :
-                       (t.closingPrice >= t.tpPrice ? "bg-emerald-950/20" : "bg-gray-900/30"))
-                    : "bg-gray-900/30";
+                  const stickyBg =
+                    t.remainQty > 0 &&
+                    t.closingPrice !== null &&
+                    !isNaN(t.closingPrice)
+                      ? t.closingPrice <= t.slPrice
+                        ? "bg-red-950/20"
+                        : t.closingPrice >= t.tpPrice
+                          ? "bg-emerald-950/20"
+                          : "bg-gray-900/30"
+                      : "bg-gray-900/30";
 
                   return (
                     <tr
