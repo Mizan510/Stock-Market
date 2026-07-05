@@ -1852,7 +1852,7 @@ const UpdatePrice = () => {
                               className={`p-2.5 text-right font-mono ${getCellClass("rsi14", item.rsi14)}`}
                             >
                               {item.rsi14 !== undefined && item.rsi14 !== null
-                                ? Number(item.rsi14).toFixed(1)
+                                ? Number(item.rsi14).toFixed(2)
                                 : "-"}
                             </td>
                             <td className="p-2.5 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
@@ -1961,7 +1961,7 @@ const UpdatePrice = () => {
                             </td>
                             <td className="p-2.5 text-right font-mono text-pink-300">
                               {item.rsi14 !== undefined && item.rsi14 !== null
-                                ? Number(item.rsi14).toFixed(1)
+                                ? Number(item.rsi14).toFixed(2)
                                 : "-"}
                             </td>
                             <td className="p-2.5 text-right font-mono text-purple-400 font-bold bg-purple-950/10">
