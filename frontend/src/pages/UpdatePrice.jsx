@@ -57,6 +57,8 @@ const UpdatePrice = () => {
     const c = parseFloat(data.closingPrice);
     const volume = parseFloat(data.todayVolume);
     const avgVolume = parseFloat(data.avgVolume1M);
+    const ma20 = parseFloat(data.ma20);
+    const rsi14 = parseFloat(data.rsi14);
 
     let pivot = null;
     let r1 = null;
@@ -88,26 +90,80 @@ const UpdatePrice = () => {
       volRatio = parseFloat((volume / avgVolume).toFixed(2));
     }
 
-    // Calculate Custom Signal - requires all values
-    if (c && pivot && r1 && s1 && volRatio) {
+    // Enhanced Custom Signal Logic with MA20 and RSI14
+    if (
+      c &&
+      pivot &&
+      r1 &&
+      s1 &&
+      volRatio !== null &&
+      ma20 !== null &&
+      rsi14 !== null
+    ) {
       const priceDiffPercent = Math.abs((c - pivot) / pivot);
 
+      // Check if price is near pivot (within 0.5%)
       if (priceDiffPercent <= 0.005) {
         customSignal = "Neutral";
-      } else if (c > r1 && volRatio > 2) {
+      }
+      // Check for Overbought (RSI >= 70)
+      else if (rsi14 >= 70) {
+        customSignal = "Overbought (High Risk)";
+      }
+      // Check for Oversold (RSI <= 30)
+      else if (rsi14 <= 30) {
+        customSignal = "Oversold (Watch Bounce)";
+      }
+      // Very Strong Buyer: Close > R1, Vol Ratio >= 2, Close > MA20, RSI >= 55
+      else if (c > r1 && volRatio >= 2 && c > ma20 && rsi14 >= 55) {
         customSignal = "Very Strong Buyer";
-      } else if (c > pivot && volRatio > 1.5) {
+      }
+      // Strong Buyer: Close > Pivot, Vol Ratio >= 1.5, Close > MA20, RSI >= 50
+      else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50) {
         customSignal = "Strong Buyer";
-      } else if (c > pivot) {
+      }
+      // Weak Buyer: Close > Pivot, Vol Ratio >= 0.8, Close > MA20
+      else if (c > pivot && volRatio >= 0.8 && c > ma20) {
         customSignal = "Weak Buyer";
-      } else if (c < s1 && volRatio > 2) {
+      }
+      // Very Strong Seller: Close < S1, Vol Ratio >= 2, Close < MA20, RSI <= 45
+      else if (c < s1 && volRatio >= 2 && c < ma20 && rsi14 <= 45) {
         customSignal = "Very Strong Seller";
-      } else if (c < pivot && volRatio > 1.5) {
+      }
+      // Strong Seller: Close < Pivot, Vol Ratio >= 1.5, Close < MA20, RSI <= 50
+      else if (c < pivot && volRatio >= 1.5 && c < ma20 && rsi14 <= 50) {
         customSignal = "Strong Seller";
-      } else if (c < pivot) {
+      }
+      // Weak Seller: Close < Pivot
+      else if (c < pivot) {
         customSignal = "Weak Seller";
-      } else {
+      }
+      // Default
+      else {
         customSignal = "Neutral";
+      }
+    } else {
+      // Fallback: If we don't have all required values, use simpler logic
+      if (c && pivot && r1 && s1 && volRatio) {
+        const priceDiffPercent = Math.abs((c - pivot) / pivot);
+
+        if (priceDiffPercent <= 0.005) {
+          customSignal = "Neutral";
+        } else if (c > r1 && volRatio > 2) {
+          customSignal = "Very Strong Buyer";
+        } else if (c > pivot && volRatio > 1.5) {
+          customSignal = "Strong Buyer";
+        } else if (c > pivot) {
+          customSignal = "Weak Buyer";
+        } else if (c < s1 && volRatio > 2) {
+          customSignal = "Very Strong Seller";
+        } else if (c < pivot && volRatio > 1.5) {
+          customSignal = "Strong Seller";
+        } else if (c < pivot) {
+          customSignal = "Weak Seller";
+        } else {
+          customSignal = "Neutral";
+        }
       }
     }
 
