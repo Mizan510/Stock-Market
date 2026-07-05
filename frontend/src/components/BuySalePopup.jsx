@@ -430,6 +430,15 @@ const BuySalePopup = ({
     return null;
   };
 
+  // Helper function to get RSI 14 for a company
+  const getRSI14 = (row) => {
+    // Get RSI from the row data
+    if (row.rsi14 !== null && row.rsi14 !== undefined) {
+      return row.rsi14;
+    }
+    return null;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2">
       <div className="w-full max-w-5xl max-h-[95vh] bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
@@ -520,9 +529,14 @@ const BuySalePopup = ({
                           const badgeStyle =
                             getVolumeSignalBadge(volumeSignal);
                           const isHighlighted = row.isHighlighted;
-                          // Get volume ratio using helper
+                          // Get Volume Ratio (show this prominently in parentheses)
                           const volumeRatio = getVolumeRatio(row);
                           const formattedRatio = formatVolumeRatio(volumeRatio);
+                          // Get RSI 14 (show this in the info line only)
+                          const rsi14 = getRSI14(row);
+                          const formattedRSI = rsi14 !== null ? rsi14.toFixed(2) : null;
+                          // Check if RSI is above 70 for warning
+                          const isRSIOverbought = rsi14 !== null && rsi14 > 70;
 
                           return (
                             <div
@@ -534,7 +548,7 @@ const BuySalePopup = ({
                               }`}
                             >
                               <div className="flex flex-col gap-1">
-                                {/* Company Name with Volume Ratio - NO % sign */}
+                                {/* Company Name with Volume Ratio in parentheses */}
                                 <div className="flex items-center justify-between w-full">
                                   <span
                                     className={`font-semibold text-xs sm:text-sm ${
@@ -548,7 +562,7 @@ const BuySalePopup = ({
                                       <span className={`ml-1.5 text-[10px] font-mono ${
                                         isHighlighted ? "text-amber-400/80" : "text-amber-400/60"
                                       }`}>
-                                        ({formattedRatio})
+                                        (VR: {formattedRatio})
                                       </span>
                                     )}
                                   </span>
@@ -580,16 +594,17 @@ const BuySalePopup = ({
                                   </span>
                                 </div>
 
-                                {/* Additional info */}
+                                {/* Info line - RSI with warning if above 70 */}
                                 <div className="flex items-center justify-between">
                                   <span
                                     className={signalStyle + " text-[8px]"}
                                   >
                                     Signal: {volumeSignal}
                                   </span>
-                                  {formattedRatio !== null && (
-                                    <span className="text-[8px] text-gray-500">
-                                      Vol Ratio: {formattedRatio}
+                                  {formattedRSI !== null && (
+                                    <span className={`text-[8px] ${isRSIOverbought ? "text-rose-500 font-bold" : "text-gray-500"}`}>
+                                      RSI: {formattedRSI}
+                                      {isRSIOverbought && " ⚠️"}
                                     </span>
                                   )}
                                 </div>
@@ -641,9 +656,14 @@ const BuySalePopup = ({
                                   yearlyHigh,
                                   row.buyPercent,
                                 );
-                                // Get volume ratio using helper
+                                // Get Volume Ratio (show this in parentheses)
                                 const volumeRatio = getVolumeRatio(row);
                                 const formattedRatio = formatVolumeRatio(volumeRatio);
+                                // Get RSI 14 (show this in the info line only)
+                                const rsi14 = getRSI14(row);
+                                const formattedRSI = rsi14 !== null ? rsi14.toFixed(2) : null;
+                                // Check if RSI is above 70 for warning
+                                const isRSIOverbought = rsi14 !== null && rsi14 > 70;
 
                                 return (
                                   <div
@@ -655,7 +675,7 @@ const BuySalePopup = ({
                                         {row.company}
                                         {formattedRatio !== null && (
                                           <span className="ml-1.5 text-[10px] font-mono text-green-400/60">
-                                            ({formattedRatio})
+                                            (VR: {formattedRatio})
                                           </span>
                                         )}
                                       </span>
@@ -677,10 +697,12 @@ const BuySalePopup = ({
                                         </span>
                                       </span>
                                     </div>
-                                    {formattedRatio !== null && (
+                                    {/* Info line - RSI with warning if above 70 */}
+                                    {formattedRSI !== null && (
                                       <div className="flex justify-end mt-0.5">
-                                        <span className="text-[8px] text-gray-500">
-                                          Vol Ratio: {formattedRatio}
+                                        <span className={`text-[8px] ${isRSIOverbought ? "text-rose-500 font-bold" : "text-gray-500"}`}>
+                                          RSI: {formattedRSI}
+                                          {isRSIOverbought && " ⚠️"}
                                         </span>
                                       </div>
                                     )}
@@ -753,9 +775,14 @@ const BuySalePopup = ({
                                 const badgeStyle =
                                   getVolumeSignalBadge(volumeSignal);
                                 const isHighlighted = row.isHighlighted;
-                                // Get volume ratio using helper
+                                // Get Volume Ratio (show this in parentheses)
                                 const volumeRatio = getVolumeRatio(row);
                                 const formattedRatio = formatVolumeRatio(volumeRatio);
+                                // Get RSI 14 (show this in the info line only)
+                                const rsi14 = getRSI14(row);
+                                const formattedRSI = rsi14 !== null ? rsi14.toFixed(2) : null;
+                                // Check if RSI is above 70 for warning
+                                const isRSIOverbought = rsi14 !== null && rsi14 > 70;
 
                                 return (
                                   <div
@@ -767,7 +794,7 @@ const BuySalePopup = ({
                                     }`}
                                   >
                                     <div className="flex flex-col gap-1">
-                                      {/* Company Name with Volume Ratio - NO % sign */}
+                                      {/* Company Name with Volume Ratio in parentheses */}
                                       <div className="flex items-center justify-between w-full">
                                         <span
                                           className={`font-semibold text-xs sm:text-sm ${
@@ -781,7 +808,7 @@ const BuySalePopup = ({
                                             <span className={`ml-1.5 text-[10px] font-mono ${
                                               isHighlighted ? "text-amber-400/80" : "text-purple-400/60"
                                             }`}>
-                                              ({formattedRatio})
+                                              (VR: {formattedRatio})
                                             </span>
                                           )}
                                         </span>
@@ -813,16 +840,17 @@ const BuySalePopup = ({
                                         </span>
                                       </div>
 
-                                      {/* Additional info */}
+                                      {/* Info line - RSI with warning if above 70 */}
                                       <div className="flex items-center justify-between">
                                         <span
                                           className={signalStyle + " text-[8px]"}
                                         >
                                           Signal: {volumeSignal}
                                         </span>
-                                        {formattedRatio !== null && (
-                                          <span className="text-[8px] text-gray-500">
-                                            Vol Ratio: {formattedRatio}
+                                        {formattedRSI !== null && (
+                                          <span className={`text-[8px] ${isRSIOverbought ? "text-rose-500 font-bold" : "text-gray-500"}`}>
+                                            RSI: {formattedRSI}
+                                            {isRSIOverbought && " ⚠️"}
                                           </span>
                                         )}
                                       </div>
@@ -891,12 +919,16 @@ const BuySalePopup = ({
                           </div>
                           <div className="space-y-1.5">
                             {redSaleList.map((row, idx) => {
-                              // Get volume ratio for sale items
+                              // Get Volume Ratio and RSI for sale items
                               const zoneRow = buyRows.find(
                                 (r) => r.company === row.company
                               );
                               const volumeRatio = zoneRow ? getVolumeRatio(zoneRow) : null;
                               const formattedRatio = formatVolumeRatio(volumeRatio);
+                              const rsi14 = zoneRow ? getRSI14(zoneRow) : null;
+                              const formattedRSI = rsi14 !== null ? rsi14.toFixed(2) : null;
+                              // Check if RSI is above 70 for warning
+                              const isRSIOverbought = rsi14 !== null && rsi14 > 70;
 
                               return (
                                 <div
@@ -908,7 +940,7 @@ const BuySalePopup = ({
                                       {row.company}
                                       {formattedRatio !== null && (
                                         <span className="ml-1.5 text-[10px] font-mono text-red-400/60">
-                                          ({formattedRatio})
+                                          (VR: {formattedRatio})
                                         </span>
                                       )}
                                     </span>
@@ -950,10 +982,12 @@ const BuySalePopup = ({
                                         ৳{row.exitFloorPrice.toFixed(2)}
                                       </span>
                                     </div>
-                                    {formattedRatio !== null && (
+                                    {/* Info line - RSI with warning if above 70 */}
+                                    {formattedRSI !== null && (
                                       <div className="flex justify-end">
-                                        <span className="text-[8px] text-gray-500">
-                                          Vol Ratio: {formattedRatio}
+                                        <span className={`text-[8px] ${isRSIOverbought ? "text-rose-500 font-bold" : "text-gray-500"}`}>
+                                          RSI: {formattedRSI}
+                                          {isRSIOverbought && " ⚠️"}
                                         </span>
                                       </div>
                                     )}
@@ -978,12 +1012,16 @@ const BuySalePopup = ({
                           </div>
                           <div className="space-y-1.5">
                             {greenSaleList.map((row, idx) => {
-                              // Get volume ratio for sale items
+                              // Get Volume Ratio and RSI for sale items
                               const zoneRow = buyRows.find(
                                 (r) => r.company === row.company
                               );
                               const volumeRatio = zoneRow ? getVolumeRatio(zoneRow) : null;
                               const formattedRatio = formatVolumeRatio(volumeRatio);
+                              const rsi14 = zoneRow ? getRSI14(zoneRow) : null;
+                              const formattedRSI = rsi14 !== null ? rsi14.toFixed(2) : null;
+                              // Check if RSI is above 70 for warning
+                              const isRSIOverbought = rsi14 !== null && rsi14 > 70;
 
                               return (
                                 <div
@@ -995,7 +1033,7 @@ const BuySalePopup = ({
                                       {row.company}
                                       {formattedRatio !== null && (
                                         <span className="ml-1.5 text-[10px] font-mono text-green-400/60">
-                                          ({formattedRatio})
+                                          (VR: {formattedRatio})
                                         </span>
                                       )}
                                     </span>
@@ -1037,10 +1075,12 @@ const BuySalePopup = ({
                                         ৳{row.targetPrice.toFixed(2)}
                                       </span>
                                     </div>
-                                    {formattedRatio !== null && (
+                                    {/* Info line - RSI with warning if above 70 */}
+                                    {formattedRSI !== null && (
                                       <div className="flex justify-end">
-                                        <span className="text-[8px] text-gray-500">
-                                          Vol Ratio: {formattedRatio}
+                                        <span className={`text-[8px] ${isRSIOverbought ? "text-rose-500 font-bold" : "text-gray-500"}`}>
+                                          RSI: {formattedRSI}
+                                          {isRSIOverbought && " ⚠️"}
                                         </span>
                                       </div>
                                     )}
