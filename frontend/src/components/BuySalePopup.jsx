@@ -18,6 +18,7 @@ const BuySalePopup = ({
   // State for section visibility - all hidden by default
   const [showYearlyLow, setShowYearlyLow] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  const [showRemainingSales, setShowRemainingSales] = useState(false);
 
   const cleanString = (str) =>
     String(str || "")
@@ -349,6 +350,15 @@ const BuySalePopup = ({
       row.closingPrice >= row.targetPrice,
   );
 
+  // NEW: Remaining Sales - between stop loss and target
+  const remainingSaleList = saleRows.filter(
+    (row) =>
+      row.remainQtn > 0 &&
+      row.closingPrice > 0 &&
+      row.closingPrice > row.exitFloorPrice &&
+      row.closingPrice < row.targetPrice,
+  );
+
   // Get Volume Signal Style
   const getVolumeSignalStyle = (signal) => {
     if (!signal || signal === "N/A") return "text-gray-400";
@@ -415,6 +425,7 @@ const BuySalePopup = ({
   // Toggle functions
   const toggleYearlyLow = () => setShowYearlyLow(!showYearlyLow);
   const toggleVolume = () => setShowVolume(!showVolume);
+  const toggleRemainingSales = () => setShowRemainingSales(!showRemainingSales);
 
   // Helper function to format volume ratio as decimal (no % sign)
   const formatVolumeRatio = (ratio) => {
@@ -905,11 +916,9 @@ const BuySalePopup = ({
                     </div>
                   </div>
 
-                  {redSaleList.length === 0 && greenSaleList.length === 0 ? (
+                  {redSaleList.length === 0 && greenSaleList.length === 0 && remainingSaleList.length === 0 ? (
                     <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                      <p className="text-gray-500 text-[10px] sm:text-xs">
-                        No sale signals
-                      </p>
+                      <p className="text-gray-500 text-[10px] sm:text-xs">No sale signals</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -1114,6 +1123,118 @@ const BuySalePopup = ({
                               );
                             })}
                           </div>
+                        </div>
+                      )}
+
+                      {/* NEW: Remaining Holdings Section */}
+                      {remainingSaleList.length > 0 && (
+                        <div className="mt-3">
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                            onClick={toggleRemainingSales}
+                          >
+                            <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                            <h3 className="font-semibold text-gray-200 text-[10px] sm:text-sm">
+                              📊 Remaining Holdings
+                            </h3>
+                            <span className="text-[10px] sm:text-xs bg-blue-900 text-blue-300 px-1.5 py-0.5 rounded-full">
+                              {remainingSaleList.length}
+                            </span>
+                            <span className="ml-auto text-gray-500 text-[10px] sm:text-xs">
+                              {showRemainingSales ? "▼" : "▶"}
+                            </span>
+                          </div>
+
+                          {showRemainingSales && (
+                            <div className="space-y-1.5 mt-2">
+                              {remainingSaleList.map((row, idx) => {
+                                // Get Volume Ratio and RSI for remaining items
+                                const zoneRow = buyRows.find(
+                                  (r) => r.company === row.company,
+                                );
+                                const volumeRatio = zoneRow
+                                  ? getVolumeRatio(zoneRow)
+                                  : null;
+                                const formattedRatio = formatVolumeRatio(volumeRatio);
+                                const rsi14 = zoneRow ? getRSI14(zoneRow) : null;
+                                const formattedRSI =
+                                  rsi14 !== null ? rsi14.toFixed(2) : null;
+                                const isRSIOverbought =
+                                  rsi14 !== null && rsi14 > 70;
+                                
+                                // Calculate profit/loss percentage
+                                const profitLossPercent = ((row.sessionPrice - row.avgBuyPriceWithCommission) / row.avgBuyPriceWithCommission) * 100;
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-1.5 sm:p-2 hover:bg-blue-900/30 transition-colors"
+                                  >
+                                    <div className="flex justify-between items-start mb-1 sm:mb-2">
+                                      <span className="font-semibold text-blue-300 text-[10px] sm:text-sm truncate flex-1">
+                                        {row.company}
+                                      </span>
+                                      <span className={`text-[9px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full ml-1 shrink-0 ${
+                                        profitLossPercent >= 0 
+                                          ? "bg-green-800 text-green-300" 
+                                          : "bg-red-800 text-red-300"
+                                      }`}>
+                                        {profitLossPercent >= 0 ? "📈" : "📉"} {profitLossPercent.toFixed(2)}%
+                                      </span>
+                                    </div>
+                                    <div className="space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs">
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-400">Buy Price:</span>
+                                        <span className="text-gray-300 font-medium">
+                                          ৳{row.avgBuyPriceWithCommission.toFixed(2)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-400">Session Price:</span>
+                                        <span className={`font-medium ${
+                                          profitLossPercent >= 0 ? "text-green-400" : "text-red-400"
+                                        }`}>
+                                          ৳{row.sessionPrice.toFixed(2)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-400">Quantity:</span>
+                                        <span className="text-gray-300">
+                                          {row.remainQtn.toLocaleString()} shares
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-400">Stop Loss:</span>
+                                        <span className="text-red-400 font-medium">
+                                          ৳{row.exitFloorPrice.toFixed(2)}
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-gray-400">Target:</span>
+                                        <span className="text-green-400 font-medium">
+                                          ৳{row.targetPrice.toFixed(2)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center justify-between pt-0.5 border-t border-gray-700/50">
+                                        <span className="text-yellow-400">
+                                          Vol. Ratio:{" "}
+                                          <span className="text-yellow-300 font-medium">
+                                            {formattedRatio ?? "-"}
+                                          </span>
+                                        </span>
+                                        {formattedRSI !== null && (
+                                          <span className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}>
+                                            RSI: {formattedRSI}
+                                            {isRSIOverbought && " ⚠️"}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
