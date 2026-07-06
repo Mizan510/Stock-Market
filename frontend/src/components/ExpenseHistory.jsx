@@ -37,18 +37,32 @@ const ExpenseHistory = ({
   }
 
   return (
-    <div className="overflow-x-auto bg-gray-900 rounded-xl border border-gray-800">
-      <table className="w-full text-sm text-center table-fixed">
+    <div className="overflow-auto bg-gray-900 rounded-xl border border-gray-800">
+      <table className="min-w-full text-sm text-center table-fixed">
         {/* HEADER */}
         <thead className="bg-gray-800 text-gray-200">
           <tr>
-            <th className="w-35 p-3 border border-gray-700">Date</th>
-            <th className="w-40 p-3 border border-gray-700">Title</th>
-            <th className="w-35 p-3 border border-gray-700">Category</th>
-            <th className="w-35 p-3 border border-gray-700">Importance</th>
-            <th className="w-30 p-3 border border-gray-700">Amount</th>
-            <th className="w-50 p-3 border border-gray-700">Note</th>
-            <th className="w-35 p-3 border border-gray-700">Action</th>
+            <th className="w-35 p-3 border border-gray-700 sticky left-0 top-0 z-30 bg-gray-800">
+              Date
+            </th>
+            <th className="w-40 p-3 border border-gray-700 sticky top-0 z-20 bg-gray-800">
+              Title
+            </th>
+            <th className="w-35 p-3 border border-gray-700 sticky top-0 z-20 bg-gray-800">
+              Category
+            </th>
+            <th className="w-35 p-3 border border-gray-700 sticky top-0 z-20 bg-gray-800">
+              Importance
+            </th>
+            <th className="w-30 p-3 border border-gray-700 sticky top-0 z-20 bg-gray-800">
+              Amount
+            </th>
+            <th className="w-50 p-3 border border-gray-700 sticky top-0 z-20 bg-gray-800">
+              Note
+            </th>
+            <th className="w-35 p-3 border border-gray-700 sticky top-0 z-20 bg-gray-800">
+              Action
+            </th>
           </tr>
         </thead>
 
@@ -56,7 +70,7 @@ const ExpenseHistory = ({
         <tbody>
           {filteredList.map((item) => (
             <tr key={item._id} className="hover:bg-gray-800/40 transition">
-              <td className="p-3 border border-gray-700 text-gray-300">
+              <td className="p-3 border border-gray-700 text-gray-300 sticky left-0 bg-gray-900 z-10">
                 {new Date(item.date).toLocaleDateString("en-GB")}
               </td>
               <td className="p-3 border border-gray-700 font-semibold">

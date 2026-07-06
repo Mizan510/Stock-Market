@@ -54,7 +54,7 @@ const Sidebar = ({
     >
       {/* Header */}
       <div
-        className={`flex flex-col items-center ${isOpen ? "mb-6" : "justify-center"}`}
+        className={`flex flex-col items-center ${isOpen ? "mb-2" : "justify-center"}`}
       >
         {isOpen ? (
           <div className="w-full text-center">

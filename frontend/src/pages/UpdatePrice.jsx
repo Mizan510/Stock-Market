@@ -50,15 +50,29 @@ const UpdatePrice = () => {
     return Math.round(value);
   };
 
+  const parseFloatOrNull = (value) => {
+    if (value === null || value === undefined || String(value).trim() === "") {
+      return null;
+    }
+    const parsed = parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const formatToTwoDecimals = (value) => {
+    const parsed = parseFloatOrNull(value);
+    if (parsed === null) return null;
+    return Number(parsed.toFixed(2));
+  };
+
   // Calculate pivot and support/resistance levels
   const calculateIndicators = (data) => {
-    const h = parseFloat(data.todaysHigh);
-    const l = parseFloat(data.todaysLow);
-    const c = parseFloat(data.closingPrice);
-    const volume = parseFloat(data.todayVolume);
-    const avgVolume = parseFloat(data.avgVolume1M);
-    const ma20 = parseFloat(data.ma20);
-    const rsi14 = parseFloat(data.rsi14);
+    const h = parseFloatOrNull(data.todaysHigh);
+    const l = parseFloatOrNull(data.todaysLow);
+    const c = parseFloatOrNull(data.closingPrice);
+    const volume = parseFloatOrNull(data.todayVolume);
+    const avgVolume = parseFloatOrNull(data.avgVolume1M);
+    const ma20 = parseFloatOrNull(data.ma20);
+    const rsi14 = parseFloatOrNull(data.rsi14);
 
     let pivot = null;
     let r1 = null;
@@ -68,7 +82,7 @@ const UpdatePrice = () => {
     let customSignal = "Neutral";
 
     // Calculate Pivot - requires all three values
-    if (h && l && c) {
+    if (h !== null && l !== null && c !== null) {
       pivot = parseFloat(((h + l + c) / 3).toFixed(2));
 
       // Calculate R1 and S1
@@ -86,7 +100,7 @@ const UpdatePrice = () => {
     }
 
     // Calculate Volume Ratio
-    if (volume && avgVolume && avgVolume > 0) {
+    if (volume !== null && avgVolume !== null && avgVolume > 0) {
       volRatio = parseFloat((volume / avgVolume).toFixed(2));
     }
 
@@ -248,25 +262,47 @@ const UpdatePrice = () => {
     if (existingCompany) {
       setFormData({
         company: existingCompany.company || "",
-        todaysHigh: existingCompany.todaysHigh
-          ? String(existingCompany.todaysHigh)
-          : "",
-        todaysLow: existingCompany.todaysLow
-          ? String(existingCompany.todaysLow)
-          : "",
-        closingPrice: existingCompany.closingPrice
-          ? String(existingCompany.closingPrice)
-          : "",
-        low: existingCompany.low ? String(existingCompany.low) : "",
-        high: existingCompany.high ? String(existingCompany.high) : "",
-        todayVolume: existingCompany.todayVolume
-          ? String(existingCompany.todayVolume)
-          : "",
-        avgVolume1M: existingCompany.avgVolume1M
-          ? String(existingCompany.avgVolume1M)
-          : "",
-        ma20: existingCompany.ma20 ? String(existingCompany.ma20) : "",
-        rsi14: existingCompany.rsi14 ? String(existingCompany.rsi14) : "",
+        todaysHigh:
+          existingCompany.todaysHigh !== null &&
+          existingCompany.todaysHigh !== undefined
+            ? String(existingCompany.todaysHigh)
+            : "",
+        todaysLow:
+          existingCompany.todaysLow !== null &&
+          existingCompany.todaysLow !== undefined
+            ? String(existingCompany.todaysLow)
+            : "",
+        closingPrice:
+          existingCompany.closingPrice !== null &&
+          existingCompany.closingPrice !== undefined
+            ? String(existingCompany.closingPrice)
+            : "",
+        low:
+          existingCompany.low !== null && existingCompany.low !== undefined
+            ? String(existingCompany.low)
+            : "",
+        high:
+          existingCompany.high !== null && existingCompany.high !== undefined
+            ? String(existingCompany.high)
+            : "",
+        todayVolume:
+          existingCompany.todayVolume !== null &&
+          existingCompany.todayVolume !== undefined
+            ? String(existingCompany.todayVolume)
+            : "",
+        avgVolume1M:
+          existingCompany.avgVolume1M !== null &&
+          existingCompany.avgVolume1M !== undefined
+            ? String(existingCompany.avgVolume1M)
+            : "",
+        ma20:
+          existingCompany.ma20 !== null && existingCompany.ma20 !== undefined
+            ? String(formatToTwoDecimals(existingCompany.ma20))
+            : "",
+        rsi14:
+          existingCompany.rsi14 !== null && existingCompany.rsi14 !== undefined
+            ? String(formatToTwoDecimals(existingCompany.rsi14))
+            : "",
         _id: existingCompany._id,
       });
     }
@@ -541,8 +577,10 @@ const UpdatePrice = () => {
           high: yearHigh,
           todayVolume: volume,
           avgVolume1M: avgVolume,
-          ma20: rawMa20 !== null ? parseNum(rawMa20) : null,
-          rsi14: rawRsi14 !== null ? parseNum(rawRsi14) : null,
+          ma20:
+            rawMa20 !== null ? formatToTwoDecimals(parseNum(rawMa20)) : null,
+          rsi14:
+            rawRsi14 !== null ? formatToTwoDecimals(parseNum(rawRsi14)) : null,
           _processed: true,
         };
 
@@ -627,8 +665,14 @@ const UpdatePrice = () => {
           high: item.high,
           todayVolume: item.todayVolume,
           avgVolume1M: roundedAvgVolume,
-          ma20: item.ma20 ?? null,
-          rsi14: item.rsi14 ?? null,
+          ma20:
+            item.ma20 !== null && item.ma20 !== undefined
+              ? formatToTwoDecimals(item.ma20)
+              : null,
+          rsi14:
+            item.rsi14 !== null && item.rsi14 !== undefined
+              ? formatToTwoDecimals(item.rsi14)
+              : null,
           pivotPoint: indicators.pivot,
           r1: indicators.r1,
           s1: indicators.s1,
@@ -729,6 +773,8 @@ const UpdatePrice = () => {
         high: formData.high !== "" ? Number(formData.high) : null,
         todayVolume: volume,
         avgVolume1M: avgVolume,
+        ma20: formData.ma20 !== "" ? Number(formData.ma20) : null,
+        rsi14: formData.rsi14 !== "" ? Number(formData.rsi14) : null,
       };
 
       const indicators = calculateIndicators(data);
@@ -738,8 +784,14 @@ const UpdatePrice = () => {
       const payload = {
         company: uppercasedCompany,
         ...data,
-        ma20: formData.ma20 !== "" ? Number(formData.ma20) : null,
-        rsi14: formData.rsi14 !== "" ? Number(formData.rsi14) : null,
+        ma20:
+          formData.ma20 !== ""
+            ? formatToTwoDecimals(Number(formData.ma20))
+            : null,
+        rsi14:
+          formData.rsi14 !== ""
+            ? formatToTwoDecimals(Number(formData.rsi14))
+            : null,
         pivotPoint: indicators.pivot,
         r1: indicators.r1,
         s1: indicators.s1,
@@ -834,15 +886,37 @@ const UpdatePrice = () => {
     setIsNewCompany(false);
     setFormData({
       company: item.company,
-      todaysHigh: item.todaysHigh ? String(item.todaysHigh) : "",
-      todaysLow: item.todaysLow ? String(item.todaysLow) : "",
-      closingPrice: item.closingPrice ? String(item.closingPrice) : "",
-      low: item.low ? String(item.low) : "",
-      high: item.high ? String(item.high) : "",
-      todayVolume: item.todayVolume ? String(item.todayVolume) : "",
-      avgVolume1M: item.avgVolume1M ? String(item.avgVolume1M) : "",
-      ma20: item.ma20 ? String(item.ma20) : "",
-      rsi14: item.rsi14 ? String(item.rsi14) : "",
+      todaysHigh:
+        item.todaysHigh !== null && item.todaysHigh !== undefined
+          ? String(item.todaysHigh)
+          : "",
+      todaysLow:
+        item.todaysLow !== null && item.todaysLow !== undefined
+          ? String(item.todaysLow)
+          : "",
+      closingPrice:
+        item.closingPrice !== null && item.closingPrice !== undefined
+          ? String(item.closingPrice)
+          : "",
+      low: item.low !== null && item.low !== undefined ? String(item.low) : "",
+      high:
+        item.high !== null && item.high !== undefined ? String(item.high) : "",
+      todayVolume:
+        item.todayVolume !== null && item.todayVolume !== undefined
+          ? String(item.todayVolume)
+          : "",
+      avgVolume1M:
+        item.avgVolume1M !== null && item.avgVolume1M !== undefined
+          ? String(item.avgVolume1M)
+          : "",
+      ma20:
+        item.ma20 !== null && item.ma20 !== undefined
+          ? String(formatToTwoDecimals(item.ma20))
+          : "",
+      rsi14:
+        item.rsi14 !== null && item.rsi14 !== undefined
+          ? String(formatToTwoDecimals(item.rsi14))
+          : "",
       _id: item._id,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1673,7 +1747,7 @@ const UpdatePrice = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-1.5">
+              <label className="block text-xs font-semibold text-pink-500 mb-1.5">
                 RSI 14
               </label>
               <input
@@ -1778,10 +1852,10 @@ const UpdatePrice = () => {
                     <th className="p-2.5 font-semibold text-right text-amber-400 whitespace-nowrap">
                       Avg Volume (1M)
                     </th>
-                    <th className="p-2.5 font-semibold text-right text-yellow-300 whitespace-nowrap">
+                    <th className="p-2.5 font-semibold text-right text-pink-500 whitespace-nowrap">
                       MA 20
                     </th>
-                    <th className="p-2.5 font-semibold text-right text-pink-300 whitespace-nowrap">
+                    <th className="p-2.5 font-semibold text-right text-pink-500 whitespace-nowrap">
                       RSI 14
                     </th>
                     <th className="p-2.5 font-semibold text-right text-purple-400 whitespace-nowrap">
@@ -2010,12 +2084,12 @@ const UpdatePrice = () => {
                                 ? Number(item.avgVolume1M).toLocaleString()
                                 : "-"}
                             </td>
-                            <td className="p-2.5 text-right font-mono text-yellow-300">
+                            <td className="p-2.5 text-right font-mono text-pink-500">
                               {item.ma20 !== undefined && item.ma20 !== null
                                 ? Number(item.ma20).toFixed(2)
                                 : "-"}
                             </td>
-                            <td className="p-2.5 text-right font-mono text-pink-300">
+                            <td className="p-2.5 text-right font-mono text-pink-600">
                               {item.rsi14 !== undefined && item.rsi14 !== null
                                 ? Number(item.rsi14).toFixed(2)
                                 : "-"}
