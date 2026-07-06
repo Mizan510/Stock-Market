@@ -381,37 +381,36 @@ const BuySalePopup = ({
     }
   };
 
-  // More distinct colors for better visibility
-const getVolumeSignalBadge = (signal) => {
-  if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
+  const getVolumeSignalBadge = (signal) => {
+    if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
 
-  const signalUpper = signal.toUpperCase();
+    const signalUpper = signal.toUpperCase();
 
-  if (
-    signalUpper === "STRONG BULLISH" ||
-    signalUpper === "VERY STRONG BUYER"
-  ) {
-    return "bg-emerald-800 text-black font-bold border border-yellow-400"; // ← Changed to 'border'
-  } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
-    return "bg-emerald-800 text-black font-bold border border-yellow-400"; // ← Changed to 'border'
-  } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
-    return "bg-emerald-300 text-emerald-900";
-  } else if (
-    signalUpper === "STRONG BEARISH" ||
-    signalUpper === "VERY STRONG SELLER"
-  ) {
-    return "bg-rose-600 text-white";
-  } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
-    return "bg-rose-500 text-white";
-  } else if (
-    signalUpper === "MILD BEARISH" ||
-    signalUpper === "WEAK SELLER"
-  ) {
-    return "bg-rose-300 text-rose-900";
-  } else {
-    return "bg-gray-700 text-gray-300";
-  }
-};
+    if (
+      signalUpper === "STRONG BULLISH" ||
+      signalUpper === "VERY STRONG BUYER"
+    ) {
+      return "bg-gray-900 text-green-300 font-bold border border-green-500";
+    } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
+      return "bg-gray-800 text-green-400 font-semibold border border-green-500";
+    } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
+      return "bg-gray-700 text-emerald-300 font-medium";
+    } else if (
+      signalUpper === "STRONG BEARISH" ||
+      signalUpper === "VERY STRONG SELLER"
+    ) {
+      return "bg-gray-900 text-rose-300 font-bold border border-rose-500";
+    } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
+      return "bg-gray-800 text-rose-400 font-semibold border border-rose-500";
+    } else if (
+      signalUpper === "MILD BEARISH" ||
+      signalUpper === "WEAK SELLER"
+    ) {
+      return "bg-gray-700 text-rose-300 font-medium";
+    } else {
+      return "bg-gray-800 text-gray-400";
+    }
+  };
 
   // Toggle functions
   const toggleYearlyLow = () => setShowYearlyLow(!showYearlyLow);
@@ -496,9 +495,7 @@ const getVolumeSignalBadge = (signal) => {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] sm:text-xs">
-                      <span className="text-gray-400">
-                        Pyramid Rules:
-                      </span>
+                      <span className="text-gray-400">Pyramid Rules:</span>
 
                       <span className="text-amber-400 font-medium">
                         Follow or Not?
@@ -887,9 +884,7 @@ const getVolumeSignalBadge = (signal) => {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] sm:text-xs">
-                      <span className="text-gray-400">
-                        3% of High Price:
-                      </span>
+                      <span className="text-gray-400">3% of High Price:</span>
                       <span className="text-amber-400 font-medium">
                         Follow or Not?
                       </span>
@@ -912,7 +907,9 @@ const getVolumeSignalBadge = (signal) => {
 
                   {redSaleList.length === 0 && greenSaleList.length === 0 ? (
                     <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                      <p className="text-gray-500 text-[10px] sm:text-xs">No sale signals</p>
+                      <p className="text-gray-500 text-[10px] sm:text-xs">
+                        No sale signals
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
