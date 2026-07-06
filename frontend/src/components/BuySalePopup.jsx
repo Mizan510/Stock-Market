@@ -381,37 +381,37 @@ const BuySalePopup = ({
     }
   };
 
-  // Get Volume Signal Badge Style
-  const getVolumeSignalBadge = (signal) => {
-    if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
+  // More distinct colors for better visibility
+const getVolumeSignalBadge = (signal) => {
+  if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
 
-    const signalUpper = signal.toUpperCase();
+  const signalUpper = signal.toUpperCase();
 
-    if (
-      signalUpper === "STRONG BULLISH" ||
-      signalUpper === "VERY STRONG BUYER"
-    ) {
-      return "bg-emerald-500 text-white text-border-";
-    } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
-      return "bg-emerald-500 text-white";
-    } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
-      return "bg-emerald-300 text-emerald-900";
-    } else if (
-      signalUpper === "STRONG BEARISH" ||
-      signalUpper === "VERY STRONG SELLER"
-    ) {
-      return "bg-rose-600 text-white";
-    } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
-      return "bg-rose-500 text-white";
-    } else if (
-      signalUpper === "MILD BEARISH" ||
-      signalUpper === "WEAK SELLER"
-    ) {
-      return "bg-rose-300 text-rose-900";
-    } else {
-      return "bg-gray-700 text-gray-300";
-    }
-  };
+  if (
+    signalUpper === "STRONG BULLISH" ||
+    signalUpper === "VERY STRONG BUYER"
+  ) {
+    return "bg-emerald-800 text-black font-bold border border-yellow-400"; // ← Changed to 'border'
+  } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
+    return "bg-emerald-800 text-black font-bold border border-yellow-400"; // ← Changed to 'border'
+  } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
+    return "bg-emerald-300 text-emerald-900";
+  } else if (
+    signalUpper === "STRONG BEARISH" ||
+    signalUpper === "VERY STRONG SELLER"
+  ) {
+    return "bg-rose-600 text-white";
+  } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
+    return "bg-rose-500 text-white";
+  } else if (
+    signalUpper === "MILD BEARISH" ||
+    signalUpper === "WEAK SELLER"
+  ) {
+    return "bg-rose-300 text-rose-900";
+  } else {
+    return "bg-gray-700 text-gray-300";
+  }
+};
 
   // Toggle functions
   const toggleYearlyLow = () => setShowYearlyLow(!showYearlyLow);
@@ -489,18 +489,18 @@ const BuySalePopup = ({
                 <div className="flex-1 w-1/2 min-w-0">
                   {/* Buy Section Questions - Top */}
                   <div className="flex flex-col gap-1 mb-3 bg-gray-800/30 p-2 rounded-lg border border-gray-700/50">
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-[10px] sm:text-xs">
                       <span className="text-gray-400">Buy Zone:</span>
                       <span className="text-amber-400 font-medium">
                         Follow or Not?
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-gray-400 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                      <span className="text-gray-400">
                         Pyramid Rules:
                       </span>
 
-                      <span className="text-amber-400 text-xs sm:text-sm font-medium">
+                      <span className="text-amber-400 font-medium">
                         Follow or Not?
                       </span>
                     </div>
@@ -510,11 +510,11 @@ const BuySalePopup = ({
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
-                      <h3 className="font-semibold text-amber-400 text-xs sm:text-sm">
+                      <h3 className="font-semibold text-amber-400 text-[10px] sm:text-sm">
                         🚀 Ready for Buy
                       </h3>
                       {readyForBuyList.length > 0 && (
-                        <span className="text-xs bg-amber-900 text-amber-300 px-1.5 py-0.5 rounded-full">
+                        <span className="text-[10px] sm:text-xs bg-amber-900 text-amber-300 px-1.5 py-0.5 rounded-full">
                           {readyForBuyList.length}
                         </span>
                       )}
@@ -522,7 +522,7 @@ const BuySalePopup = ({
 
                     {readyForBuyList.length === 0 ? (
                       <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                        <p className="text-gray-500 text-xs">
+                        <p className="text-gray-500 text-[10px] sm:text-xs">
                           No strong buyer signals
                         </p>
                       </div>
@@ -551,17 +551,17 @@ const BuySalePopup = ({
                           return (
                             <div
                               key={idx}
-                              className={`border rounded-lg p-2 transition-all duration-300 ${
+                              className={`border rounded-lg p-1.5 sm:p-2 transition-all duration-300 ${
                                 isHighlighted
                                   ? "bg-amber-900/40 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60"
                                   : "bg-amber-900/20 border-amber-700/50 hover:bg-amber-900/30"
                               }`}
                             >
-                              <div className="flex flex-col gap-1">
+                              <div className="flex flex-col gap-0.5 sm:gap-1">
                                 {/* Company Name */}
                                 <div className="flex items-center justify-between w-full">
                                   <span
-                                    className={`font-semibold text-xs sm:text-sm ${
+                                    className={`font-semibold text-[10px] sm:text-sm ${
                                       isHighlighted
                                         ? "text-amber-300"
                                         : "text-amber-200"
@@ -570,7 +570,7 @@ const BuySalePopup = ({
                                     {row.company}
                                   </span>
                                   {isHighlighted && (
-                                    <span className="text-xs sm:text-sm font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                                    <span className="text-[10px] sm:text-xs font-bold bg-amber-600 text-white px-1 sm:px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
                                       DOUBLE
                                     </span>
                                   )}
@@ -579,11 +579,11 @@ const BuySalePopup = ({
                                 {/* Signal Badge and Price */}
                                 <div className="flex items-center justify-between">
                                   <span
-                                    className={`text-xs sm:text-sm font-bold px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
+                                    className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
                                   >
                                     {volumeSignal}
                                   </span>
-                                  <span className="text-gray-400 text-xs sm:text-sm">
+                                  <span className="text-gray-400 text-[10px] sm:text-xs">
                                     Current:{" "}
                                     <span
                                       className={`font-medium ${
@@ -599,12 +599,12 @@ const BuySalePopup = ({
 
                                 {/* Info line - Volume Ratio and RSI */}
                                 <div className="flex items-center justify-between">
-                                  <span className="text-yellow-400 text-xs sm:text-sm">
+                                  <span className="text-yellow-400 text-[10px] sm:text-xs">
                                     Vol. Ratio: {formattedRatio ?? "-"}
                                   </span>
                                   {formattedRSI !== null && (
                                     <span
-                                      className={`text-xs sm:text-sm ${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
+                                      className={`text-[10px] sm:text-xs ${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                     >
                                       RSI: {formattedRSI}
                                       {isRSIOverbought && " ⚠️"}
@@ -627,15 +627,15 @@ const BuySalePopup = ({
                         onClick={toggleYearlyLow}
                       >
                         <div className="w-1 h-4 bg-green-500 rounded-full"></div>
-                        <h3 className="font-semibold text-gray-200 text-xs sm:text-sm">
+                        <h3 className="font-semibold text-gray-200 text-[10px] sm:text-sm">
                           📉 Yearly Low Buy (≤20% Zone)
                         </h3>
                         {yearlyLowBuyList.length > 0 && (
-                          <span className="text-xs bg-green-900 text-green-300 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] sm:text-xs bg-green-900 text-green-300 px-1.5 py-0.5 rounded-full">
                             {yearlyLowBuyList.length}
                           </span>
                         )}
-                        <span className="ml-auto text-gray-500 text-xs">
+                        <span className="ml-auto text-gray-500 text-[10px] sm:text-xs">
                           {showYearlyLow ? "▼" : "▶"}
                         </span>
                       </div>
@@ -644,7 +644,7 @@ const BuySalePopup = ({
                         <>
                           {yearlyLowBuyList.length === 0 ? (
                             <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                              <p className="text-gray-500 text-xs">
+                              <p className="text-gray-500 text-[10px] sm:text-xs">
                                 No yearly low buy signals
                               </p>
                             </div>
@@ -677,31 +677,31 @@ const BuySalePopup = ({
                                 return (
                                   <div
                                     key={idx}
-                                    className="bg-green-900/20 border border-green-800/50 rounded-lg p-2 hover:bg-green-900/30 transition-colors"
+                                    className="bg-green-900/20 border border-green-800/50 rounded-lg p-1.5 sm:p-2 hover:bg-green-900/30 transition-colors"
                                   >
-                                    <div className="flex justify-between items-start mb-1">
-                                      <span className="font-semibold text-green-300 text-xs sm:text-sm truncate flex-1">
+                                    <div className="flex justify-between items-start mb-0.5 sm:mb-1">
+                                      <span className="font-semibold text-green-300 text-[10px] sm:text-sm truncate flex-1">
                                         {row.company}
                                       </span>
-                                      <span className="text-xs bg-green-800 text-green-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                      <span className="text-[9px] sm:text-xs bg-green-800 text-green-300 px-1 sm:px-1.5 py-0.5 rounded-full ml-1 shrink-0">
                                         Buy
                                       </span>
                                     </div>
-                                    <div className="flex justify-between text-xs sm:text-sm mt-1">
-                                      <span className="text-gray-400 text-xs sm:text-sm">
+                                    <div className="flex justify-between text-[10px] sm:text-xs mt-0.5 sm:mt-1">
+                                      <span className="text-gray-400">
                                         Current:{" "}
                                         <span className="text-gray-300 font-medium">
                                           ৳{currentPrice?.toFixed(2)}
                                         </span>
                                       </span>
-                                      <span className="text-green-400 text-xs sm:text-sm">
+                                      <span className="text-green-400">
                                         ≤20% Zone:{" "}
                                         <span className="font-medium">
                                           ৳{buyZone?.toFixed(2)}
                                         </span>
                                       </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs sm:text-sm mt-0.5">
+                                    <div className="flex items-center justify-between text-[10px] sm:text-xs mt-0.5">
                                       <span className="text-yellow-400">
                                         Vol. Ratio:{" "}
                                         <span className="text-yellow-300 font-medium">
@@ -734,15 +734,15 @@ const BuySalePopup = ({
                           onClick={toggleVolume}
                         >
                           <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
-                          <h3 className="font-semibold text-gray-200 text-xs sm:text-sm">
+                          <h3 className="font-semibold text-gray-200 text-[10px] sm:text-sm">
                             📈 Volume Signal Buy
                           </h3>
                           {volumeBuyListWithHighlight.length > 0 && (
-                            <span className="text-xs sm:text-sm bg-purple-900 text-purple-300 px-1.5 py-0.5 rounded-full">
+                            <span className="text-[10px] sm:text-xs bg-purple-900 text-purple-300 px-1.5 py-0.5 rounded-full">
                               {volumeBuyListWithHighlight.length}
                             </span>
                           )}
-                          <span className="ml-auto text-gray-500 text-xs sm:text-sm">
+                          <span className="ml-auto text-gray-500 text-[10px] sm:text-xs">
                             {showVolume ? "▼" : "▶"}
                           </span>
                         </div>
@@ -753,7 +753,7 @@ const BuySalePopup = ({
                             (row) => row.isHighlighted,
                           ).length > 0 && (
                             <div className="ml-3">
-                              <span className="text-xs sm:text-sm bg-amber-600 text-white px-2 py-0.5 rounded-full animate-pulse font-bold inline-flex items-center gap-1">
+                              <span className="text-[10px] sm:text-xs bg-amber-600 text-white px-1.5 sm:px-2 py-0.5 rounded-full animate-pulse font-bold inline-flex items-center gap-1">
                                 ⚡{" "}
                                 {
                                   volumeBuyListWithHighlight.filter(
@@ -770,7 +770,7 @@ const BuySalePopup = ({
                         <>
                           {volumeBuyListWithHighlight.length === 0 ? (
                             <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                              <p className="text-gray-500 text-xs">
+                              <p className="text-gray-500 text-[10px] sm:text-xs">
                                 No volume buy signals
                               </p>
                             </div>
@@ -804,17 +804,17 @@ const BuySalePopup = ({
                                 return (
                                   <div
                                     key={idx}
-                                    className={`border rounded-lg p-2 transition-all duration-300 ${
+                                    className={`border rounded-lg p-1.5 sm:p-2 transition-all duration-300 ${
                                       isHighlighted
                                         ? "bg-amber-900/30 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60 hover:ring-amber-500/80"
                                         : "bg-purple-900/20 border-purple-800/50 hover:bg-purple-900/30"
                                     }`}
                                   >
-                                    <div className="flex flex-col gap-1">
+                                    <div className="flex flex-col gap-0.5 sm:gap-1">
                                       {/* Company Name with Volume Ratio in parentheses */}
                                       <div className="flex items-center justify-between w-full">
                                         <span
-                                          className={`font-semibold text-xs sm:text-sm ${
+                                          className={`font-semibold text-[10px] sm:text-sm ${
                                             isHighlighted
                                               ? "text-amber-300"
                                               : "text-purple-300"
@@ -823,7 +823,7 @@ const BuySalePopup = ({
                                           {row.company}
                                         </span>
                                         {isHighlighted && (
-                                          <span className="text-xs sm:text-sm font-bold bg-amber-600 text-white px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                                          <span className="text-[10px] sm:text-xs font-bold bg-amber-600 text-white px-1 sm:px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
                                             DOUBLE
                                           </span>
                                         )}
@@ -832,11 +832,11 @@ const BuySalePopup = ({
                                       {/* Signal Badge and Price */}
                                       <div className="flex items-center justify-between">
                                         <span
-                                          className={`text-xs sm:text-sm font-bold px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
+                                          className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
                                         >
                                           {volumeSignal}
                                         </span>
-                                        <span className="text-gray-400 text-xs sm:text-sm">
+                                        <span className="text-gray-400 text-[10px] sm:text-xs">
                                           Current:{" "}
                                           <span
                                             className={`font-medium ${
@@ -852,12 +852,12 @@ const BuySalePopup = ({
 
                                       {/* Info line - Volume Ratio and RSI */}
                                       <div className="flex items-center justify-between">
-                                        <span className="text-yellow-400 text-xs sm:text-sm">
+                                        <span className="text-yellow-400 text-[10px] sm:text-xs">
                                           Vol. Ratio: {formattedRatio ?? "-"}
                                         </span>
                                         {formattedRSI !== null && (
                                           <span
-                                            className={`text-xs sm:text-sm ${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
+                                            className={`text-[10px] sm:text-xs ${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                           >
                                             RSI: {formattedRSI}
                                             {isRSIOverbought && " ⚠️"}
@@ -880,17 +880,17 @@ const BuySalePopup = ({
                 <div className="flex-1 w-1/2 min-w-0">
                   {/* Sale Section Questions - Top */}
                   <div className="flex flex-col gap-1 mb-3 bg-gray-800/30 p-2 rounded-lg border border-gray-700/50">
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-[10px] sm:text-xs">
                       <span className="text-gray-400">3% Stop Loss:</span>
                       <span className="text-amber-400 font-medium">
                         Follow or Not?
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-gray-400 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-[10px] sm:text-xs">
+                      <span className="text-gray-400">
                         3% of High Price:
                       </span>
-                      <span className="text-amber-400 text-xs sm:text-sm font-medium">
+                      <span className="text-amber-400 font-medium">
                         Follow or Not?
                       </span>
                     </div>
@@ -899,11 +899,11 @@ const BuySalePopup = ({
                   <div className="flex flex-col gap-1 mb-2">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-4 bg-red-500 rounded-full"></div>
-                      <h3 className="font-semibold text-gray-200 text-sm">
+                      <h3 className="font-semibold text-gray-200 text-[10px] sm:text-sm">
                         🔴 Sale Signals
                       </h3>
                       {redSaleList.length + greenSaleList.length > 0 && (
-                        <span className="text-xs bg-red-900 text-red-300 px-1.5 py-0.5 rounded-full">
+                        <span className="text-[10px] sm:text-xs bg-red-900 text-red-300 px-1.5 py-0.5 rounded-full">
                           {redSaleList.length + greenSaleList.length}
                         </span>
                       )}
@@ -912,7 +912,7 @@ const BuySalePopup = ({
 
                   {redSaleList.length === 0 && greenSaleList.length === 0 ? (
                     <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                      <p className="text-gray-500 text-xs">No sale signals</p>
+                      <p className="text-gray-500 text-[10px] sm:text-xs">No sale signals</p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -920,10 +920,10 @@ const BuySalePopup = ({
                       {redSaleList.length > 0 && (
                         <div>
                           <div className="flex items-center gap-1 mb-1">
-                            <span className="text-xs font-semibold text-red-400">
+                            <span className="text-[9px] sm:text-xs font-semibold text-red-400">
                               🚨 Stop Loss (3% Below)
                             </span>
-                            <span className="text-xs bg-red-900 text-red-300 px-1 rounded">
+                            <span className="text-[9px] sm:text-xs bg-red-900 text-red-300 px-1 rounded">
                               {redSaleList.length}
                             </span>
                           </div>
@@ -948,17 +948,17 @@ const BuySalePopup = ({
                               return (
                                 <div
                                   key={idx}
-                                  className="bg-red-900/20 border border-red-800/50 rounded-lg p-2"
+                                  className="bg-red-900/20 border border-red-800/50 rounded-lg p-1.5 sm:p-2"
                                 >
-                                  <div className="flex justify-between items-start mb-2">
-                                    <span className="font-semibold text-red-300 text-xs sm:text-sm truncate flex-1">
+                                  <div className="flex justify-between items-start mb-1 sm:mb-2">
+                                    <span className="font-semibold text-red-300 text-[10px] sm:text-sm truncate flex-1">
                                       {row.company}
                                     </span>
-                                    <span className="text-xs bg-red-800 text-red-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                    <span className="text-[9px] sm:text-xs bg-red-800 text-red-300 px-1 sm:px-1.5 py-0.5 rounded-full ml-1 shrink-0">
                                       Loss
                                     </span>
                                   </div>
-                                  <div className="space-y-1 text-xs sm:text-sm">
+                                  <div className="space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs">
                                     <div className="flex justify-between">
                                       <span className="text-gray-400">
                                         Buy Price:
@@ -994,7 +994,7 @@ const BuySalePopup = ({
                                         ৳{row.exitFloorPrice.toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                                    <div className="flex items-center justify-between">
                                       <span className="text-yellow-400">
                                         Vol. Ratio:{" "}
                                         <span className="text-yellow-300 font-medium">
@@ -1022,10 +1022,10 @@ const BuySalePopup = ({
                       {greenSaleList.length > 0 && (
                         <div>
                           <div className="flex items-center gap-1 mb-1 mt-2">
-                            <span className="text-xs font-semibold text-green-400">
+                            <span className="text-[9px] sm:text-xs font-semibold text-green-400">
                               🏆 Target Hit (10% Above)
                             </span>
-                            <span className="text-xs bg-green-900 text-green-300 px-1 rounded">
+                            <span className="text-[9px] sm:text-xs bg-green-900 text-green-300 px-1 rounded">
                               {greenSaleList.length}
                             </span>
                           </div>
@@ -1050,17 +1050,17 @@ const BuySalePopup = ({
                               return (
                                 <div
                                   key={idx}
-                                  className="bg-green-900/20 border border-green-800/50 rounded-lg p-2"
+                                  className="bg-green-900/20 border border-green-800/50 rounded-lg p-1.5 sm:p-2"
                                 >
-                                  <div className="flex justify-between items-start mb-2">
-                                    <span className="font-semibold text-green-300 text-xs sm:text-sm truncate flex-1">
+                                  <div className="flex justify-between items-start mb-1 sm:mb-2">
+                                    <span className="font-semibold text-green-300 text-[10px] sm:text-sm truncate flex-1">
                                       {row.company}
                                     </span>
-                                    <span className="text-xs bg-green-800 text-green-300 px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                    <span className="text-[9px] sm:text-xs bg-green-800 text-green-300 px-1 sm:px-1.5 py-0.5 rounded-full ml-1 shrink-0">
                                       Profit
                                     </span>
                                   </div>
-                                  <div className="space-y-1 text-xs sm:text-sm">
+                                  <div className="space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs">
                                     <div className="flex justify-between">
                                       <span className="text-yellow-400">
                                         Buy Price:
@@ -1096,7 +1096,7 @@ const BuySalePopup = ({
                                         ৳{row.targetPrice.toFixed(2)}
                                       </span>
                                     </div>
-                                    <div className="flex items-center justify-between text-xs sm:text-sm">
+                                    <div className="flex items-center justify-between">
                                       <span className="text-yellow-400">
                                         Vol. Ratio:{" "}
                                         <span className="text-yellow-300 font-medium">
@@ -1131,7 +1131,7 @@ const BuySalePopup = ({
         <div className="border-t border-gray-700 px-3 py-2 flex justify-center bg-gray-800/50">
           <button
             onClick={onClose}
-            className="px-4 py-1 bg-blue-800 hover:bg-blue-600 text-white text-xl font-medium rounded-lg transition"
+            className="px-4 py-1 bg-blue-800 hover:bg-blue-600 text-white text-base sm:text-xl font-medium rounded-lg transition"
           >
             Go to Dashboard
           </button>
