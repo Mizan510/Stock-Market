@@ -128,7 +128,14 @@ const calculateIndicators = (data) => {
     }
   }
 
-  return { pivotPoint: pivot, r1, s1, volRatio, originalSignal, customSignal };
+  return { 
+    pivotPoint: pivot, 
+    r1, 
+    s1, 
+    volRatio, 
+    originalSignal, 
+    customSignal 
+  };
 };
 
 const buildZoneData = (data) => {
@@ -191,7 +198,10 @@ router.get("/", async (req, res) => {
     res.json(zones);
   } catch (err) {
     console.error("Error fetching zones:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json({ 
+      message: "Server error", 
+      error: err.message 
+    });
   }
 });
 
@@ -202,10 +212,15 @@ router.post("/", async (req, res) => {
 
     // Validate company name
     if (!zoneData.company) {
-      return res.status(400).json({ message: "Company name is required" });
+      return res.status(400).json({ 
+        message: "Company name is required" 
+      });
     }
 
-    const existingZone = await Zone.findOne({ company: zoneData.company });
+    const existingZone = await Zone.findOne({ 
+      company: zoneData.company 
+    });
+    
     if (existingZone) {
       return res.status(400).json({
         message: "Company already exists. Please use PUT to update.",
@@ -217,7 +232,9 @@ router.post("/", async (req, res) => {
     res.status(201).json(zone);
   } catch (err) {
     console.error("Error creating zone:", err);
-    res.status(400).json({ message: err.message });
+    res.status(400).json({ 
+      message: err.message 
+    });
   }
 });
 
@@ -228,22 +245,32 @@ router.put("/:id", async (req, res) => {
 
     // Validate company name
     if (!zoneData.company) {
-      return res.status(400).json({ message: "Company name is required" });
+      return res.status(400).json({ 
+        message: "Company name is required" 
+      });
     }
 
-    const zone = await Zone.findByIdAndUpdate(req.params.id, zoneData, {
-      new: true,
-      runValidators: true,
-    });
+    const zone = await Zone.findByIdAndUpdate(
+      req.params.id, 
+      zoneData, 
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!zone) {
-      return res.status(404).json({ message: "Zone not found" });
+      return res.status(404).json({ 
+        message: "Zone not found" 
+      });
     }
 
     res.json(zone);
   } catch (err) {
     console.error("Error updating zone:", err);
-    res.status(400).json({ message: err.message });
+    res.status(400).json({ 
+      message: err.message 
+    });
   }
 });
 
@@ -251,10 +278,19 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const zone = await Zone.findByIdAndDelete(req.params.id);
-    if (!zone) return res.status(404).json({ message: "Not found" });
-    res.json({ message: "Deleted" });
+    if (!zone) {
+      return res.status(404).json({ 
+        message: "Zone not found" 
+      });
+    }
+    res.json({ 
+      message: "Zone deleted successfully" 
+    });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Error deleting zone:", err);
+    res.status(500).json({ 
+      message: err.message 
+    });
   }
 });
 
