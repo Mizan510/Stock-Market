@@ -67,20 +67,22 @@ const UpdatePrice = () => {
   // Safe number comparison with tolerance for floating-point precision
   const safeNumberCompare = (val1, val2) => {
     // If both are null/undefined/empty, they're equal
-    if ((val1 === null || val1 === undefined || val1 === '') && 
-        (val2 === null || val2 === undefined || val2 === '')) {
+    if (
+      (val1 === null || val1 === undefined || val1 === "") &&
+      (val2 === null || val2 === undefined || val2 === "")
+    ) {
       return true;
     }
-    
+
     // Parse both to numbers
     const num1 = parseFloatOrNull(val1);
     const num2 = parseFloatOrNull(val2);
-    
+
     // If either is null after parsing, they're only equal if both are null
     if (num1 === null || num2 === null) {
       return num1 === num2;
     }
-    
+
     // Compare with tolerance for floating-point precision
     // Use 0.005 tolerance for price values
     const tolerance = 0.005;
@@ -385,8 +387,7 @@ const UpdatePrice = () => {
     return uploadedData.map((uploaded) => {
       const uppercasedCompany = toUpperCaseName(uploaded.company);
       const existing = zoneData.find(
-        (existing) =>
-          existing.company?.toLowerCase() === uppercasedCompany?.toLowerCase(),
+        (existing) => toUpperCaseName(existing.company) === uppercasedCompany,
       );
 
       // Calculate indicators for uploaded data
@@ -487,100 +488,67 @@ const UpdatePrice = () => {
     const parseNum = (val) => {
       if (val === undefined || val === null || String(val).trim() === "")
         return null;
-      // Handle strings with commas (e.g., "11,400,211")
-      let cleanedVal = String(val).replace(/,/g, "");
-      const num = Number(cleanedVal);
+
+      // Convert to string and normalize common formatting issues:
+      // - remove NBSP and regular spaces
+      // - convert parentheses to negative numbers e.g. (1,234) -> -1234
+      // - remove commas and other non-numeric punctuation except dot and minus
+      let s = String(val).trim();
+      // Convert (123) -> -123
+      s = s.replace(/^\((.*)\)$/, "-$1");
+      // Remove non-breaking spaces and normal spaces
+      s = s.replace(/[\u00A0\s]/g, "");
+      // Remove commas
+      s = s.replace(/,/g, "");
+      // Strip any characters except digits, dot and minus
+      s = s.replace(/[^0-9.-]/g, "");
+
+      if (s === "" || s === "-" || s === ".") return null;
+      const num = Number(s);
       return isNaN(num) ? null : num;
     };
 
+    // Create a normalized-key map for the incoming row so header variations
+    // (extra spaces, different punctuation/casing) don't cause mis-mapping.
+    const normalizeKey = (k) =>
+      String(k || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .trim();
+
     return rawData
       .map((item) => {
-        let compName = String(
-          item["Trading Code"] ||
-            item["Symbol"] ||
-            item["Scrip"] ||
-            item["Company Name"] ||
-            item["Company"] ||
-            item["CompanyName"] ||
-            "",
-        ).trim();
+        // Build normalized key map
+        const norm = {};
+        Object.keys(item || {}).forEach((k) => {
+          norm[normalizeKey(k)] = item[k];
+        });
 
-        compName = toUpperCaseName(compName);
+        // Map common header variations to canonical fields
+        const compName = toUpperCaseName(
+          norm.tradingcode ||
+            norm.symbol ||
+            norm.scrip ||
+            norm.companyname ||
+            norm.company ||
+            norm.companyname ||
+            "",
+        );
 
         const rawHigh =
-          item["Session High"] !== undefined
-            ? item["Session High"]
-            : item["SessionHigh"] !== undefined
-              ? item["SessionHigh"]
-              : item["High"] !== undefined
-                ? item["High"]
-                : item["TodaysHigh"] !== undefined
-                  ? item["TodaysHigh"]
-                  : null;
-
-        const rawLow =
-          item["Session Low"] !== undefined
-            ? item["Session Low"]
-            : item["SessionLow"] !== undefined
-              ? item["SessionLow"]
-              : item["Low"] !== undefined
-                ? item["Low"]
-                : item["TodaysLow"] !== undefined
-                  ? item["TodaysLow"]
-                  : null;
-
+          norm.sessionhigh ?? norm.high ?? norm.todayshigh ?? null;
+        const rawLow = norm.sessionlow ?? norm.low ?? norm.todayslow ?? null;
         const rawClose =
-          item["Session Close"] !== undefined
-            ? item["Session Close"]
-            : item["SessionClose"] !== undefined
-              ? item["SessionClose"]
-              : item["LTP"] !== undefined
-                ? item["LTP"]
-                : item["Close"] !== undefined
-                  ? item["Close"]
-                  : item["ClosingPrice"] !== undefined
-                    ? item["ClosingPrice"]
-                    : null;
-
-        const oneYLow =
-          item["1Y Low"] !== undefined
-            ? item["1Y Low"]
-            : item["1YLow"] !== undefined
-              ? item["1YLow"]
-              : item["YearLow"] !== undefined
-                ? item["YearLow"]
-                : item["Low Price"] !== undefined
-                  ? item["Low Price"]
-                  : null;
-
-        const oneYHigh =
-          item["1Y High"] !== undefined
-            ? item["1Y High"]
-            : item["1YHigh"] !== undefined
-              ? item["1YHigh"]
-              : item["YearHigh"] !== undefined
-                ? item["YearHigh"]
-                : item["High Price"] !== undefined
-                  ? item["High Price"]
-                  : null;
-
-        const todayVol =
-          item["Today Volume"] !== undefined
-            ? item["Today Volume"]
-            : item["TodayVolume"] !== undefined
-              ? item["TodayVolume"]
-              : item["Volume"] !== undefined
-                ? item["Volume"]
-                : null;
-
+          norm.sessionclose ??
+          norm.ltp ??
+          norm.close ??
+          norm.closingprice ??
+          null;
+        const oneYLow = norm.y1low ?? norm.yearlow ?? norm.lowprice ?? null;
+        const oneYHigh = norm.y1high ?? norm.yearhigh ?? norm.highprice ?? null;
+        const todayVol = norm.todayvolume ?? norm.volume ?? null;
         const avgVol =
-          item["Avg Volume (1M)"] !== undefined
-            ? item["Avg Volume (1M)"]
-            : item["AvgVolume1M"] !== undefined
-              ? item["AvgVolume1M"]
-              : item["Avg Volume"] !== undefined
-                ? item["Avg Volume"]
-                : null;
+          norm.avgvolume1m ?? norm.avgvolume ?? norm.avgvolume ?? null;
 
         const h = parseNum(rawHigh);
         const l = parseNum(rawLow);
@@ -590,9 +558,8 @@ const UpdatePrice = () => {
         const volume = parseNum(todayVol);
         const avgVolume = roundAvgVolume(parseNum(avgVol));
 
-        const rawMa20 = item["MA20"] ?? item["MA 20"] ?? item["MA_20"] ?? null;
-        const rawRsi14 =
-          item["RSI14"] ?? item["RSI 14"] ?? item["RSI_14"] ?? null;
+        const rawMa20 = norm.ma20 ?? norm.ma ?? null;
+        const rawRsi14 = norm.rsi14 ?? norm.rsi ?? null;
 
         const data = {
           company: compName,
@@ -655,13 +622,18 @@ const UpdatePrice = () => {
       setSubmitLoading(true);
       const updatedZoneMap = new Map();
 
+      const normalizeCompanyKey = (name) =>
+        toUpperCaseName(name || "").toLowerCase();
+
       zoneData.forEach((item) => {
-        updatedZoneMap.set(item.company.toLowerCase(), { ...item });
+        const key = normalizeCompanyKey(item.company);
+        updatedZoneMap.set(key, { ...item });
       });
 
       let successCount = 0;
       let errorCount = 0;
-      let newCompaniesList = new Set(companies.map((c) => c.toLowerCase()));
+      // Preserve display casing (uppercase) for companies list
+      let newCompaniesList = new Set(companies.map((c) => toUpperCaseName(c)));
 
       for (const item of comparisonData) {
         if (!item.company) {
@@ -669,7 +641,7 @@ const UpdatePrice = () => {
           continue;
         }
 
-        const companyKey = item.company.toLowerCase();
+        const companyKey = normalizeCompanyKey(item.company);
         const existingItem = updatedZoneMap.get(companyKey);
 
         // FIX: Round avg volume before saving
@@ -717,8 +689,12 @@ const UpdatePrice = () => {
           } else {
             const res = await api.post("/zone", payload);
             const savedRecord = res.data?.data || res.data;
+            // Ensure savedRecord.company is normalized for display
+            if (savedRecord && savedRecord.company) {
+              savedRecord.company = toUpperCaseName(savedRecord.company);
+            }
             updatedZoneMap.set(companyKey, savedRecord);
-            newCompaniesList.add(companyKey);
+            newCompaniesList.add(toUpperCaseName(item.company));
             successCount++;
           }
         } catch (err) {
@@ -1916,7 +1892,10 @@ const UpdatePrice = () => {
 
                         const getCellClass = (field, value) => {
                           if (isNewRecord) return "bg-yellow-950/30";
-                          if (hasChanges && !safeNumberCompare(value, item.existing?.[field])) {
+                          if (
+                            hasChanges &&
+                            !safeNumberCompare(value, item.existing?.[field])
+                          ) {
                             return "bg-amber-950/50 text-amber-300 font-bold ring-1 ring-amber-500/50";
                           }
                           return "";
