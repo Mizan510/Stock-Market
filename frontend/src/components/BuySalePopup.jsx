@@ -916,9 +916,13 @@ const BuySalePopup = ({
                     </div>
                   </div>
 
-                  {redSaleList.length === 0 && greenSaleList.length === 0 && remainingSaleList.length === 0 ? (
+                  {redSaleList.length === 0 &&
+                  greenSaleList.length === 0 &&
+                  remainingSaleList.length === 0 ? (
                     <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
-                      <p className="text-gray-500 text-[10px] sm:text-xs">No sale signals</p>
+                      <p className="text-gray-500 text-[10px] sm:text-xs">
+                        No sale signals
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -993,10 +997,10 @@ const BuySalePopup = ({
                                       </span>
                                     </div>
                                     <div className="flex justify-between">
-                                      <span className="text-gray-400">
+                                      <span className="text-red-500">
                                         Stop Loss:
                                       </span>
-                                      <span className="text-red-400 font-medium">
+                                      <span className="text-red-500 font-medium text-[15px]">
                                         ৳{row.exitFloorPrice.toFixed(2)}
                                       </span>
                                     </div>
@@ -1134,7 +1138,7 @@ const BuySalePopup = ({
                             onClick={toggleRemainingSales}
                           >
                             <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-                            <h3 className="font-semibold text-gray-200 text-[10px] sm:text-sm">
+                            <h3 className="font-semibold text-gray-200 text-[7px] sm:text-xs md:text-sm">
                               📊 Remaining Holdings
                             </h3>
                             <span className="text-[10px] sm:text-xs bg-blue-900 text-blue-300 px-1.5 py-0.5 rounded-full">
@@ -1155,15 +1159,22 @@ const BuySalePopup = ({
                                 const volumeRatio = zoneRow
                                   ? getVolumeRatio(zoneRow)
                                   : null;
-                                const formattedRatio = formatVolumeRatio(volumeRatio);
-                                const rsi14 = zoneRow ? getRSI14(zoneRow) : null;
+                                const formattedRatio =
+                                  formatVolumeRatio(volumeRatio);
+                                const rsi14 = zoneRow
+                                  ? getRSI14(zoneRow)
+                                  : null;
                                 const formattedRSI =
                                   rsi14 !== null ? rsi14.toFixed(2) : null;
                                 const isRSIOverbought =
                                   rsi14 !== null && rsi14 > 70;
-                                
+
                                 // Calculate profit/loss percentage
-                                const profitLossPercent = ((row.sessionPrice - row.avgBuyPriceWithCommission) / row.avgBuyPriceWithCommission) * 100;
+                                const profitLossPercent =
+                                  ((row.sessionPrice -
+                                    row.avgBuyPriceWithCommission) /
+                                    row.avgBuyPriceWithCommission) *
+                                  100;
 
                                 return (
                                   <div
@@ -1174,43 +1185,63 @@ const BuySalePopup = ({
                                       <span className="font-semibold text-blue-300 text-[10px] sm:text-sm truncate flex-1">
                                         {row.company}
                                       </span>
-                                      <span className={`text-[9px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full ml-1 shrink-0 ${
-                                        profitLossPercent >= 0 
-                                          ? "bg-green-800 text-green-300" 
-                                          : "bg-red-800 text-red-300"
-                                      }`}>
-                                        {profitLossPercent >= 0 ? "📈" : "📉"} {profitLossPercent.toFixed(2)}%
+                                      <span
+                                        className={`text-[9px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full ml-1 shrink-0 ${
+                                          profitLossPercent >= 0
+                                            ? "bg-green-800 text-green-300"
+                                            : "bg-red-800 text-red-300"
+                                        }`}
+                                      >
+                                        {profitLossPercent.toFixed(2)}%
                                       </span>
                                     </div>
                                     <div className="space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs">
                                       <div className="flex justify-between">
-                                        <span className="text-gray-400">Buy Price:</span>
+                                        <span className="text-gray-400">
+                                          Buy Price:
+                                        </span>
                                         <span className="text-gray-300 font-medium">
-                                          ৳{row.avgBuyPriceWithCommission.toFixed(2)}
+                                          ৳
+                                          {row.avgBuyPriceWithCommission.toFixed(
+                                            2,
+                                          )}
                                         </span>
                                       </div>
                                       <div className="flex justify-between">
-                                        <span className="text-gray-400">Session Price:</span>
-                                        <span className={`font-medium ${
-                                          profitLossPercent >= 0 ? "text-green-400" : "text-red-400"
-                                        }`}>
+                                        <span className="text-gray-400">
+                                          Session Price:
+                                        </span>
+                                        <span
+                                          className={`font-medium ${
+                                            profitLossPercent >= 0
+                                              ? "text-green-400"
+                                              : "text-red-400"
+                                          }`}
+                                        >
                                           ৳{row.sessionPrice.toFixed(2)}
                                         </span>
                                       </div>
                                       <div className="flex justify-between">
-                                        <span className="text-gray-400">Quantity:</span>
+                                        <span className="text-gray-400">
+                                          Quantity:
+                                        </span>
                                         <span className="text-gray-300">
-                                          {row.remainQtn.toLocaleString()} shares
+                                          {row.remainQtn.toLocaleString()}{" "}
+                                          shares
                                         </span>
                                       </div>
                                       <div className="flex justify-between">
-                                        <span className="text-gray-400">Stop Loss:</span>
-                                        <span className="text-red-400 font-medium">
+                                        <span className="text-red-500">
+                                          Stop Loss:
+                                        </span>
+                                        <span className="text-red-500 font-medium text-[15px]">
                                           ৳{row.exitFloorPrice.toFixed(2)}
                                         </span>
                                       </div>
                                       <div className="flex justify-between">
-                                        <span className="text-gray-400">Target:</span>
+                                        <span className="text-gray-400">
+                                          Target:
+                                        </span>
                                         <span className="text-green-400 font-medium">
                                           ৳{row.targetPrice.toFixed(2)}
                                         </span>
@@ -1223,7 +1254,9 @@ const BuySalePopup = ({
                                           </span>
                                         </span>
                                         {formattedRSI !== null && (
-                                          <span className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}>
+                                          <span
+                                            className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
+                                          >
                                             RSI: {formattedRSI}
                                             {isRSIOverbought && " ⚠️"}
                                           </span>
