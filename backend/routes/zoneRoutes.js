@@ -3,7 +3,20 @@ const router = express.Router();
 const Zone = require("../models/Zone");
 
 const parseNumber = (value) => {
+  // Handle null, undefined, empty string
   if (value === undefined || value === null || value === "") return null;
+  
+  // If it's already a number and is finite, return it
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  
+  // Try to convert string to number (handle comma-separated values)
+  if (typeof value === 'string') {
+    const cleaned = value.replace(/,/g, '');
+    const number = Number(cleaned);
+    return Number.isFinite(number) ? number : null;
+  }
+  
+  // Try to convert to number
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 };
@@ -121,11 +134,11 @@ const calculateIndicators = (data) => {
 const buildZoneData = (data) => {
   const zoneData = {};
 
-  if (data.company !== undefined) {
+  if (data.company !== undefined && data.company !== null) {
     zoneData.company = data.company.toUpperCase().trim();
   }
 
-  // Include ALL fields including volume
+  // Define all fields that should be processed
   const fields = [
     "low",
     "high",
@@ -140,11 +153,18 @@ const buildZoneData = (data) => {
     "rsi14",
   ];
 
+  // Process each field
   fields.forEach((key) => {
+    // Check if the field exists in the request body
     if (Object.prototype.hasOwnProperty.call(data, key)) {
-      // Allow explicit nulls so client can clear values
-      const value = parseNumber(data[key]);
-      zoneData[key] = value;
+      const value = data[key];
+      // Handle the value
+      if (value === undefined || value === null || value === "") {
+        zoneData[key] = null;
+      } else {
+        const parsed = parseNumber(value);
+        zoneData[key] = parsed;
+      }
     }
   });
 
@@ -180,6 +200,11 @@ router.post("/", async (req, res) => {
   try {
     const zoneData = buildZoneData(req.body);
 
+    // Validate company name
+    if (!zoneData.company) {
+      return res.status(400).json({ message: "Company name is required" });
+    }
+
     const existingZone = await Zone.findOne({ company: zoneData.company });
     if (existingZone) {
       return res.status(400).json({
@@ -200,6 +225,11 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const zoneData = buildZoneData(req.body);
+
+    // Validate company name
+    if (!zoneData.company) {
+      return res.status(400).json({ message: "Company name is required" });
+    }
 
     const zone = await Zone.findByIdAndUpdate(req.params.id, zoneData, {
       new: true,

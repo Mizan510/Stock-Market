@@ -64,6 +64,29 @@ const UpdatePrice = () => {
     return Number(parsed.toFixed(2));
   };
 
+  // Safe number comparison with tolerance for floating-point precision
+  const safeNumberCompare = (val1, val2) => {
+    // If both are null/undefined/empty, they're equal
+    if ((val1 === null || val1 === undefined || val1 === '') && 
+        (val2 === null || val2 === undefined || val2 === '')) {
+      return true;
+    }
+    
+    // Parse both to numbers
+    const num1 = parseFloatOrNull(val1);
+    const num2 = parseFloatOrNull(val2);
+    
+    // If either is null after parsing, they're only equal if both are null
+    if (num1 === null || num2 === null) {
+      return num1 === num2;
+    }
+    
+    // Compare with tolerance for floating-point precision
+    // Use 0.005 tolerance for price values
+    const tolerance = 0.005;
+    return Math.abs(num1 - num2) < tolerance;
+  };
+
   // Calculate pivot and support/resistance levels
   const calculateIndicators = (data) => {
     const h = parseFloatOrNull(data.todaysHigh);
@@ -383,63 +406,64 @@ const UpdatePrice = () => {
 
       const mismatches = [];
 
-      if (Number(uploaded.low) !== Number(existing.low)) {
+      // Use safe comparison for each field
+      if (!safeNumberCompare(uploaded.low, existing.low)) {
         mismatches.push({
           field: "1Y Low",
           old: existing.low,
           new: uploaded.low,
         });
       }
-      if (Number(uploaded.ma20 || 0) !== Number(existing.ma20 || 0)) {
+      if (!safeNumberCompare(uploaded.ma20, existing.ma20)) {
         mismatches.push({
           field: "MA20",
           old: existing.ma20,
           new: uploaded.ma20,
         });
       }
-      if (Number(uploaded.rsi14 || 0) !== Number(existing.rsi14 || 0)) {
+      if (!safeNumberCompare(uploaded.rsi14, existing.rsi14)) {
         mismatches.push({
           field: "RSI14",
           old: existing.rsi14,
           new: uploaded.rsi14,
         });
       }
-      if (Number(uploaded.high) !== Number(existing.high)) {
+      if (!safeNumberCompare(uploaded.high, existing.high)) {
         mismatches.push({
           field: "1Y High",
           old: existing.high,
           new: uploaded.high,
         });
       }
-      if (Number(uploaded.todaysHigh) !== Number(existing.todaysHigh)) {
+      if (!safeNumberCompare(uploaded.todaysHigh, existing.todaysHigh)) {
         mismatches.push({
           field: "Session High",
           old: existing.todaysHigh,
           new: uploaded.todaysHigh,
         });
       }
-      if (Number(uploaded.todaysLow) !== Number(existing.todaysLow)) {
+      if (!safeNumberCompare(uploaded.todaysLow, existing.todaysLow)) {
         mismatches.push({
           field: "Session Low",
           old: existing.todaysLow,
           new: uploaded.todaysLow,
         });
       }
-      if (Number(uploaded.closingPrice) !== Number(existing.closingPrice)) {
+      if (!safeNumberCompare(uploaded.closingPrice, existing.closingPrice)) {
         mismatches.push({
           field: "Session Close",
           old: existing.closingPrice,
           new: uploaded.closingPrice,
         });
       }
-      if (Number(uploaded.todayVolume) !== Number(existing.todayVolume)) {
+      if (!safeNumberCompare(uploaded.todayVolume, existing.todayVolume)) {
         mismatches.push({
           field: "Today Volume",
           old: existing.todayVolume,
           new: uploaded.todayVolume,
         });
       }
-      if (Number(uploaded.avgVolume1M) !== Number(existing.avgVolume1M)) {
+      if (!safeNumberCompare(uploaded.avgVolume1M, existing.avgVolume1M)) {
         mismatches.push({
           field: "Avg Volume (1M)",
           old: existing.avgVolume1M,
@@ -463,7 +487,9 @@ const UpdatePrice = () => {
     const parseNum = (val) => {
       if (val === undefined || val === null || String(val).trim() === "")
         return null;
-      const num = Number(String(val).replace(/,/g, ""));
+      // Handle strings with commas (e.g., "11,400,211")
+      let cleanedVal = String(val).replace(/,/g, "");
+      const num = Number(cleanedVal);
       return isNaN(num) ? null : num;
     };
 
@@ -1424,12 +1450,13 @@ const UpdatePrice = () => {
     return "bg-gray-800/60 text-gray-400";
   };
 
+  // Updated isValueChanged to use safe comparison
   const isValueChanged = (companyName, field, newValue) => {
     const comparison = comparisonData.find((c) => c.company === companyName);
     if (!comparison || !comparison.existing) return false;
 
     const existingValue = comparison.existing[field];
-    return Number(newValue) !== Number(existingValue);
+    return !safeNumberCompare(newValue, existingValue);
   };
 
   return (
@@ -1889,10 +1916,7 @@ const UpdatePrice = () => {
 
                         const getCellClass = (field, value) => {
                           if (isNewRecord) return "bg-yellow-950/30";
-                          if (
-                            hasChanges &&
-                            isValueChanged(item.company, field, value)
-                          ) {
+                          if (hasChanges && !safeNumberCompare(value, item.existing?.[field])) {
                             return "bg-amber-950/50 text-amber-300 font-bold ring-1 ring-amber-500/50";
                           }
                           return "";
