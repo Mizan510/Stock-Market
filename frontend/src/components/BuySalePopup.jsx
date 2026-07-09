@@ -600,7 +600,7 @@ const BuySalePopup = ({
                                           : "text-gray-300"
                                       }`}
                                     >
-                                      ৳{currentPrice?.toFixed(2)}
+                                      {currentPrice?.toFixed(2)}
                                     </span>
                                   </span>
                                 </div>
@@ -699,13 +699,13 @@ const BuySalePopup = ({
                                       <span className="text-gray-400">
                                         Current:{" "}
                                         <span className="text-gray-300 font-medium">
-                                          ৳{currentPrice?.toFixed(2)}
+                                          {currentPrice?.toFixed(2)}
                                         </span>
                                       </span>
                                       <span className="text-green-400">
                                         ≤20% Zone:{" "}
                                         <span className="font-medium">
-                                          ৳{buyZone?.toFixed(2)}
+                                          {buyZone?.toFixed(2)}
                                         </span>
                                       </span>
                                     </div>
@@ -853,7 +853,7 @@ const BuySalePopup = ({
                                                 : "text-gray-300"
                                             }`}
                                           >
-                                            ৳{currentPrice?.toFixed(2)}
+                                            {currentPrice?.toFixed(2)}
                                           </span>
                                         </span>
                                       </div>
@@ -958,7 +958,7 @@ const BuySalePopup = ({
                               return (
                                 <div
                                   key={idx}
-                                  className="bg-red-900/20 border border-red-800/50 rounded-lg p-1.5 sm:p-2"
+                                  className="bg-red-950/20 border border-red-800/50 rounded-lg p-1.5 sm:p-2"
                                 >
                                   <div className="flex justify-between items-start mb-1 sm:mb-2">
                                     <span className="font-semibold text-red-300 text-[10px] sm:text-sm truncate flex-1">
@@ -974,7 +974,6 @@ const BuySalePopup = ({
                                         Buy Price:
                                       </span>
                                       <span className="text-gray-300 font-medium">
-                                        ৳
                                         {row.avgBuyPriceWithCommission.toFixed(
                                           2,
                                         )}
@@ -982,10 +981,10 @@ const BuySalePopup = ({
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-gray-400">
-                                        Session Price:
+                                        Session Close:
                                       </span>
-                                      <span className="text-red-400 font-medium">
-                                        ৳{row.sessionPrice.toFixed(2)}
+                                      <span className="text-red-500 font-medium text-[15px]">
+                                        {row.sessionPrice.toFixed(2)}
                                       </span>
                                     </div>
                                     <div className="flex justify-between">
@@ -1001,7 +1000,7 @@ const BuySalePopup = ({
                                         Stop Loss:
                                       </span>
                                       <span className="text-red-500 font-medium text-[15px]">
-                                        ৳{row.exitFloorPrice.toFixed(2)}
+                                        {row.exitFloorPrice.toFixed(2)}
                                       </span>
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -1076,7 +1075,6 @@ const BuySalePopup = ({
                                         Buy Price:
                                       </span>
                                       <span className="text-gray-300 font-medium">
-                                        ৳
                                         {row.avgBuyPriceWithCommission.toFixed(
                                           2,
                                         )}
@@ -1086,8 +1084,8 @@ const BuySalePopup = ({
                                       <span className="text-gray-400">
                                         Session Price:
                                       </span>
-                                      <span className="text-green-400 font-medium">
-                                        ৳{row.sessionPrice.toFixed(2)}
+                                      <span className="text-green-400 font-medium text-[15px]">
+                                        {row.sessionPrice.toFixed(2)}
                                       </span>
                                     </div>
                                     <div className="flex justify-between">
@@ -1103,7 +1101,7 @@ const BuySalePopup = ({
                                         Target Price:
                                       </span>
                                       <span className="text-green-400 font-medium">
-                                        ৳{row.targetPrice.toFixed(2)}
+                                        {row.targetPrice.toFixed(2)}
                                       </span>
                                     </div>
                                     <div className="flex items-center justify-between">
@@ -1179,7 +1177,7 @@ const BuySalePopup = ({
                                 return (
                                   <div
                                     key={idx}
-                                    className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-1.5 sm:p-2 hover:bg-blue-900/30 transition-colors"
+                                    className="bg-blue-950/20 border border-blue-800/50 rounded-lg p-1.5 sm:p-2 hover:bg-blue-900/30 transition-colors"
                                   >
                                     <div className="flex justify-between items-start mb-1 sm:mb-2">
                                       <span className="font-semibold text-blue-300 text-[10px] sm:text-sm truncate flex-1">
@@ -1201,7 +1199,6 @@ const BuySalePopup = ({
                                           Buy Price:
                                         </span>
                                         <span className="text-gray-300 font-medium">
-                                          ৳
                                           {row.avgBuyPriceWithCommission.toFixed(
                                             2,
                                           )}
@@ -1209,16 +1206,16 @@ const BuySalePopup = ({
                                       </div>
                                       <div className="flex justify-between">
                                         <span className="text-gray-400">
-                                          Session Price:
+                                          Session Close:
                                         </span>
                                         <span
                                           className={`font-medium ${
                                             profitLossPercent >= 0
-                                              ? "text-green-400"
-                                              : "text-red-400"
+                                              ? "text-green-500 text-[15px]"
+                                              : "text-red-500 text-[15px]"
                                           }`}
                                         >
-                                          ৳{row.sessionPrice.toFixed(2)}
+                                          {row.sessionPrice.toFixed(2)}
                                         </span>
                                       </div>
                                       <div className="flex justify-between">
@@ -1235,7 +1232,7 @@ const BuySalePopup = ({
                                           Stop Loss:
                                         </span>
                                         <span className="text-red-500 font-medium text-[15px]">
-                                          ৳{row.exitFloorPrice.toFixed(2)}
+                                          {row.exitFloorPrice.toFixed(2)}
                                         </span>
                                       </div>
                                       <div className="flex justify-between">
@@ -1243,7 +1240,7 @@ const BuySalePopup = ({
                                           Target:
                                         </span>
                                         <span className="text-green-400 font-medium">
-                                          ৳{row.targetPrice.toFixed(2)}
+                                          {row.targetPrice.toFixed(2)}
                                         </span>
                                       </div>
                                       <div className="flex items-center justify-between pt-0.5 border-t border-gray-700/50">
