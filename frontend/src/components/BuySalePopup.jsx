@@ -45,6 +45,19 @@ const BuySalePopup = ({
     return lowValue + ((highValue - lowValue) * percentValue) / 100;
   };
 
+  // NORMALIZE SIGNAL - SINGLE DECLARATION
+  const normalizeSignal = (value) => {
+    const signal = String(value || "").trim();
+    const signalUpper = signal.toUpperCase();
+    if (
+      signalUpper === "STRONG BUYER (NEAR PIVOT)" ||
+      signalUpper === "STRONG BUYER NEAR PIVOT"
+    ) {
+      return "STRONG BUYER (NP)";
+    }
+    return signalUpper;
+  };
+
   // Helper function to calculate volume ratio
   const calculateVolumeRatio = (todayVolume, avgVolume) => {
     if (!todayVolume || !avgVolume || avgVolume === 0) return null;
@@ -94,11 +107,11 @@ const BuySalePopup = ({
               pivots[company] = zone.pivotPoint;
               console.log(`${company} pivot from DB:`, zone.pivotPoint);
             }
-            // Store volume signal
-            if (zone.volumeSignal || zone.customSignal) {
-              volumes[company] = zone.volumeSignal || zone.customSignal;
-              console.log(`${company} volume signal:`, volumes[company]);
-            }
+            // Store normalized volume signal
+            const rawSignal = zone.volumeSignal || zone.customSignal || "Neutral";
+            const normalizedSignal = normalizeSignal(rawSignal);
+            volumes[company] = normalizedSignal;
+            console.log(`${company} volume signal:`, normalizedSignal);
             // Calculate and store volume ratio from today volume and avg volume
             const todayVol = zone.todayVolume || 0;
             const avgVol = zone.avgVolume1M || 0;
@@ -137,6 +150,9 @@ const BuySalePopup = ({
             const avgVol = row.avgVolume1M || 0;
             const calculatedRatio = calculateVolumeRatio(todayVol, avgVol);
 
+            const rawSignal = row.volumeSignal || row.customSignal || "Neutral";
+            const normalizedSignal = normalizeSignal(rawSignal);
+
             return {
               ...row,
               company: company,
@@ -154,8 +170,10 @@ const BuySalePopup = ({
               buyPercent: row.buyPercent ?? 20,
               // Use pivot from database
               pivot: row.pivotPoint || null,
-              // Volume signal from database
-              volumeSignal: row.volumeSignal || row.customSignal || null,
+              // MA20 from database
+              ma20: row.ma20 || null,
+              // Normalized volume signal from database
+              volumeSignal: normalizedSignal,
               // Volume ratio - use calculated value or from database
               volumeRatio:
                 calculatedRatio !== null
@@ -299,40 +317,38 @@ const BuySalePopup = ({
     yearlyLowBuyList.map((row) => row.company),
   );
 
-  // Volume Signal Buy - Uses volume signal from database with highlight check
+  // Volume Signal Buy - Shows: Overbought (ST), Strong Buyer, Weak Buyer, Strong Buyer (NP)
   const volumeBuyListWithHighlight = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
-      const buySignals = [
-        "STRONG BULLISH",
-        "BULLISH",
-        "MILD BULLISH",
-        "STRONG BUYER",
-        "BUYER",
-        "WEAK BUYER",
-      ];
-      const signalUpper = volumeSignal?.toUpperCase() || "";
-      return buySignals.some((signal) => signalUpper.includes(signal));
-    })
-    .map((row) => ({
-      ...row,
-      // Highlight if stock is in Yearly Low Buy list
-      isHighlighted: yearlyLowCompanySet.has(row.company),
-    }));
-
-  // Ready for Buy - Only STRONG BUYER and VERY STRONG BUYER
-  const readyForBuyList = buyRows
-    .filter((row) => {
-      const volumeSignal = row.volumeSignal || volumeData[row.company];
-      const signalUpper = volumeSignal?.toUpperCase() || "";
+      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      // Exact match check
       return (
-        signalUpper.includes("STRONG BUYER") ||
-        signalUpper.includes("VERY STRONG BUYER")
+        signalUpper === "OVERBOUGHT (ST)" ||
+        signalUpper === "STRONG BUYER (NP)" ||
+        signalUpper === "STRONG BUYER" ||
+        signalUpper === "WEAK BUYER"
       );
     })
     .map((row) => ({
       ...row,
-      // Highlight if stock is in Yearly Low Buy list
+      isHighlighted: yearlyLowCompanySet.has(row.company),
+    }));
+
+  // Ready for Buy - Shows: Overbought (ST), Strong Buyer, Strong Buyer (NP)
+  const readyForBuyList = buyRows
+    .filter((row) => {
+      const volumeSignal = row.volumeSignal || volumeData[row.company];
+      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      // Exact match check
+      return (
+        signalUpper === "OVERBOUGHT (ST)" ||
+        signalUpper === "STRONG BUYER (NP)" ||
+        signalUpper === "STRONG BUYER"
+      );
+    })
+    .map((row) => ({
+      ...row,
       isHighlighted: yearlyLowCompanySet.has(row.company),
     }));
 
@@ -363,13 +379,21 @@ const BuySalePopup = ({
   const getVolumeSignalStyle = (signal) => {
     if (!signal || signal === "N/A") return "text-gray-400";
 
-    const signalUpper = signal.toUpperCase();
+    const signalUpper = String(signal || "").toUpperCase();
 
-    if (
+    if (signalUpper === "OVERBOUGHT (ST)") {
+      return "text-orange-400 font-bold";
+    } else if (signalUpper === "OVERBOUGHT (HR)") {
+      return "text-red-500 font-bold animate-pulse";
+    } else if (signalUpper === "OVERSOLD (WB)") {
+      return "text-purple-400 font-bold";
+    } else if (
       signalUpper === "STRONG BULLISH" ||
       signalUpper === "VERY STRONG BUYER"
     ) {
       return "text-emerald-400 font-bold";
+    } else if (signalUpper === "STRONG BUYER (NP)") {
+      return "text-teal-400 font-bold";
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "text-emerald-300 font-bold";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
@@ -394,29 +418,37 @@ const BuySalePopup = ({
   const getVolumeSignalBadge = (signal) => {
     if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
 
-    const signalUpper = signal.toUpperCase();
+    const signalUpper = String(signal || "").toUpperCase();
 
-    if (
+    if (signalUpper === "OVERBOUGHT (ST)") {
+      return "bg-green-800 text-white font-normal border-2 border-green-500";
+    } else if (signalUpper === "OVERBOUGHT (HR)") {
+      return "bg-red-600 text-white font-bold border-2 border-red-400 animate-pulse";
+    } else if (signalUpper === "OVERSOLD (WB)") {
+      return "bg-purple-600 text-white font-bold border border-purple-400";
+    } else if (
       signalUpper === "STRONG BULLISH" ||
       signalUpper === "VERY STRONG BUYER"
     ) {
-      return "bg-gray-900 text-green-300 font-bold border border-green-500";
+      return "bg-emerald-700 text-yellow-300 font-bold border-2 border-yellow-400";
+    } else if (signalUpper === "STRONG BUYER (NP)") {
+      return "bg-cyan-700 text-white font-bold border-2 border-cyan-300";
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
-      return "bg-gray-800 text-green-400 font-semibold border border-green-500";
+      return "bg-emerald-950 text-white font-semibold border border-emerald-700";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
-      return "bg-gray-700 text-emerald-300 font-medium";
+      return "bg-emerald-400 text-gray-900 font-semibold";
     } else if (
       signalUpper === "STRONG BEARISH" ||
       signalUpper === "VERY STRONG SELLER"
     ) {
-      return "bg-gray-900 text-rose-300 font-bold border border-rose-500";
+      return "bg-red-700 text-yellow-300 font-bold border-2 border-yellow-400";
     } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
-      return "bg-gray-800 text-rose-400 font-semibold border border-rose-500";
+      return "bg-red-500 text-white font-bold border border-red-400";
     } else if (
       signalUpper === "MILD BEARISH" ||
       signalUpper === "WEAK SELLER"
     ) {
-      return "bg-gray-700 text-rose-300 font-medium";
+      return "bg-red-300 text-gray-900 font-semibold";
     } else {
       return "bg-gray-800 text-gray-400";
     }
@@ -455,6 +487,22 @@ const BuySalePopup = ({
     // Get RSI from the row data
     if (row.rsi14 !== null && row.rsi14 !== undefined) {
       return row.rsi14;
+    }
+    return null;
+  };
+
+  // Helper function to get MA20 for a company
+  const getMA20 = (row) => {
+    if (row.ma20 !== null && row.ma20 !== undefined) {
+      return row.ma20;
+    }
+    return null;
+  };
+
+  // Helper function to get Pivot for a company
+  const getPivot = (row) => {
+    if (row.pivot !== null && row.pivot !== undefined) {
+      return row.pivot;
     }
     return null;
   };
@@ -507,7 +555,6 @@ const BuySalePopup = ({
                     </div>
                     <div className="flex items-center gap-2 text-[10px] sm:text-xs">
                       <span className="text-gray-400">Pyramid Rules:</span>
-
                       <span className="text-amber-400 font-medium">
                         Follow or Not?
                       </span>
@@ -527,6 +574,16 @@ const BuySalePopup = ({
                         </span>
                       )}
                     </div>
+                    <p className="text-[10px] sm:text-xs text-gray-400">
+                      <span className="text-green-400 font-medium">ST</span> =
+                      Strong Trend •{" "}
+                      <span className="text-cyan-400 font-medium">NP</span> =
+                      Near Pivot •{" "}
+                      <span className="text-yellow-400 font-medium">WB</span> =
+                      Watch Bounce •{" "}
+                      <span className="text-red-400 font-medium">HR</span> =
+                      High Risk
+                    </p>
 
                     {readyForBuyList.length === 0 ? (
                       <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
@@ -538,23 +595,29 @@ const BuySalePopup = ({
                       <div className="space-y-1.5">
                         {readyForBuyList.map((row, idx) => {
                           const currentPrice = parseNumber(row.closingPrice);
-                          const volumeSignal =
+                          const rawVolumeSignal =
                             row.volumeSignal ||
                             volumeData[row.company] ||
                             "Neutral";
-                          const signalStyle =
-                            getVolumeSignalStyle(volumeSignal);
+                          const volumeSignal = normalizeSignal(rawVolumeSignal);
                           const badgeStyle = getVolumeSignalBadge(volumeSignal);
                           const isHighlighted = row.isHighlighted;
-                          // Get Volume Ratio (show this prominently in parentheses)
+                          // Get Volume Ratio
                           const volumeRatio = getVolumeRatio(row);
                           const formattedRatio = formatVolumeRatio(volumeRatio);
-                          // Get RSI 14 (show this in the info line only)
+                          // Get RSI 14
                           const rsi14 = getRSI14(row);
                           const formattedRSI =
                             rsi14 !== null ? rsi14.toFixed(2) : null;
-                          // Check if RSI is above 70 for warning
                           const isRSIOverbought = rsi14 !== null && rsi14 > 70;
+                          // Get MA20
+                          const ma20 = getMA20(row);
+                          const formattedMA20 =
+                            ma20 !== null ? ma20.toFixed(2) : null;
+                          // Get Pivot
+                          const pivot = getPivot(row);
+                          const formattedPivot =
+                            pivot !== null ? pivot.toFixed(2) : null;
 
                           return (
                             <div
@@ -592,7 +655,7 @@ const BuySalePopup = ({
                                     {volumeSignal}
                                   </span>
                                   <span className="text-gray-400 text-[10px] sm:text-xs">
-                                    Current:{" "}
+                                    Close:{" "}
                                     <span
                                       className={`font-medium ${
                                         isHighlighted
@@ -605,19 +668,39 @@ const BuySalePopup = ({
                                   </span>
                                 </div>
 
-                                {/* Info line - Volume Ratio and RSI */}
+                                {/* Info line - Volume Ratio and MA */}
                                 <div className="flex items-center justify-between">
                                   <span className="text-yellow-400 text-[10px] sm:text-xs">
                                     Vol. Ratio: {formattedRatio ?? "-"}
                                   </span>
-                                  {formattedRSI !== null && (
+                                  <span className="text-blue-400 text-[10px] sm:text-xs">
+                                    MA20:{" "}
+                                    <span className="text-blue-300 font-medium">
+                                      {formattedMA20 ?? "-"}
+                                    </span>
+                                  </span>
+                                </div>
+
+                                {/* RSI and Pivot line */}
+                                <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                  {formattedRSI !== null ? (
                                     <span
-                                      className={`text-[10px] sm:text-xs ${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
+                                      className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                     >
                                       RSI: {formattedRSI}
                                       {isRSIOverbought && " ⚠️"}
                                     </span>
+                                  ) : (
+                                    <span className="text-yellow-400">
+                                      RSI: -
+                                    </span>
                                   )}
+                                  <span className="text-purple-400">
+                                    Pivot:{" "}
+                                    <span className="text-purple-300 font-medium">
+                                      {formattedPivot ?? "-"}
+                                    </span>
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -670,17 +753,24 @@ const BuySalePopup = ({
                                   yearlyHigh,
                                   row.buyPercent,
                                 );
-                                // Get Volume Ratio (show this in parentheses)
+                                // Get Volume Ratio
                                 const volumeRatio = getVolumeRatio(row);
                                 const formattedRatio =
                                   formatVolumeRatio(volumeRatio);
-                                // Get RSI 14 (show this in the info line only)
+                                // Get RSI 14
                                 const rsi14 = getRSI14(row);
                                 const formattedRSI =
                                   rsi14 !== null ? rsi14.toFixed(2) : null;
-                                // Check if RSI is above 70 for warning
                                 const isRSIOverbought =
                                   rsi14 !== null && rsi14 > 70;
+                                // Get MA20
+                                const ma20 = getMA20(row);
+                                const formattedMA20 =
+                                  ma20 !== null ? ma20.toFixed(2) : null;
+                                // Get Pivot
+                                const pivot = getPivot(row);
+                                const formattedPivot =
+                                  pivot !== null ? pivot.toFixed(2) : null;
 
                                 return (
                                   <div
@@ -697,7 +787,7 @@ const BuySalePopup = ({
                                     </div>
                                     <div className="flex justify-between text-[10px] sm:text-xs mt-0.5 sm:mt-1">
                                       <span className="text-gray-400">
-                                        Current:{" "}
+                                        Close:{" "}
                                         <span className="text-gray-300 font-medium">
                                           {currentPrice?.toFixed(2)}
                                         </span>
@@ -716,14 +806,33 @@ const BuySalePopup = ({
                                           {formattedRatio ?? "-"}
                                         </span>
                                       </span>
-                                      {formattedRSI !== null && (
+                                      <span className="text-blue-400 text-[10px] sm:text-xs">
+                                        MA20:{" "}
+                                        <span className="text-blue-300 font-medium">
+                                          {formattedMA20 ?? "-"}
+                                        </span>
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-[10px] sm:text-xs mt-0.5">
+                                      {formattedRSI !== null ? (
                                         <span
                                           className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                         >
                                           RSI: {formattedRSI}
                                           {isRSIOverbought && " ⚠️"}
                                         </span>
+                                      ) : (
+                                        <span className="text-yellow-400">
+                                          RSI: -
+                                        </span>
                                       )}
+                                      <span className="text-purple-400">
+                                        Pivot:{" "}
+                                        <span className="text-purple-300 font-medium">
+                                          {formattedPivot ?? "-"}
+                                        </span>
+                                      </span>
                                     </div>
                                   </div>
                                 );
@@ -788,26 +897,32 @@ const BuySalePopup = ({
                                 const currentPrice = parseNumber(
                                   row.closingPrice,
                                 );
-                                const volumeSignal =
+                                const rawVolumeSignal =
                                   row.volumeSignal ||
                                   volumeData[row.company] ||
                                   "Neutral";
-                                const signalStyle =
-                                  getVolumeSignalStyle(volumeSignal);
+                                const volumeSignal = normalizeSignal(rawVolumeSignal);
                                 const badgeStyle =
                                   getVolumeSignalBadge(volumeSignal);
                                 const isHighlighted = row.isHighlighted;
-                                // Get Volume Ratio (show this in parentheses)
+                                // Get Volume Ratio
                                 const volumeRatio = getVolumeRatio(row);
                                 const formattedRatio =
                                   formatVolumeRatio(volumeRatio);
-                                // Get RSI 14 (show this in the info line only)
+                                // Get RSI 14
                                 const rsi14 = getRSI14(row);
                                 const formattedRSI =
                                   rsi14 !== null ? rsi14.toFixed(2) : null;
-                                // Check if RSI is above 70 for warning
                                 const isRSIOverbought =
                                   rsi14 !== null && rsi14 > 70;
+                                // Get MA20
+                                const ma20 = getMA20(row);
+                                const formattedMA20 =
+                                  ma20 !== null ? ma20.toFixed(2) : null;
+                                // Get Pivot
+                                const pivot = getPivot(row);
+                                const formattedPivot =
+                                  pivot !== null ? pivot.toFixed(2) : null;
 
                                 return (
                                   <div
@@ -819,7 +934,7 @@ const BuySalePopup = ({
                                     }`}
                                   >
                                     <div className="flex flex-col gap-0.5 sm:gap-1">
-                                      {/* Company Name with Volume Ratio in parentheses */}
+                                      {/* Company Name */}
                                       <div className="flex items-center justify-between w-full">
                                         <span
                                           className={`font-semibold text-[10px] sm:text-sm ${
@@ -845,7 +960,7 @@ const BuySalePopup = ({
                                           {volumeSignal}
                                         </span>
                                         <span className="text-gray-400 text-[10px] sm:text-xs">
-                                          Current:{" "}
+                                          Close:{" "}
                                           <span
                                             className={`font-medium ${
                                               isHighlighted
@@ -858,19 +973,39 @@ const BuySalePopup = ({
                                         </span>
                                       </div>
 
-                                      {/* Info line - Volume Ratio and RSI */}
+                                      {/* Info line - Volume Ratio and MA */}
                                       <div className="flex items-center justify-between">
                                         <span className="text-yellow-400 text-[10px] sm:text-xs">
                                           Vol. Ratio: {formattedRatio ?? "-"}
                                         </span>
-                                        {formattedRSI !== null && (
+                                        <span className="text-blue-400 text-[10px] sm:text-xs">
+                                          MA20:{" "}
+                                          <span className="text-blue-300 font-medium">
+                                            {formattedMA20 ?? "-"}
+                                          </span>
+                                        </span>
+                                      </div>
+
+                                      {/* RSI and Pivot line */}
+                                      <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                        {formattedRSI !== null ? (
                                           <span
-                                            className={`text-[10px] sm:text-xs ${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
+                                            className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                           >
                                             RSI: {formattedRSI}
                                             {isRSIOverbought && " ⚠️"}
                                           </span>
+                                        ) : (
+                                          <span className="text-yellow-400">
+                                            RSI: -
+                                          </span>
                                         )}
+                                        <span className="text-purple-400">
+                                          Pivot:{" "}
+                                          <span className="text-purple-300 font-medium">
+                                            {formattedPivot ?? "-"}
+                                          </span>
+                                        </span>
                                       </div>
                                     </div>
                                   </div>
@@ -939,7 +1074,6 @@ const BuySalePopup = ({
                           </div>
                           <div className="space-y-1.5">
                             {redSaleList.map((row, idx) => {
-                              // Get Volume Ratio and RSI for sale items
                               const zoneRow = buyRows.find(
                                 (r) => r.company === row.company,
                               );
@@ -951,9 +1085,14 @@ const BuySalePopup = ({
                               const rsi14 = zoneRow ? getRSI14(zoneRow) : null;
                               const formattedRSI =
                                 rsi14 !== null ? rsi14.toFixed(2) : null;
-                              // Check if RSI is above 70 for warning
                               const isRSIOverbought =
                                 rsi14 !== null && rsi14 > 70;
+                              const ma20 = zoneRow ? getMA20(zoneRow) : null;
+                              const formattedMA20 =
+                                ma20 !== null ? ma20.toFixed(2) : null;
+                              const pivot = zoneRow ? getPivot(zoneRow) : null;
+                              const formattedPivot =
+                                pivot !== null ? pivot.toFixed(2) : null;
 
                               return (
                                 <div
@@ -1010,14 +1149,32 @@ const BuySalePopup = ({
                                           {formattedRatio ?? "-"}
                                         </span>
                                       </span>
-                                      {formattedRSI !== null && (
+                                      <span className="text-blue-400">
+                                        MA20:{" "}
+                                        <span className="text-blue-300 font-medium">
+                                          {formattedMA20 ?? "-"}
+                                        </span>
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                      {formattedRSI !== null ? (
                                         <span
                                           className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                         >
                                           RSI: {formattedRSI}
                                           {isRSIOverbought && " ⚠️"}
                                         </span>
+                                      ) : (
+                                        <span className="text-yellow-400">
+                                          RSI: -
+                                        </span>
                                       )}
+                                      <span className="text-purple-400">
+                                        Pivot:{" "}
+                                        <span className="text-purple-300 font-medium">
+                                          {formattedPivot ?? "-"}
+                                        </span>
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -1040,7 +1197,6 @@ const BuySalePopup = ({
                           </div>
                           <div className="space-y-1.5">
                             {greenSaleList.map((row, idx) => {
-                              // Get Volume Ratio and RSI for sale items
                               const zoneRow = buyRows.find(
                                 (r) => r.company === row.company,
                               );
@@ -1052,9 +1208,14 @@ const BuySalePopup = ({
                               const rsi14 = zoneRow ? getRSI14(zoneRow) : null;
                               const formattedRSI =
                                 rsi14 !== null ? rsi14.toFixed(2) : null;
-                              // Check if RSI is above 70 for warning
                               const isRSIOverbought =
                                 rsi14 !== null && rsi14 > 70;
+                              const ma20 = zoneRow ? getMA20(zoneRow) : null;
+                              const formattedMA20 =
+                                ma20 !== null ? ma20.toFixed(2) : null;
+                              const pivot = zoneRow ? getPivot(zoneRow) : null;
+                              const formattedPivot =
+                                pivot !== null ? pivot.toFixed(2) : null;
 
                               return (
                                 <div
@@ -1082,7 +1243,7 @@ const BuySalePopup = ({
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-gray-400">
-                                        Session Price:
+                                        Session Close:
                                       </span>
                                       <span className="text-green-400 font-medium text-[15px]">
                                         {row.sessionPrice.toFixed(2)}
@@ -1111,14 +1272,32 @@ const BuySalePopup = ({
                                           {formattedRatio ?? "-"}
                                         </span>
                                       </span>
-                                      {formattedRSI !== null && (
+                                      <span className="text-blue-400">
+                                        MA20:{" "}
+                                        <span className="text-blue-300 font-medium">
+                                          {formattedMA20 ?? "-"}
+                                        </span>
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                      {formattedRSI !== null ? (
                                         <span
                                           className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                         >
                                           RSI: {formattedRSI}
                                           {isRSIOverbought && " ⚠️"}
                                         </span>
+                                      ) : (
+                                        <span className="text-yellow-400">
+                                          RSI: -
+                                        </span>
                                       )}
+                                      <span className="text-purple-400">
+                                        Pivot:{" "}
+                                        <span className="text-purple-300 font-medium">
+                                          {formattedPivot ?? "-"}
+                                        </span>
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -1150,7 +1329,6 @@ const BuySalePopup = ({
                           {showRemainingSales && (
                             <div className="space-y-1.5 mt-2">
                               {remainingSaleList.map((row, idx) => {
-                                // Get Volume Ratio and RSI for remaining items
                                 const zoneRow = buyRows.find(
                                   (r) => r.company === row.company,
                                 );
@@ -1166,8 +1344,15 @@ const BuySalePopup = ({
                                   rsi14 !== null ? rsi14.toFixed(2) : null;
                                 const isRSIOverbought =
                                   rsi14 !== null && rsi14 > 70;
+                                const ma20 = zoneRow ? getMA20(zoneRow) : null;
+                                const formattedMA20 =
+                                  ma20 !== null ? ma20.toFixed(2) : null;
+                                const pivot = zoneRow
+                                  ? getPivot(zoneRow)
+                                  : null;
+                                const formattedPivot =
+                                  pivot !== null ? pivot.toFixed(2) : null;
 
-                                // Calculate profit/loss percentage
                                 const profitLossPercent =
                                   ((row.sessionPrice -
                                     row.avgBuyPriceWithCommission) /
@@ -1243,21 +1428,39 @@ const BuySalePopup = ({
                                           {row.targetPrice.toFixed(2)}
                                         </span>
                                       </div>
-                                      <div className="flex items-center justify-between pt-0.5 border-t border-gray-700/50">
+                                      <div className="flex items-center justify-between">
                                         <span className="text-yellow-400">
                                           Vol. Ratio:{" "}
                                           <span className="text-yellow-300 font-medium">
                                             {formattedRatio ?? "-"}
                                           </span>
                                         </span>
-                                        {formattedRSI !== null && (
+                                        <span className="text-blue-400">
+                                          MA20:{" "}
+                                          <span className="text-blue-300 font-medium">
+                                            {formattedMA20 ?? "-"}
+                                          </span>
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                        {formattedRSI !== null ? (
                                           <span
                                             className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
                                           >
                                             RSI: {formattedRSI}
                                             {isRSIOverbought && " ⚠️"}
                                           </span>
+                                        ) : (
+                                          <span className="text-yellow-400">
+                                            RSI: -
+                                          </span>
                                         )}
+                                        <span className="text-purple-400">
+                                          Pivot:{" "}
+                                          <span className="text-purple-300 font-medium">
+                                            {formattedPivot ?? "-"}
+                                          </span>
+                                        </span>
                                       </div>
                                     </div>
                                   </div>

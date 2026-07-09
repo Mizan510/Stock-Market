@@ -21,6 +21,19 @@ const parseNumber = (value) => {
   return Number.isFinite(number) ? number : null;
 };
 
+const normalizeSignal = (signal) => {
+  if (signal === undefined || signal === null) return signal;
+  const normalized = String(signal).trim();
+  const upper = normalized.toUpperCase();
+  if (
+    upper === "STRONG BUYER (NEAR PIVOT)" ||
+    upper === "STRONG BUYER NEAR PIVOT"
+  ) {
+    return "Strong Buyer (NP)";
+  }
+  return normalized;
+};
+
 // Calculate all indicators
 const calculateIndicators = (data) => {
   const h = parseNumber(data.todaysHigh);
@@ -195,7 +208,17 @@ const buildZoneData = (data) => {
 router.get("/", async (req, res) => {
   try {
     const zones = await Zone.find().sort({ company: 1 });
-    res.json(zones);
+    const normalizedZones = zones.map((zone) => {
+      const normalizedZone = zone.toObject ? zone.toObject() : { ...zone };
+      normalizedZone.customSignal = normalizeSignal(
+        normalizedZone.customSignal,
+      );
+      normalizedZone.volumeSignal = normalizeSignal(
+        normalizedZone.volumeSignal,
+      );
+      return normalizedZone;
+    });
+    res.json(normalizedZones);
   } catch (err) {
     console.error("Error fetching zones:", err);
     res.status(500).json({ 
