@@ -142,15 +142,15 @@ const UpdatePrice = () => {
 
       // Check for Overbought (Strong Trend) - RSI >= 70, Vol >= 1.5, Close > MA20, Close > Pivot
       if (rsi14 >= 70 && volRatio >= 1.5 && c > ma20 && c > pivot) {
-        customSignal = "Overbought (Strong Trend)";
+        customSignal = "Overbought (ST)";
       }
       // Check for Overbought (High Risk) - RSI >= 70 (general)
       else if (rsi14 >= 70) {
-        customSignal = "Overbought (High Risk)";
+        customSignal = "Overbought (HR)";
       }
       // Check for Oversold (Watch Bounce) - RSI <= 30
       else if (rsi14 <= 30) {
-        customSignal = "Oversold (Watch Bounce)";
+        customSignal = "Oversold (WB)";
       }
       // Very Strong Buyer: Close > R1, Vol >= 2, Close > MA20, RSI 55-70
       else if (c > r1 && volRatio >= 2 && c > ma20 && rsi14 >= 55 && rsi14 < 70) {
@@ -158,7 +158,7 @@ const UpdatePrice = () => {
       }
       // Strong Buyer (Near Pivot): Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70, Near Pivot
       else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70 && isNearPivot) {
-        customSignal = "Strong Buyer (Near Pivot)";
+        customSignal = "Strong Buyer (NP)";
       }
       // Strong Buyer: Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70
       else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70) {
@@ -1361,7 +1361,7 @@ const UpdatePrice = () => {
                   fgColor: { argb: "FF006100" },
                 };
                 cell.font.color = { argb: "FFFFFFFF" };
-              } else if (signal === "STRONG BUYER" || signal === "STRONG BUYER (NEAR PIVOT)") {
+              } else if (signal === "STRONG BUYER" || signal === "STRONG BUYER (NP)") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
@@ -1396,21 +1396,21 @@ const UpdatePrice = () => {
                   fgColor: { argb: "FFFFC7CE" },
                 };
                 cell.font.color = { argb: "FF9C0006" };
-              } else if (signal === "OVERBOUGHT (STRONG TREND)") {
+              } else if (signal === "OVERBOUGHT (ST)") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
                   fgColor: { argb: "FF5B2D8E" },
                 };
                 cell.font.color = { argb: "FFFFFFFF" };
-              } else if (signal === "OVERBOUGHT (HIGH RISK)") {
+              } else if (signal === "OVERBOUGHT (HR)") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
                   fgColor: { argb: "FF9B59B6" },
                 };
                 cell.font.color = { argb: "FFFFFFFF" };
-              } else if (signal === "OVERSOLD (WATCH BOUNCE)") {
+              } else if (signal === "OVERSOLD (WB)") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
@@ -1454,7 +1454,7 @@ const UpdatePrice = () => {
 
     if (signalUpper === "VERY STRONG BUYER") {
       return "bg-emerald-950/90 text-emerald-300 border border-emerald-600 font-bold";
-    } else if (signalUpper === "STRONG BUYER" || signalUpper === "STRONG BUYER (NEAR PIVOT)") {
+    } else if (signalUpper === "STRONG BUYER" || signalUpper === "STRONG BUYER (NP)") {
       return "bg-emerald-900/80 text-emerald-300 border border-emerald-700";
     } else if (signalUpper === "WEAK BUYER") {
       return "bg-emerald-800/70 text-emerald-300 border border-emerald-800/50";
@@ -1464,11 +1464,11 @@ const UpdatePrice = () => {
       return "bg-rose-900/80 text-rose-300 border border-rose-700";
     } else if (signalUpper === "WEAK SELLER") {
       return "bg-rose-800/70 text-rose-300 border border-rose-800/50";
-    } else if (signalUpper === "OVERBOUGHT (STRONG TREND)") {
+    } else if (signalUpper === "OVERBOUGHT (ST)") {
       return "bg-purple-950/90 text-purple-300 border border-purple-600 font-bold";
-    } else if (signalUpper === "OVERBOUGHT (HIGH RISK)") {
+    } else if (signalUpper === "OVERBOUGHT (HR)") {
       return "bg-purple-900/80 text-purple-300 border border-purple-700";
-    } else if (signalUpper === "OVERSOLD (WATCH BOUNCE)") {
+    } else if (signalUpper === "OVERSOLD (WB)") {
       return "bg-blue-950/80 text-blue-300 border border-blue-700";
     }
 
