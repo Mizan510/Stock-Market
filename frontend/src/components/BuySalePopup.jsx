@@ -91,6 +91,8 @@ const BuySalePopup = ({
         const rawBuys = buyResponse.data?.data || buyResponse.data || [];
         const rawSales = saleResponse.data?.data || saleResponse.data || [];
 
+        console.log("=== DEBUG: Raw Zone Data ===", rawZones);
+
         // Get pivot points, volume signals, and volume ratios from database
         const pivots = {};
         const volumes = {};
@@ -103,21 +105,27 @@ const BuySalePopup = ({
             // Store pivot
             if (zone.pivotPoint !== undefined && zone.pivotPoint !== null) {
               pivots[company] = zone.pivotPoint;
+              console.log(`${company} pivot from DB:`, zone.pivotPoint);
             }
             // Store normalized volume signal
             const rawSignal = zone.volumeSignal || zone.customSignal || "Neutral";
             const normalizedSignal = normalizeSignal(rawSignal);
             volumes[company] = normalizedSignal;
+            console.log(`${company} volume signal:`, normalizedSignal);
             // Calculate and store volume ratio from today volume and avg volume
             const todayVol = zone.todayVolume || 0;
             const avgVol = zone.avgVolume1M || 0;
             const ratio = calculateVolumeRatio(todayVol, avgVol);
             if (ratio !== null) {
               volumeRatios[company] = ratio;
+              console.log(`${company} volume ratio calculated:`, ratio);
             }
           }
         });
 
+        console.log("=== All Pivots from DB ===", pivots);
+        console.log("=== All Volume Signals from DB ===", volumes);
+        console.log("=== All Volume Ratios from DB ===", volumeRatios);
         setPivotData(pivots);
         setVolumeData(volumes);
         setVolumeRatioData(volumeRatios);
@@ -179,6 +187,10 @@ const BuySalePopup = ({
             }),
           );
 
+        console.log(
+          "=== Mapped Buy Data with Volume Ratios ===",
+          mappedBuyData,
+        );
         setBuyRows(mappedBuyData);
 
         // Buy aggregation
@@ -310,13 +322,20 @@ const BuySalePopup = ({
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
       const signalUpper = String(volumeSignal || "").toUpperCase().trim();
-      // Include all buy signals: ST, VSB, SB, SB(NP) - exclude weak buyer
-      return (
-        signalUpper === "OVERBOUGHT (ST)" ||
-        signalUpper === "VERY STRONG BUYER" ||
-        signalUpper === "STRONG BUYER (NP)" ||
-        signalUpper === "STRONG BUYER"
-      );
+      
+      // Debug: log the signal for troubleshooting
+      if (signalUpper.includes("STRONG BUYER")) {
+        console.log(`[DEBUG] Company: ${row.company}, Signal: "${signalUpper}"`);
+      }
+
+      // Allowed buy signals (excluding Weak Buyer)
+      const allowedSignals = [
+        "OVERBOUGHT (ST)",
+        "VERY STRONG BUYER",
+        "STRONG BUYER (NP)",
+        "STRONG BUYER"
+      ];
+      return allowedSignals.includes(signalUpper);
     })
     .map((row) => ({
       ...row,
