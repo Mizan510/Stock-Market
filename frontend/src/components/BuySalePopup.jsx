@@ -297,7 +297,8 @@ const BuySalePopup = ({
     yearlyLowBuyList.map((row) => row.company),
   );
 
-  // Volume Signal Buy - includes all buy signals: ST, Very Strong Buyer, Strong Buyer, Strong Buyer (NP)
+  // Volume Signal Buy - includes: ST, Very Strong Buyer, Strong Buyer (NP)
+  // REMOVED: "STRONG BUYER" from this list
   const volumeBuyListWithHighlight = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
@@ -306,7 +307,6 @@ const BuySalePopup = ({
         "OVERBOUGHT (ST)",
         "VERY STRONG BUYER",
         "STRONG BUYER (NP)",
-        "STRONG BUYER",
       ];
       const included = allowedSignals.includes(signalUpper);
       if (signalUpper.includes("STRONG BUYER")) {
@@ -320,6 +320,7 @@ const BuySalePopup = ({
     }));
 
   // Ready for Buy - stronger signals (always visible)
+  // Includes: ST, Strong Buyer (NP), Strong Buyer
   const readyForBuyList = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
@@ -378,7 +379,7 @@ const BuySalePopup = ({
     ) {
       return "text-emerald-400 font-bold";
     } else if (signalUpper === "STRONG BUYER (NP)") {
-      return "text-teal-400 font-bold";
+      return "text-teal-400 font-bold text-[9px] sm:text-[10px]"; // Reduced text size
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "text-emerald-300 font-bold";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
@@ -417,7 +418,7 @@ const BuySalePopup = ({
     ) {
       return "bg-emerald-700 text-yellow-300 font-bold border-2 border-yellow-400";
     } else if (signalUpper === "STRONG BUYER (NP)") {
-      return "bg-cyan-700 text-white font-bold border-2 border-cyan-300";
+      return "bg-cyan-700 text-white font-bold border-2 border-cyan-300 text-[9px] sm:text-[10px]"; // Reduced text size
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "bg-emerald-950 text-white font-semibold border border-emerald-700";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
