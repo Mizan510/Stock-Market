@@ -15,7 +15,7 @@ const BuySalePopup = ({
   const [volumeData, setVolumeData] = useState({});
   const [volumeRatioData, setVolumeRatioData] = useState({});
 
-  // State for section visibility - all hidden by default
+  // State for section visibility
   const [showYearlyLow, setShowYearlyLow] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
   const [showRemainingSales, setShowRemainingSales] = useState(false);
@@ -45,20 +45,26 @@ const BuySalePopup = ({
     return lowValue + ((highValue - lowValue) * percentValue) / 100;
   };
 
-  // NORMALIZE SIGNAL - SINGLE DECLARATION
+  // Normalize signal to a standard uppercase form
   const normalizeSignal = (value) => {
-    const signal = String(value || "").trim();
+    if (!value) return "NEUTRAL";
+    const signal = String(value).trim();
     const signalUpper = signal.toUpperCase();
-    if (
-      signalUpper === "STRONG BUYER (NEAR PIVOT)" ||
-      signalUpper === "STRONG BUYER NEAR PIVOT"
-    ) {
-      return "STRONG BUYER (NP)";
-    }
-    return signalUpper;
+    // Map variations to the standard format
+    const mapping = {
+      "STRONG BUYER (NEAR PIVOT)": "STRONG BUYER (NP)",
+      "STRONG BUYER NEAR PIVOT": "STRONG BUYER (NP)",
+      "STRONG BUYER (NP)": "STRONG BUYER (NP)",
+      "OVERBOUGHT (STRONG TREND)": "OVERBOUGHT (ST)",
+      "OVERBOUGHT STRONG TREND": "OVERBOUGHT (ST)",
+      "OVERBOUGHT (HIGH RISK)": "OVERBOUGHT (HR)",
+      "OVERBOUGHT HIGH RISK": "OVERBOUGHT (HR)",
+      "OVERSOLD (WATCH BOUNCE)": "OVERSOLD (WB)",
+      "OVERSOLD WATCH BOUNCE": "OVERSOLD (WB)",
+    };
+    return mapping[signalUpper] || signalUpper;
   };
 
-  // Helper function to calculate volume ratio
   const calculateVolumeRatio = (todayVolume, avgVolume) => {
     if (!todayVolume || !avgVolume || avgVolume === 0) return null;
     return todayVolume / avgVolume;
@@ -93,7 +99,6 @@ const BuySalePopup = ({
 
         console.log("=== DEBUG: Raw Zone Data ===", rawZones);
 
-        // Get pivot points, volume signals, and volume ratios from database
         const pivots = {};
         const volumes = {};
         const volumeRatios = {};
@@ -102,50 +107,39 @@ const BuySalePopup = ({
           const company =
             zone.company || zone.companyName || zone.stockName || "";
           if (company) {
-            // Store pivot
             if (zone.pivotPoint !== undefined && zone.pivotPoint !== null) {
               pivots[company] = zone.pivotPoint;
-              console.log(`${company} pivot from DB:`, zone.pivotPoint);
             }
-            // Store normalized volume signal
             const rawSignal = zone.volumeSignal || zone.customSignal || "Neutral";
             const normalizedSignal = normalizeSignal(rawSignal);
             volumes[company] = normalizedSignal;
-            console.log(`${company} volume signal:`, normalizedSignal);
-            // Calculate and store volume ratio from today volume and avg volume
+            console.log(`[DEBUG] ${company} → normalized signal: "${normalizedSignal}" (original: "${rawSignal}")`);
+
             const todayVol = zone.todayVolume || 0;
             const avgVol = zone.avgVolume1M || 0;
             const ratio = calculateVolumeRatio(todayVol, avgVol);
             if (ratio !== null) {
               volumeRatios[company] = ratio;
-              console.log(`${company} volume ratio calculated:`, ratio);
             }
           }
         });
 
-        console.log("=== All Pivots from DB ===", pivots);
-        console.log("=== All Volume Signals from DB ===", volumes);
-        console.log("=== All Volume Ratios from DB ===", volumeRatios);
         setPivotData(pivots);
         setVolumeData(volumes);
         setVolumeRatioData(volumeRatios);
 
-        // Create buy rows with proper data
         const mappedBuyData = rawZones
           .map((row) => {
             const company =
               row.company || row.companyName || row.stockName || "";
 
-            // Session values
             const sessionHigh = row.todaysHigh || 0;
             const sessionLow = row.todaysLow || 0;
             const sessionClose = row.closingPrice || 0;
 
-            // Yearly values
             const yearlyHigh = row.high || 0;
             const yearlyLow = row.low || 0;
 
-            // Calculate volume ratio directly from the row data
             const todayVol = row.todayVolume || 0;
             const avgVol = row.avgVolume1M || 0;
             const calculatedRatio = calculateVolumeRatio(todayVol, avgVol);
@@ -156,25 +150,18 @@ const BuySalePopup = ({
             return {
               ...row,
               company: company,
-              // Session values
-              sessionHigh: sessionHigh,
-              sessionLow: sessionLow,
-              sessionClose: sessionClose,
-              // Yearly values
-              yearlyHigh: yearlyHigh,
-              yearlyLow: yearlyLow,
-              // For display - use session values for pivot display
+              sessionHigh,
+              sessionLow,
+              sessionClose,
+              yearlyHigh,
+              yearlyLow,
               high: sessionHigh,
               low: sessionLow,
               closingPrice: sessionClose,
               buyPercent: row.buyPercent ?? 20,
-              // Use pivot from database
               pivot: row.pivotPoint || null,
-              // MA20 from database
               ma20: row.ma20 || null,
-              // Normalized volume signal from database
               volumeSignal: normalizedSignal,
-              // Volume ratio - use calculated value or from database
               volumeRatio:
                 calculatedRatio !== null
                   ? calculatedRatio
@@ -187,13 +174,9 @@ const BuySalePopup = ({
             }),
           );
 
-        console.log(
-          "=== Mapped Buy Data with Volume Ratios ===",
-          mappedBuyData,
-        );
         setBuyRows(mappedBuyData);
 
-        // Buy aggregation
+        // Buy aggregation (unchanged)
         const buyAggregation = {};
         rawBuys.forEach((item) => {
           const company = (
@@ -223,7 +206,6 @@ const BuySalePopup = ({
           buyAggregation[company].totalCommission += commission;
         });
 
-        // Sale aggregation
         const saleAggregation = {};
         rawSales.forEach((item) => {
           const company = (
@@ -242,7 +224,6 @@ const BuySalePopup = ({
           saleAggregation[company].totalQty += qty;
         });
 
-        // Normalize sale data
         const normalizedSaleData = Object.keys(buyAggregation)
           .map((company) => {
             const buyData = buyAggregation[company];
@@ -298,10 +279,10 @@ const BuySalePopup = ({
 
   const isLoading = loading || localLoading;
 
-  // Yearly Low Buy - Uses yearly high/low values
+  // ----- BUY SIGNALS -----
+
   const yearlyLowBuyList = buyRows.filter((row) => {
     const currentPrice = parseNumber(row.closingPrice);
-    // Use yearly values for zone calculation
     const yearlyHigh = row.yearlyHigh || row.high || 0;
     const yearlyLow = row.yearlyLow || row.low || 0;
     const buyZone = calcZone(yearlyLow, yearlyHigh, row.buyPercent);
@@ -312,42 +293,37 @@ const BuySalePopup = ({
     );
   });
 
-  // Create a set of yearly low buy company names for highlighting
   const yearlyLowCompanySet = new Set(
     yearlyLowBuyList.map((row) => row.company),
   );
 
-  // Volume Signal Buy - Shows: OVERBOUGHT (ST), VERY STRONG BUYER, STRONG BUYER, STRONG BUYER (NP)
+  // Volume Signal Buy - includes all buy signals: ST, Very Strong Buyer, Strong Buyer, Strong Buyer (NP)
   const volumeBuyListWithHighlight = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
       const signalUpper = String(volumeSignal || "").toUpperCase().trim();
-      
-      // Debug: log the signal for troubleshooting
-      if (signalUpper.includes("STRONG BUYER")) {
-        console.log(`[DEBUG] Company: ${row.company}, Signal: "${signalUpper}"`);
-      }
-
-      // Allowed buy signals (excluding Weak Buyer)
       const allowedSignals = [
         "OVERBOUGHT (ST)",
         "VERY STRONG BUYER",
         "STRONG BUYER (NP)",
-        "STRONG BUYER"
+        "STRONG BUYER",
       ];
-      return allowedSignals.includes(signalUpper);
+      const included = allowedSignals.includes(signalUpper);
+      if (signalUpper.includes("STRONG BUYER")) {
+        console.log(`[DEBUG] Company: ${row.company}, Signal: "${signalUpper}", Included: ${included}`);
+      }
+      return included;
     })
     .map((row) => ({
       ...row,
       isHighlighted: yearlyLowCompanySet.has(row.company),
     }));
 
-  // Ready for Buy - Shows: Overbought (ST), Strong Buyer, Strong Buyer (NP)
+  // Ready for Buy - stronger signals (always visible)
   const readyForBuyList = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
       const signalUpper = String(volumeSignal || "").toUpperCase().trim();
-      // Exact match check
       return (
         signalUpper === "OVERBOUGHT (ST)" ||
         signalUpper === "STRONG BUYER (NP)" ||
@@ -358,6 +334,8 @@ const BuySalePopup = ({
       ...row,
       isHighlighted: yearlyLowCompanySet.has(row.company),
     }));
+
+  // ----- SALE SIGNALS -----
 
   const redSaleList = saleRows.filter(
     (row) =>
@@ -373,7 +351,6 @@ const BuySalePopup = ({
       row.closingPrice >= row.targetPrice,
   );
 
-  // NEW: Remaining Sales - between stop loss and target
   const remainingSaleList = saleRows.filter(
     (row) =>
       row.remainQtn > 0 &&
@@ -382,7 +359,8 @@ const BuySalePopup = ({
       row.closingPrice < row.targetPrice,
   );
 
-  // Get Volume Signal Style
+  // ----- STYLING FUNCTIONS -----
+
   const getVolumeSignalStyle = (signal) => {
     if (!signal || signal === "N/A") return "text-gray-400";
 
@@ -466,39 +444,32 @@ const BuySalePopup = ({
   const toggleVolume = () => setShowVolume(!showVolume);
   const toggleRemainingSales = () => setShowRemainingSales(!showRemainingSales);
 
-  // Helper function to format volume ratio as decimal (no % sign)
+  // Helper functions for metrics
   const formatVolumeRatio = (ratio) => {
     if (ratio === null || ratio === undefined || isNaN(ratio)) return null;
     return ratio.toFixed(2);
   };
 
-  // Helper function to get volume ratio for a company
   const getVolumeRatio = (row) => {
-    // First try to get from the row
     if (row.volumeRatio !== null && row.volumeRatio !== undefined) {
       return row.volumeRatio;
     }
-    // Then try from the volumeRatioData state
     if (volumeRatioData[row.company] !== undefined) {
       return volumeRatioData[row.company];
     }
-    // Calculate from today volume and avg volume if available
     if (row.todayVolume && row.avgVolume1M) {
       return calculateVolumeRatio(row.todayVolume, row.avgVolume1M);
     }
     return null;
   };
 
-  // Helper function to get RSI 14 for a company
   const getRSI14 = (row) => {
-    // Get RSI from the row data
     if (row.rsi14 !== null && row.rsi14 !== undefined) {
       return row.rsi14;
     }
     return null;
   };
 
-  // Helper function to get MA20 for a company
   const getMA20 = (row) => {
     if (row.ma20 !== null && row.ma20 !== undefined) {
       return row.ma20;
@@ -506,7 +477,6 @@ const BuySalePopup = ({
     return null;
   };
 
-  // Helper function to get Pivot for a company
   const getPivot = (row) => {
     if (row.pivot !== null && row.pivot !== undefined) {
       return row.pivot;
@@ -609,19 +579,15 @@ const BuySalePopup = ({
                           const volumeSignal = normalizeSignal(rawVolumeSignal);
                           const badgeStyle = getVolumeSignalBadge(volumeSignal);
                           const isHighlighted = row.isHighlighted;
-                          // Get Volume Ratio
                           const volumeRatio = getVolumeRatio(row);
                           const formattedRatio = formatVolumeRatio(volumeRatio);
-                          // Get RSI 14
                           const rsi14 = getRSI14(row);
                           const formattedRSI =
                             rsi14 !== null ? rsi14.toFixed(2) : null;
                           const isRSIOverbought = rsi14 !== null && rsi14 > 70;
-                          // Get MA20
                           const ma20 = getMA20(row);
                           const formattedMA20 =
                             ma20 !== null ? ma20.toFixed(2) : null;
-                          // Get Pivot
                           const pivot = getPivot(row);
                           const formattedPivot =
                             pivot !== null ? pivot.toFixed(2) : null;
@@ -636,7 +602,6 @@ const BuySalePopup = ({
                               }`}
                             >
                               <div className="flex flex-col gap-0.5 sm:gap-1">
-                                {/* Company Name */}
                                 <div className="flex items-center justify-between w-full">
                                   <span
                                     className={`font-semibold text-[10px] sm:text-sm ${
@@ -654,7 +619,6 @@ const BuySalePopup = ({
                                   )}
                                 </div>
 
-                                {/* Signal Badge and Price */}
                                 <div className="flex items-center justify-between">
                                   <span
                                     className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
@@ -675,7 +639,6 @@ const BuySalePopup = ({
                                   </span>
                                 </div>
 
-                                {/* Info line - Volume Ratio and MA */}
                                 <div className="flex items-center justify-between">
                                   <span className="text-yellow-400 text-[10px] sm:text-xs">
                                     Vol. Ratio: {formattedRatio ?? "-"}
@@ -688,7 +651,6 @@ const BuySalePopup = ({
                                   </span>
                                 </div>
 
-                                {/* RSI and Pivot line */}
                                 <div className="flex items-center justify-between text-[10px] sm:text-xs">
                                   {formattedRSI !== null ? (
                                     <span
@@ -760,21 +722,17 @@ const BuySalePopup = ({
                                   yearlyHigh,
                                   row.buyPercent,
                                 );
-                                // Get Volume Ratio
                                 const volumeRatio = getVolumeRatio(row);
                                 const formattedRatio =
                                   formatVolumeRatio(volumeRatio);
-                                // Get RSI 14
                                 const rsi14 = getRSI14(row);
                                 const formattedRSI =
                                   rsi14 !== null ? rsi14.toFixed(2) : null;
                                 const isRSIOverbought =
                                   rsi14 !== null && rsi14 > 70;
-                                // Get MA20
                                 const ma20 = getMA20(row);
                                 const formattedMA20 =
                                   ma20 !== null ? ma20.toFixed(2) : null;
-                                // Get Pivot
                                 const pivot = getPivot(row);
                                 const formattedPivot =
                                   pivot !== null ? pivot.toFixed(2) : null;
@@ -850,7 +808,7 @@ const BuySalePopup = ({
                       )}
                     </div>
 
-                    {/* Volume Signal Buy Section with Highlight - Collapsible */}
+                    {/* Volume Signal Buy Section - Collapsible */}
                     <div>
                       <div className="flex flex-col gap-1 mb-2">
                         <div
@@ -871,7 +829,6 @@ const BuySalePopup = ({
                           </span>
                         </div>
 
-                        {/* Double Signal on separate line - only show when expanded */}
                         {showVolume &&
                           volumeBuyListWithHighlight.filter(
                             (row) => row.isHighlighted,
@@ -912,21 +869,17 @@ const BuySalePopup = ({
                                 const badgeStyle =
                                   getVolumeSignalBadge(volumeSignal);
                                 const isHighlighted = row.isHighlighted;
-                                // Get Volume Ratio
                                 const volumeRatio = getVolumeRatio(row);
                                 const formattedRatio =
                                   formatVolumeRatio(volumeRatio);
-                                // Get RSI 14
                                 const rsi14 = getRSI14(row);
                                 const formattedRSI =
                                   rsi14 !== null ? rsi14.toFixed(2) : null;
                                 const isRSIOverbought =
                                   rsi14 !== null && rsi14 > 70;
-                                // Get MA20
                                 const ma20 = getMA20(row);
                                 const formattedMA20 =
                                   ma20 !== null ? ma20.toFixed(2) : null;
-                                // Get Pivot
                                 const pivot = getPivot(row);
                                 const formattedPivot =
                                   pivot !== null ? pivot.toFixed(2) : null;
@@ -941,7 +894,6 @@ const BuySalePopup = ({
                                     }`}
                                   >
                                     <div className="flex flex-col gap-0.5 sm:gap-1">
-                                      {/* Company Name */}
                                       <div className="flex items-center justify-between w-full">
                                         <span
                                           className={`font-semibold text-[10px] sm:text-sm ${
@@ -959,7 +911,6 @@ const BuySalePopup = ({
                                         )}
                                       </div>
 
-                                      {/* Signal Badge and Price */}
                                       <div className="flex items-center justify-between">
                                         <span
                                           className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
@@ -980,7 +931,6 @@ const BuySalePopup = ({
                                         </span>
                                       </div>
 
-                                      {/* Info line - Volume Ratio and MA */}
                                       <div className="flex items-center justify-between">
                                         <span className="text-yellow-400 text-[10px] sm:text-xs">
                                           Vol. Ratio: {formattedRatio ?? "-"}
@@ -993,7 +943,6 @@ const BuySalePopup = ({
                                         </span>
                                       </div>
 
-                                      {/* RSI and Pivot line */}
                                       <div className="flex items-center justify-between text-[10px] sm:text-xs">
                                         {formattedRSI !== null ? (
                                           <span
@@ -1314,7 +1263,7 @@ const BuySalePopup = ({
                         </div>
                       )}
 
-                      {/* NEW: Remaining Holdings Section */}
+                      {/* Remaining Holdings Section */}
                       {remainingSaleList.length > 0 && (
                         <div className="mt-3">
                           <div
