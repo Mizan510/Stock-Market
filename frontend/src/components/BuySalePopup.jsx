@@ -413,7 +413,7 @@ const BuySalePopup = ({
     ) {
       return "bg-emerald-700 text-yellow-300 font-bold border-2 border-yellow-400";
     } else if (signalUpper === "STRONG BUYER (NP)") {
-      return "bg-cyan-700 text-white font-bold border-2 border-cyan-300 text-[9px] sm:text-[10px]"; // Reduced text size
+      return "bg-cyan-700 text-white font-bold border-2 border-cyan-300 text-[8px] sm:text-[10px]"; // Reduced text size
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "bg-emerald-950 text-white font-semibold border border-emerald-700";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
