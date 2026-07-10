@@ -15,7 +15,9 @@ const BuySalePopup = ({
   const [volumeData, setVolumeData] = useState({});
   const [volumeRatioData, setVolumeRatioData] = useState({});
 
-  // State for section visibility - only sale section toggles remain
+  // State for section visibility - all hidden by default
+  const [showYearlyLow, setShowYearlyLow] = useState(false);
+  const [showVolume, setShowVolume] = useState(false);
   const [showRemainingSales, setShowRemainingSales] = useState(false);
 
   const cleanString = (str) =>
@@ -43,7 +45,7 @@ const BuySalePopup = ({
     return lowValue + ((highValue - lowValue) * percentValue) / 100;
   };
 
-  // NORMALIZE SIGNAL
+  // NORMALIZE SIGNAL - SINGLE DECLARATION
   const normalizeSignal = (value) => {
     const signal = String(value || "").trim();
     const signalUpper = signal.toUpperCase();
@@ -98,12 +100,15 @@ const BuySalePopup = ({
           const company =
             zone.company || zone.companyName || zone.stockName || "";
           if (company) {
+            // Store pivot
             if (zone.pivotPoint !== undefined && zone.pivotPoint !== null) {
               pivots[company] = zone.pivotPoint;
             }
+            // Store normalized volume signal
             const rawSignal = zone.volumeSignal || zone.customSignal || "Neutral";
             const normalizedSignal = normalizeSignal(rawSignal);
             volumes[company] = normalizedSignal;
+            // Calculate and store volume ratio from today volume and avg volume
             const todayVol = zone.todayVolume || 0;
             const avgVol = zone.avgVolume1M || 0;
             const ratio = calculateVolumeRatio(todayVol, avgVol);
@@ -123,13 +128,16 @@ const BuySalePopup = ({
             const company =
               row.company || row.companyName || row.stockName || "";
 
+            // Session values
             const sessionHigh = row.todaysHigh || 0;
             const sessionLow = row.todaysLow || 0;
             const sessionClose = row.closingPrice || 0;
 
+            // Yearly values
             const yearlyHigh = row.high || 0;
             const yearlyLow = row.low || 0;
 
+            // Calculate volume ratio directly from the row data
             const todayVol = row.todayVolume || 0;
             const avgVol = row.avgVolume1M || 0;
             const calculatedRatio = calculateVolumeRatio(todayVol, avgVol);
@@ -140,18 +148,25 @@ const BuySalePopup = ({
             return {
               ...row,
               company: company,
+              // Session values
               sessionHigh: sessionHigh,
               sessionLow: sessionLow,
               sessionClose: sessionClose,
+              // Yearly values
               yearlyHigh: yearlyHigh,
               yearlyLow: yearlyLow,
+              // For display - use session values for pivot display
               high: sessionHigh,
               low: sessionLow,
               closingPrice: sessionClose,
               buyPercent: row.buyPercent ?? 20,
+              // Use pivot from database
               pivot: row.pivotPoint || null,
+              // MA20 from database
               ma20: row.ma20 || null,
+              // Normalized volume signal from database
               volumeSignal: normalizedSignal,
+              // Volume ratio - use calculated value or from database
               volumeRatio:
                 calculatedRatio !== null
                   ? calculatedRatio
@@ -271,11 +286,10 @@ const BuySalePopup = ({
 
   const isLoading = loading || localLoading;
 
-  // --- Buy Signal Calculation ---
-
-  // 1. Yearly Low Buy
+  // Yearly Low Buy - Uses yearly high/low values
   const yearlyLowBuyList = buyRows.filter((row) => {
     const currentPrice = parseNumber(row.closingPrice);
+    // Use yearly values for zone calculation
     const yearlyHigh = row.yearlyHigh || row.high || 0;
     const yearlyLow = row.yearlyLow || row.low || 0;
     const buyZone = calcZone(yearlyLow, yearlyHigh, row.buyPercent);
@@ -286,86 +300,45 @@ const BuySalePopup = ({
     );
   });
 
+  // Create a set of yearly low buy company names for highlighting
   const yearlyLowCompanySet = new Set(
     yearlyLowBuyList.map((row) => row.company),
   );
 
-  // 2. Volume Signal Buy (all buy-related volume signals)
-  const volumeBuyList = buyRows.filter((row) => {
-    const volumeSignal = row.volumeSignal || volumeData[row.company];
-    const signalUpper = String(volumeSignal || "").toUpperCase().trim();
-    return (
-      signalUpper === "OVERBOUGHT (ST)" ||
-      signalUpper === "STRONG BUYER (NP)" ||
-      signalUpper === "STRONG BUYER" ||
-      signalUpper === "WEAK BUYER"
-    );
-  });
+  // Volume Signal Buy - Shows: OVERBOUGHT (ST), VERY STRONG BUYER, STRONG BUYER, STRONG BUYER (NP)
+  const volumeBuyListWithHighlight = buyRows
+    .filter((row) => {
+      const volumeSignal = row.volumeSignal || volumeData[row.company];
+      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      // Include all buy signals: ST, VSB, SB, SB(NP) - exclude weak buyer
+      return (
+        signalUpper === "OVERBOUGHT (ST)" ||
+        signalUpper === "VERY STRONG BUYER" ||
+        signalUpper === "STRONG BUYER (NP)" ||
+        signalUpper === "STRONG BUYER"
+      );
+    })
+    .map((row) => ({
+      ...row,
+      isHighlighted: yearlyLowCompanySet.has(row.company),
+    }));
 
-  const volumeBuyCompanySet = new Set(
-    volumeBuyList.map((row) => row.company),
-  );
-
-  // 3. Ready for Buy (stronger signals)
-  const readyForBuyList = buyRows.filter((row) => {
-    const volumeSignal = row.volumeSignal || volumeData[row.company];
-    const signalUpper = String(volumeSignal || "").toUpperCase().trim();
-    return (
-      signalUpper === "OVERBOUGHT (ST)" ||
-      signalUpper === "STRONG BUYER (NP)" ||
-      signalUpper === "STRONG BUYER"
-    );
-  });
-
-  // Combined buy list: all companies that are in any of the three lists
-  const allBuyCompanies = new Set([
-    ...yearlyLowBuyList.map((r) => r.company),
-    ...volumeBuyList.map((r) => r.company),
-  ]);
-
-  const combinedBuyList = buyRows
-    .filter((row) => allBuyCompanies.has(row.company))
-    .map((row) => {
-      const isYearlyLow = yearlyLowCompanySet.has(row.company);
-      const isVolumeBuy = volumeBuyCompanySet.has(row.company);
-      const isReady = readyForBuyList.some((r) => r.company === row.company);
-      // Determine primary signal for display
-      let primarySignal = row.volumeSignal || volumeData[row.company] || "Neutral";
-      if (isReady) {
-        // Keep as is
-      } else if (isVolumeBuy) {
-        // already volume signal
-      } else if (isYearlyLow) {
-        primarySignal = "Yearly Low Buy";
-      }
-      // Normalize signal for display
-      const displaySignal = normalizeSignal(primarySignal);
-      return {
-        ...row,
-        isYearlyLow,
-        isVolumeBuy,
-        isReady,
-        displaySignal,
-        isDouble: isYearlyLow && isVolumeBuy,
-      };
-    });
-
-  // Sort by signal strength: Ready first, then Volume, then Yearly Low
-  const sortedCombinedBuy = combinedBuyList.sort((a, b) => {
-    const order = {
-      "OVERBOUGHT (ST)": 1,
-      "STRONG BUYER (NP)": 2,
-      "STRONG BUYER": 3,
-      "WEAK BUYER": 4,
-      "Yearly Low Buy": 5,
-    };
-    const aOrder = order[a.displaySignal] || 6;
-    const bOrder = order[b.displaySignal] || 6;
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    return a.company.localeCompare(b.company);
-  });
-
-  // --- Sale Signals ---
+  // Ready for Buy - Shows: Overbought (ST), Strong Buyer, Strong Buyer (NP)
+  const readyForBuyList = buyRows
+    .filter((row) => {
+      const volumeSignal = row.volumeSignal || volumeData[row.company];
+      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      // Exact match check
+      return (
+        signalUpper === "OVERBOUGHT (ST)" ||
+        signalUpper === "STRONG BUYER (NP)" ||
+        signalUpper === "STRONG BUYER"
+      );
+    })
+    .map((row) => ({
+      ...row,
+      isHighlighted: yearlyLowCompanySet.has(row.company),
+    }));
 
   const redSaleList = saleRows.filter(
     (row) =>
@@ -381,6 +354,7 @@ const BuySalePopup = ({
       row.closingPrice >= row.targetPrice,
   );
 
+  // NEW: Remaining Sales - between stop loss and target
   const remainingSaleList = saleRows.filter(
     (row) =>
       row.remainQtn > 0 &&
@@ -389,8 +363,7 @@ const BuySalePopup = ({
       row.closingPrice < row.targetPrice,
   );
 
-  // --- Helper Functions ---
-
+  // Get Volume Signal Style
   const getVolumeSignalStyle = (signal) => {
     if (!signal || signal === "N/A") return "text-gray-400";
 
@@ -469,27 +442,44 @@ const BuySalePopup = ({
     }
   };
 
-  // Helper functions for metrics
+  // Toggle functions
+  const toggleYearlyLow = () => setShowYearlyLow(!showYearlyLow);
+  const toggleVolume = () => setShowVolume(!showVolume);
+  const toggleRemainingSales = () => setShowRemainingSales(!showRemainingSales);
+
+  // Helper function to format volume ratio as decimal (no % sign)
+  const formatVolumeRatio = (ratio) => {
+    if (ratio === null || ratio === undefined || isNaN(ratio)) return null;
+    return ratio.toFixed(2);
+  };
+
+  // Helper function to get volume ratio for a company
   const getVolumeRatio = (row) => {
+    // First try to get from the row
     if (row.volumeRatio !== null && row.volumeRatio !== undefined) {
       return row.volumeRatio;
     }
+    // Then try from the volumeRatioData state
     if (volumeRatioData[row.company] !== undefined) {
       return volumeRatioData[row.company];
     }
+    // Calculate from today volume and avg volume if available
     if (row.todayVolume && row.avgVolume1M) {
       return calculateVolumeRatio(row.todayVolume, row.avgVolume1M);
     }
     return null;
   };
 
+  // Helper function to get RSI 14 for a company
   const getRSI14 = (row) => {
+    // Get RSI from the row data
     if (row.rsi14 !== null && row.rsi14 !== undefined) {
       return row.rsi14;
     }
     return null;
   };
 
+  // Helper function to get MA20 for a company
   const getMA20 = (row) => {
     if (row.ma20 !== null && row.ma20 !== undefined) {
       return row.ma20;
@@ -497,20 +487,13 @@ const BuySalePopup = ({
     return null;
   };
 
+  // Helper function to get Pivot for a company
   const getPivot = (row) => {
     if (row.pivot !== null && row.pivot !== undefined) {
       return row.pivot;
     }
     return null;
   };
-
-  const formatVolumeRatio = (ratio) => {
-    if (ratio === null || ratio === undefined || isNaN(ratio)) return null;
-    return ratio.toFixed(2);
-  };
-
-  // Toggle for remaining sales
-  const toggleRemainingSales = () => setShowRemainingSales(!showRemainingSales);
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-2">
@@ -566,20 +549,20 @@ const BuySalePopup = ({
                     </div>
                   </div>
 
-                  {/* Unified Buy Signals List */}
+                  {/* READY FOR BUY - Always visible, no toggle */}
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-1 h-4 bg-amber-500 rounded-full"></div>
                       <h3 className="font-semibold text-amber-400 text-[10px] sm:text-sm">
-                        🚀 Buy Signals
+                        🚀 Ready for Buy
                       </h3>
-                      {sortedCombinedBuy.length > 0 && (
+                      {readyForBuyList.length > 0 && (
                         <span className="text-[10px] sm:text-xs bg-amber-900 text-amber-300 px-1.5 py-0.5 rounded-full">
-                          {sortedCombinedBuy.length}
+                          {readyForBuyList.length}
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mb-2">
+                    <p className="text-[10px] sm:text-xs text-gray-400">
                       <span className="text-green-400 font-medium">ST</span> =
                       Strong Trend •{" "}
                       <span className="text-cyan-400 font-medium">NP</span> =
@@ -590,29 +573,36 @@ const BuySalePopup = ({
                       High Risk
                     </p>
 
-                    {sortedCombinedBuy.length === 0 ? (
+                    {readyForBuyList.length === 0 ? (
                       <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
                         <p className="text-gray-500 text-[10px] sm:text-xs">
-                          No buy signals at this time
+                          No strong buyer signals
                         </p>
                       </div>
                     ) : (
                       <div className="space-y-1.5">
-                        {sortedCombinedBuy.map((row, idx) => {
+                        {readyForBuyList.map((row, idx) => {
                           const currentPrice = parseNumber(row.closingPrice);
-                          const displaySignal = row.displaySignal;
-                          const badgeStyle = getVolumeSignalBadge(displaySignal);
-                          const isHighlighted = row.isDouble;
+                          const rawVolumeSignal =
+                            row.volumeSignal ||
+                            volumeData[row.company] ||
+                            "Neutral";
+                          const volumeSignal = normalizeSignal(rawVolumeSignal);
+                          const badgeStyle = getVolumeSignalBadge(volumeSignal);
+                          const isHighlighted = row.isHighlighted;
+                          // Get Volume Ratio
                           const volumeRatio = getVolumeRatio(row);
                           const formattedRatio = formatVolumeRatio(volumeRatio);
+                          // Get RSI 14
                           const rsi14 = getRSI14(row);
                           const formattedRSI =
                             rsi14 !== null ? rsi14.toFixed(2) : null;
-                          const isRSIOverbought =
-                            rsi14 !== null && rsi14 > 70;
+                          const isRSIOverbought = rsi14 !== null && rsi14 > 70;
+                          // Get MA20
                           const ma20 = getMA20(row);
                           const formattedMA20 =
                             ma20 !== null ? ma20.toFixed(2) : null;
+                          // Get Pivot
                           const pivot = getPivot(row);
                           const formattedPivot =
                             pivot !== null ? pivot.toFixed(2) : null;
@@ -623,11 +613,7 @@ const BuySalePopup = ({
                               className={`border rounded-lg p-1.5 sm:p-2 transition-all duration-300 ${
                                 isHighlighted
                                   ? "bg-amber-900/40 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60"
-                                  : row.isReady
-                                  ? "bg-amber-900/20 border-amber-700/50 hover:bg-amber-900/30"
-                                  : row.isVolumeBuy
-                                  ? "bg-purple-900/20 border-purple-800/50 hover:bg-purple-900/30"
-                                  : "bg-green-900/20 border-green-800/50 hover:bg-green-900/30"
+                                  : "bg-amber-900/20 border-amber-700/50 hover:bg-amber-900/30"
                               }`}
                             >
                               <div className="flex flex-col gap-0.5 sm:gap-1">
@@ -637,11 +623,7 @@ const BuySalePopup = ({
                                     className={`font-semibold text-[10px] sm:text-sm ${
                                       isHighlighted
                                         ? "text-amber-300"
-                                        : row.isReady
-                                        ? "text-amber-200"
-                                        : row.isVolumeBuy
-                                        ? "text-purple-300"
-                                        : "text-green-300"
+                                        : "text-amber-200"
                                     }`}
                                   >
                                     {row.company}
@@ -651,19 +633,14 @@ const BuySalePopup = ({
                                       DOUBLE
                                     </span>
                                   )}
-                                  {row.isYearlyLow && !isHighlighted && (
-                                    <span className="text-[10px] sm:text-xs bg-green-800 text-green-300 px-1 sm:px-1.5 py-0.5 rounded-full shrink-0">
-                                      Yearly Low
-                                    </span>
-                                  )}
                                 </div>
 
                                 {/* Signal Badge and Price */}
                                 <div className="flex items-center justify-between">
                                   <span
-                                    className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${badgeStyle}`}
+                                    className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
                                   >
-                                    {displaySignal}
+                                    {volumeSignal}
                                   </span>
                                   <span className="text-gray-400 text-[10px] sm:text-xs">
                                     Close:{" "}
@@ -719,6 +696,314 @@ const BuySalePopup = ({
                         })}
                       </div>
                     )}
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Yearly Low Buy Section - Collapsible */}
+                    <div>
+                      <div
+                        className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                        onClick={toggleYearlyLow}
+                      >
+                        <div className="w-1 h-4 bg-green-500 rounded-full"></div>
+                        <h3 className="font-semibold text-gray-200 text-[10px] sm:text-sm">
+                          📉 Yearly Low Buy (≤20% Zone)
+                        </h3>
+                        {yearlyLowBuyList.length > 0 && (
+                          <span className="text-[10px] sm:text-xs bg-green-900 text-green-300 px-1.5 py-0.5 rounded-full">
+                            {yearlyLowBuyList.length}
+                          </span>
+                        )}
+                        <span className="ml-auto text-gray-500 text-[10px] sm:text-xs">
+                          {showYearlyLow ? "▼" : "▶"}
+                        </span>
+                      </div>
+
+                      {showYearlyLow && (
+                        <>
+                          {yearlyLowBuyList.length === 0 ? (
+                            <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+                              <p className="text-gray-500 text-[10px] sm:text-xs">
+                                No yearly low buy signals
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {yearlyLowBuyList.map((row, idx) => {
+                                const currentPrice = parseNumber(
+                                  row.closingPrice,
+                                );
+                                const yearlyHigh =
+                                  row.yearlyHigh || row.high || 0;
+                                const yearlyLow = row.yearlyLow || row.low || 0;
+                                const buyZone = calcZone(
+                                  yearlyLow,
+                                  yearlyHigh,
+                                  row.buyPercent,
+                                );
+                                // Get Volume Ratio
+                                const volumeRatio = getVolumeRatio(row);
+                                const formattedRatio =
+                                  formatVolumeRatio(volumeRatio);
+                                // Get RSI 14
+                                const rsi14 = getRSI14(row);
+                                const formattedRSI =
+                                  rsi14 !== null ? rsi14.toFixed(2) : null;
+                                const isRSIOverbought =
+                                  rsi14 !== null && rsi14 > 70;
+                                // Get MA20
+                                const ma20 = getMA20(row);
+                                const formattedMA20 =
+                                  ma20 !== null ? ma20.toFixed(2) : null;
+                                // Get Pivot
+                                const pivot = getPivot(row);
+                                const formattedPivot =
+                                  pivot !== null ? pivot.toFixed(2) : null;
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className="bg-green-900/20 border border-green-800/50 rounded-lg p-1.5 sm:p-2 hover:bg-green-900/30 transition-colors"
+                                  >
+                                    <div className="flex justify-between items-start mb-0.5 sm:mb-1">
+                                      <span className="font-semibold text-green-300 text-[10px] sm:text-sm truncate flex-1">
+                                        {row.company}
+                                      </span>
+                                      <span className="text-[9px] sm:text-xs bg-green-800 text-green-300 px-1 sm:px-1.5 py-0.5 rounded-full ml-1 shrink-0">
+                                        Buy
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] sm:text-xs mt-0.5 sm:mt-1">
+                                      <span className="text-gray-400">
+                                        Close:{" "}
+                                        <span className="text-gray-300 font-medium">
+                                          {currentPrice?.toFixed(2)}
+                                        </span>
+                                      </span>
+                                      <span className="text-green-400">
+                                        ≤20% Zone:{" "}
+                                        <span className="font-medium">
+                                          {buyZone?.toFixed(2)}
+                                        </span>
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[10px] sm:text-xs mt-0.5">
+                                      <span className="text-yellow-400">
+                                        Vol. Ratio:{" "}
+                                        <span className="text-yellow-300 font-medium">
+                                          {formattedRatio ?? "-"}
+                                        </span>
+                                      </span>
+                                      <span className="text-blue-400 text-[10px] sm:text-xs">
+                                        MA20:{" "}
+                                        <span className="text-blue-300 font-medium">
+                                          {formattedMA20 ?? "-"}
+                                        </span>
+                                      </span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between text-[10px] sm:text-xs mt-0.5">
+                                      {formattedRSI !== null ? (
+                                        <span
+                                          className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
+                                        >
+                                          RSI: {formattedRSI}
+                                          {isRSIOverbought && " ⚠️"}
+                                        </span>
+                                      ) : (
+                                        <span className="text-yellow-400">
+                                          RSI: -
+                                        </span>
+                                      )}
+                                      <span className="text-purple-400">
+                                        Pivot:{" "}
+                                        <span className="text-purple-300 font-medium">
+                                          {formattedPivot ?? "-"}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Volume Signal Buy Section with Highlight - Collapsible */}
+                    <div>
+                      <div className="flex flex-col gap-1 mb-2">
+                        <div
+                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                          onClick={toggleVolume}
+                        >
+                          <div className="w-1 h-4 bg-purple-500 rounded-full"></div>
+                          <h3 className="font-semibold text-gray-200 text-[10px] sm:text-sm">
+                            📈 Volume Signal Buy
+                          </h3>
+                          {volumeBuyListWithHighlight.length > 0 && (
+                            <span className="text-[10px] sm:text-xs bg-purple-900 text-purple-300 px-1.5 py-0.5 rounded-full">
+                              {volumeBuyListWithHighlight.length}
+                            </span>
+                          )}
+                          <span className="ml-auto text-gray-500 text-[10px] sm:text-xs">
+                            {showVolume ? "▼" : "▶"}
+                          </span>
+                        </div>
+
+                        {/* Double Signal on separate line - only show when expanded */}
+                        {showVolume &&
+                          volumeBuyListWithHighlight.filter(
+                            (row) => row.isHighlighted,
+                          ).length > 0 && (
+                            <div className="ml-3">
+                              <span className="text-[10px] sm:text-xs bg-amber-600 text-white px-1.5 sm:px-2 py-0.5 rounded-full animate-pulse font-bold inline-flex items-center gap-1">
+                                ⚡{" "}
+                                {
+                                  volumeBuyListWithHighlight.filter(
+                                    (row) => row.isHighlighted,
+                                  ).length
+                                }{" "}
+                                Double Signal
+                              </span>
+                            </div>
+                          )}
+                      </div>
+
+                      {showVolume && (
+                        <>
+                          {volumeBuyListWithHighlight.length === 0 ? (
+                            <div className="bg-gray-800/50 rounded-xl p-4 text-center border border-gray-700">
+                              <p className="text-gray-500 text-[10px] sm:text-xs">
+                                No volume buy signals
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {volumeBuyListWithHighlight.map((row, idx) => {
+                                const currentPrice = parseNumber(
+                                  row.closingPrice,
+                                );
+                                const rawVolumeSignal =
+                                  row.volumeSignal ||
+                                  volumeData[row.company] ||
+                                  "Neutral";
+                                const volumeSignal = normalizeSignal(rawVolumeSignal);
+                                const badgeStyle =
+                                  getVolumeSignalBadge(volumeSignal);
+                                const isHighlighted = row.isHighlighted;
+                                // Get Volume Ratio
+                                const volumeRatio = getVolumeRatio(row);
+                                const formattedRatio =
+                                  formatVolumeRatio(volumeRatio);
+                                // Get RSI 14
+                                const rsi14 = getRSI14(row);
+                                const formattedRSI =
+                                  rsi14 !== null ? rsi14.toFixed(2) : null;
+                                const isRSIOverbought =
+                                  rsi14 !== null && rsi14 > 70;
+                                // Get MA20
+                                const ma20 = getMA20(row);
+                                const formattedMA20 =
+                                  ma20 !== null ? ma20.toFixed(2) : null;
+                                // Get Pivot
+                                const pivot = getPivot(row);
+                                const formattedPivot =
+                                  pivot !== null ? pivot.toFixed(2) : null;
+
+                                return (
+                                  <div
+                                    key={idx}
+                                    className={`border rounded-lg p-1.5 sm:p-2 transition-all duration-300 ${
+                                      isHighlighted
+                                        ? "bg-amber-900/30 border-amber-500/70 shadow-lg shadow-amber-500/10 ring-2 ring-amber-500/60 hover:ring-amber-500/80"
+                                        : "bg-purple-900/20 border-purple-800/50 hover:bg-purple-900/30"
+                                    }`}
+                                  >
+                                    <div className="flex flex-col gap-0.5 sm:gap-1">
+                                      {/* Company Name */}
+                                      <div className="flex items-center justify-between w-full">
+                                        <span
+                                          className={`font-semibold text-[10px] sm:text-sm ${
+                                            isHighlighted
+                                              ? "text-amber-300"
+                                              : "text-purple-300"
+                                          }`}
+                                        >
+                                          {row.company}
+                                        </span>
+                                        {isHighlighted && (
+                                          <span className="text-[10px] sm:text-xs font-bold bg-amber-600 text-white px-1 sm:px-1.5 py-0.5 rounded-full shrink-0 animate-pulse">
+                                            DOUBLE
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Signal Badge and Price */}
+                                      <div className="flex items-center justify-between">
+                                        <span
+                                          className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded-full ${badgeStyle} ${volumeSignal && volumeSignal.toLowerCase().includes("strong") ? "border-2 border-black" : ""}`}
+                                        >
+                                          {volumeSignal}
+                                        </span>
+                                        <span className="text-gray-400 text-[10px] sm:text-xs">
+                                          Close:{" "}
+                                          <span
+                                            className={`font-medium ${
+                                              isHighlighted
+                                                ? "text-amber-300"
+                                                : "text-gray-300"
+                                            }`}
+                                          >
+                                            {currentPrice?.toFixed(2)}
+                                          </span>
+                                        </span>
+                                      </div>
+
+                                      {/* Info line - Volume Ratio and MA */}
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-yellow-400 text-[10px] sm:text-xs">
+                                          Vol. Ratio: {formattedRatio ?? "-"}
+                                        </span>
+                                        <span className="text-blue-400 text-[10px] sm:text-xs">
+                                          MA20:{" "}
+                                          <span className="text-blue-300 font-medium">
+                                            {formattedMA20 ?? "-"}
+                                          </span>
+                                        </span>
+                                      </div>
+
+                                      {/* RSI and Pivot line */}
+                                      <div className="flex items-center justify-between text-[10px] sm:text-xs">
+                                        {formattedRSI !== null ? (
+                                          <span
+                                            className={`${isRSIOverbought ? "text-rose-500 font-bold" : "text-yellow-400"}`}
+                                          >
+                                            RSI: {formattedRSI}
+                                            {isRSIOverbought && " ⚠️"}
+                                          </span>
+                                        ) : (
+                                          <span className="text-yellow-400">
+                                            RSI: -
+                                          </span>
+                                        )}
+                                        <span className="text-purple-400">
+                                          Pivot:{" "}
+                                          <span className="text-purple-300 font-medium">
+                                            {formattedPivot ?? "-"}
+                                          </span>
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -1010,7 +1295,7 @@ const BuySalePopup = ({
                         </div>
                       )}
 
-                      {/* Remaining Holdings Section */}
+                      {/* NEW: Remaining Holdings Section */}
                       {remainingSaleList.length > 0 && (
                         <div className="mt-3">
                           <div
