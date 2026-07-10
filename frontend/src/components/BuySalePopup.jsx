@@ -1164,7 +1164,7 @@ const BuySalePopup = ({
                             onClick={toggleRemainingSales}
                           >
                             <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
-                            <h3 className="font-semibold text-gray-200 text-[7px] sm:text-xs md:text-sm">
+                            <h3 className="font-semibold text-gray-200 text-[10px] sm:text-xs md:text-sm">
                               📊 Remaining Holdings
                             </h3>
                             <span className="text-[10px] sm:text-xs bg-blue-900 text-blue-300 px-1.5 py-0.5 rounded-full">
