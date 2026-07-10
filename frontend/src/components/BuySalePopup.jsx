@@ -108,7 +108,8 @@ const BuySalePopup = ({
             if (zone.pivotPoint !== undefined && zone.pivotPoint !== null) {
               pivots[company] = zone.pivotPoint;
             }
-            const rawSignal = zone.volumeSignal || zone.customSignal || "Neutral";
+            const rawSignal =
+              zone.volumeSignal || zone.customSignal || "Neutral";
             const normalizedSignal = normalizeSignal(rawSignal);
             volumes[company] = normalizedSignal;
 
@@ -168,7 +169,7 @@ const BuySalePopup = ({
           .sort((a, b) =>
             a.company.localeCompare(b.company, undefined, {
               sensitivity: "base",
-            })
+            }),
           );
 
         setBuyRows(mappedBuyData);
@@ -186,7 +187,7 @@ const BuySalePopup = ({
 
           const qty = Number(item.buyQuantity ?? item.quantity ?? 0);
           const price = Number(
-            item.perShareValue ?? item.sharePrice ?? item.price ?? 0
+            item.perShareValue ?? item.sharePrice ?? item.price ?? 0,
           );
           const commission = Number(item.commission ?? price * qty * 0.004);
           const totalValue = price * qty;
@@ -240,7 +241,7 @@ const BuySalePopup = ({
             const matchedZone = rawZones.find(
               (z) =>
                 cleanString(z.company || z.companyName || z.stockName || "") ===
-                companyClean
+                companyClean,
             );
 
             const closingPrice = Number(matchedZone?.closingPrice ?? 0);
@@ -291,14 +292,16 @@ const BuySalePopup = ({
   });
 
   const yearlyLowCompanySet = new Set(
-    yearlyLowBuyList.map((row) => row.company)
+    yearlyLowBuyList.map((row) => row.company),
   );
 
   // READY FOR BUY - Shows ONLY "STRONG BUYER"
   const readyForBuyList = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
-      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      const signalUpper = String(volumeSignal || "")
+        .toUpperCase()
+        .trim();
       return signalUpper === "STRONG BUYER";
     })
     .map((row) => ({
@@ -306,11 +309,13 @@ const BuySalePopup = ({
       isHighlighted: yearlyLowCompanySet.has(row.company),
     }));
 
-  // BUY (HIGH RSI) - Shows OVERBOUGHT (ST)
+  // BUY (HIGH RSI) - Shows Buy (High RSI)
   const highRSIBuyList = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
-      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      const signalUpper = String(volumeSignal || "")
+        .toUpperCase()
+        .trim();
       return signalUpper === "OVERBOUGHT (ST)";
     })
     .map((row) => ({
@@ -318,11 +323,13 @@ const BuySalePopup = ({
       isHighlighted: yearlyLowCompanySet.has(row.company),
     }));
 
-  // BUY (NEAR PIVOT) - Shows STRONG BUYER (NP)
+  // BUY (NEAR PIVOT) - Shows Buy (Near Pivot)
   const nearPivotBuyList = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
-      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      const signalUpper = String(volumeSignal || "")
+        .toUpperCase()
+        .trim();
       return signalUpper === "STRONG BUYER (NP)";
     })
     .map((row) => ({
@@ -336,14 +343,14 @@ const BuySalePopup = ({
     (row) =>
       row.remainQtn > 0 &&
       row.closingPrice > 0 &&
-      row.closingPrice <= row.exitFloorPrice
+      row.closingPrice <= row.exitFloorPrice,
   );
 
   const greenSaleList = saleRows.filter(
     (row) =>
       row.remainQtn > 0 &&
       row.closingPrice > 0 &&
-      row.closingPrice >= row.targetPrice
+      row.closingPrice >= row.targetPrice,
   );
 
   const remainingSaleList = saleRows.filter(
@@ -351,7 +358,7 @@ const BuySalePopup = ({
       row.remainQtn > 0 &&
       row.closingPrice > 0 &&
       row.closingPrice > row.exitFloorPrice &&
-      row.closingPrice < row.targetPrice
+      row.closingPrice < row.targetPrice,
   );
 
   // ----- STYLING FUNCTIONS -----
@@ -379,7 +386,10 @@ const BuySalePopup = ({
       return "bg-red-700 text-yellow-300 font-bold border-2 border-yellow-400";
     } else if (signalUpper === "BEARISH" || signalUpper === "STRONG SELLER") {
       return "bg-red-500 text-white font-bold border border-red-400";
-    } else if (signalUpper === "MILD BEARISH" || signalUpper === "WEAK SELLER") {
+    } else if (
+      signalUpper === "MILD BEARISH" ||
+      signalUpper === "WEAK SELLER"
+    ) {
       return "bg-red-300 text-gray-900 font-semibold";
     } else {
       return "bg-gray-800 text-gray-400";
@@ -433,7 +443,15 @@ const BuySalePopup = ({
   };
 
   // Reusable card renderer
-  const renderBuyCard = (row, isHighlighted, signalDisplay, bgColor, borderColor, textColor, highlightColor) => {
+  const renderBuyCard = (
+    row,
+    isHighlighted,
+    signalDisplay,
+    bgColor,
+    borderColor,
+    textColor,
+    highlightColor,
+  ) => {
     const currentPrice = parseNumber(row.closingPrice);
     const volumeRatio = getVolumeRatio(row);
     const formattedRatio = formatVolumeRatio(volumeRatio);
@@ -592,7 +610,7 @@ const BuySalePopup = ({
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mb-2">
+                    <p className="text-[10px] sm:text-xs text-green-400 mb-2">
                       All criteria matched and ready for buy
                     </p>
 
@@ -612,8 +630,8 @@ const BuySalePopup = ({
                             "bg-amber-900/20",
                             "border-amber-700/50",
                             "text-amber-200",
-                            "text-amber-300"
-                          )
+                            "text-amber-300",
+                          ),
                         )}
                       </div>
                     )}
@@ -652,7 +670,7 @@ const BuySalePopup = ({
                             <div className="space-y-1.5">
                               {yearlyLowBuyList.map((row) => {
                                 const currentPrice = parseNumber(
-                                  row.closingPrice
+                                  row.closingPrice,
                                 );
                                 const yearlyHigh =
                                   row.yearlyHigh || row.high || 0;
@@ -660,7 +678,7 @@ const BuySalePopup = ({
                                 const buyZone = calcZone(
                                   yearlyLow,
                                   yearlyHigh,
-                                  row.buyPercent
+                                  row.buyPercent,
                                 );
                                 const volumeRatio = getVolumeRatio(row);
                                 const formattedRatio =
@@ -767,8 +785,8 @@ const BuySalePopup = ({
                           {showHighRSI ? "▼" : "▶"}
                         </span>
                       </div>
-                      <p className="text-[8px] sm:text-xs text-rose-400 mb-2 ml-1">
-                        All criteria matched but RSI High, High Risk
+                      <p className="text-[8px] sm:text-xs text-orange-400 mb-2 ml-1">
+                        All criteria matched but High RSI - High Risk
                       </p>
 
                       {showHighRSI && (
@@ -785,12 +803,12 @@ const BuySalePopup = ({
                                 renderBuyCard(
                                   row,
                                   row.isHighlighted,
-                                  "OVERBOUGHT (ST)",
-                                  "bg-orange-900/20",
+                                  "Buy (High RSI)",
+                                  "bg-orange-950/20",
                                   "border-orange-800/50",
                                   "text-orange-200",
-                                  "text-orange-300"
-                                )
+                                  "text-orange-300",
+                                ),
                               )}
                             </div>
                           )}
@@ -817,8 +835,8 @@ const BuySalePopup = ({
                           {showNearPivot ? "▼" : "▶"}
                         </span>
                       </div>
-                      <p className="text-[10px] sm:text-xs text-cyan-400 mb-2 ml-1">
-                        Price near pivot level
+                      <p className="text-[10px] sm:text-xs text-cyan-300 mb-2 ml-1">
+                        Price Near Pivot Level
                       </p>
 
                       {showNearPivot && (
@@ -835,12 +853,12 @@ const BuySalePopup = ({
                                 renderBuyCard(
                                   row,
                                   row.isHighlighted,
-                                  "STRONG BUYER (NP)",
+                                  "Buy (Near Pivot)",
                                   "bg-cyan-900/20",
                                   "border-cyan-800/50",
                                   "text-cyan-200",
-                                  "text-cyan-300"
-                                )
+                                  "text-cyan-300",
+                                ),
                               )}
                             </div>
                           )}
@@ -906,7 +924,7 @@ const BuySalePopup = ({
                           <div className="space-y-1.5">
                             {redSaleList.map((row, idx) => {
                               const zoneRow = buyRows.find(
-                                (r) => r.company === row.company
+                                (r) => r.company === row.company,
                               );
                               const volumeRatio = zoneRow
                                 ? getVolumeRatio(zoneRow)
@@ -945,7 +963,7 @@ const BuySalePopup = ({
                                       </span>
                                       <span className="text-gray-300 font-medium">
                                         {row.avgBuyPriceWithCommission.toFixed(
-                                          2
+                                          2,
                                         )}
                                       </span>
                                     </div>
@@ -1029,7 +1047,7 @@ const BuySalePopup = ({
                           <div className="space-y-1.5">
                             {greenSaleList.map((row, idx) => {
                               const zoneRow = buyRows.find(
-                                (r) => r.company === row.company
+                                (r) => r.company === row.company,
                               );
                               const volumeRatio = zoneRow
                                 ? getVolumeRatio(zoneRow)
@@ -1068,7 +1086,7 @@ const BuySalePopup = ({
                                       </span>
                                       <span className="text-gray-300 font-medium">
                                         {row.avgBuyPriceWithCommission.toFixed(
-                                          2
+                                          2,
                                         )}
                                       </span>
                                     </div>
@@ -1161,7 +1179,7 @@ const BuySalePopup = ({
                             <div className="space-y-1.5 mt-2">
                               {remainingSaleList.map((row, idx) => {
                                 const zoneRow = buyRows.find(
-                                  (r) => r.company === row.company
+                                  (r) => r.company === row.company,
                                 );
                                 const volumeRatio = zoneRow
                                   ? getVolumeRatio(zoneRow)
@@ -1216,7 +1234,7 @@ const BuySalePopup = ({
                                         </span>
                                         <span className="text-gray-300 font-medium">
                                           {row.avgBuyPriceWithCommission.toFixed(
-                                            2
+                                            2,
                                           )}
                                         </span>
                                       </div>
