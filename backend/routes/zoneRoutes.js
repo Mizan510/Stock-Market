@@ -25,11 +25,19 @@ const normalizeSignal = (signal) => {
   if (signal === undefined || signal === null) return signal;
   const normalized = String(signal).trim();
   const upper = normalized.toUpperCase();
-  if (
-    upper === "STRONG BUYER (NEAR PIVOT)" ||
-    upper === "STRONG BUYER NEAR PIVOT"
-  ) {
+  
+  // Map old signal names to new ones
+  if (upper === "STRONG BUYER (NEAR PIVOT)" || upper === "STRONG BUYER NEAR PIVOT") {
     return "Strong Buyer (NP)";
+  }
+  if (upper === "OVERBOUGHT (STRONG TREND)" || upper === "OVERBOUGHT STRONG TREND") {
+    return "Overbought (ST)";
+  }
+  if (upper === "OVERBOUGHT (HIGH RISK)" || upper === "OVERBOUGHT HIGH RISK") {
+    return "Overbought (HR)";
+  }
+  if (upper === "OVERSOLD (WATCH BOUNCE)" || upper === "OVERSOLD WATCH BOUNCE") {
+    return "Oversold (WB)";
   }
   return normalized;
 };
@@ -75,36 +83,41 @@ const calculateIndicators = (data) => {
     rsi14 !== null
   ) {
     const priceDiffPercent = Math.abs((c - pivot) / pivot);
+    const isNearPivot = priceDiffPercent <= 0.005;
 
-    // Check if price is near pivot (within 0.5%)
-    if (priceDiffPercent <= 0.005) {
-      customSignal = "Neutral";
+    // Check for Overbought (Strong Trend) - RSI >= 70, Vol >= 1.5, Close > MA20, Close > Pivot
+    if (rsi14 >= 70 && volRatio >= 1.5 && c > ma20 && c > pivot) {
+      customSignal = "Overbought (ST)";
     }
-    // Check for Overbought (RSI >= 70)
+    // Check for Overbought (High Risk) - RSI >= 70 (general)
     else if (rsi14 >= 70) {
-      customSignal = "Overbought (High Risk)";
+      customSignal = "Overbought (HR)";
     }
-    // Check for Oversold (RSI <= 30)
+    // Check for Oversold (Watch Bounce) - RSI <= 30
     else if (rsi14 <= 30) {
-      customSignal = "Oversold (Watch Bounce)";
+      customSignal = "Oversold (WB)";
     }
-    // Very Strong Buyer: Close > R1, Vol Ratio >= 2, Close > MA20, RSI >= 55
-    else if (c > r1 && volRatio >= 2 && c > ma20 && rsi14 >= 55) {
+    // Very Strong Buyer: Close > R1, Vol >= 2, Close > MA20, RSI 55-70
+    else if (c > r1 && volRatio >= 2 && c > ma20 && rsi14 >= 55 && rsi14 < 70) {
       customSignal = "Very Strong Buyer";
     }
-    // Strong Buyer: Close > Pivot, Vol Ratio >= 1.5, Close > MA20, RSI >= 50
-    else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50) {
+    // Strong Buyer (Near Pivot): Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70, Near Pivot
+    else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70 && isNearPivot) {
+      customSignal = "Strong Buyer (NP)";
+    }
+    // Strong Buyer: Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70
+    else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70) {
       customSignal = "Strong Buyer";
     }
-    // Weak Buyer: Close > Pivot, Vol Ratio >= 0.8, Close > MA20
-    else if (c > pivot && volRatio >= 0.8 && c > ma20) {
+    // Weak Buyer: Close > Pivot, Vol >= 0.8, Close > MA20, RSI < 70
+    else if (c > pivot && volRatio >= 0.8 && c > ma20 && rsi14 < 70) {
       customSignal = "Weak Buyer";
     }
-    // Very Strong Seller: Close < S1, Vol Ratio >= 2, Close < MA20, RSI <= 45
+    // Very Strong Seller: Close < S1, Vol >= 2, Close < MA20, RSI <= 45
     else if (c < s1 && volRatio >= 2 && c < ma20 && rsi14 <= 45) {
       customSignal = "Very Strong Seller";
     }
-    // Strong Seller: Close < Pivot, Vol Ratio >= 1.5, Close < MA20, RSI <= 50
+    // Strong Seller: Close < Pivot, Vol >= 1.5, Close < MA20, RSI <= 50
     else if (c < pivot && volRatio >= 1.5 && c < ma20 && rsi14 <= 50) {
       customSignal = "Strong Seller";
     }
@@ -120,18 +133,19 @@ const calculateIndicators = (data) => {
     // Fallback: If we don't have all required values, use simpler logic
     if (c !== null && pivot !== null && r1 !== null && s1 !== null && volRatio !== null) {
       const priceDiffPercent = Math.abs((c - pivot) / pivot);
+      const isNearPivot = priceDiffPercent <= 0.005;
 
-      if (priceDiffPercent <= 0.005) {
+      if (isNearPivot) {
         customSignal = "Neutral";
-      } else if (c > r1 && volRatio > 2) {
+      } else if (c > r1 && volRatio >= 2) {
         customSignal = "Very Strong Buyer";
-      } else if (c > pivot && volRatio > 1.5) {
+      } else if (c > pivot && volRatio >= 1.5) {
         customSignal = "Strong Buyer";
       } else if (c > pivot) {
         customSignal = "Weak Buyer";
-      } else if (c < s1 && volRatio > 2) {
+      } else if (c < s1 && volRatio >= 2) {
         customSignal = "Very Strong Seller";
-      } else if (c < pivot && volRatio > 1.5) {
+      } else if (c < pivot && volRatio >= 1.5) {
         customSignal = "Strong Seller";
       } else if (c < pivot) {
         customSignal = "Weak Seller";
