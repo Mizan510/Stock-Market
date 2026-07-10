@@ -129,45 +129,50 @@ const UpdatePrice = () => {
 
     // Enhanced Custom Signal Logic with MA20 and RSI14
     if (
-      c &&
-      pivot &&
-      r1 &&
-      s1 &&
+      c !== null &&
+      pivot !== null &&
+      r1 !== null &&
+      s1 !== null &&
       volRatio !== null &&
       ma20 !== null &&
       rsi14 !== null
     ) {
       const priceDiffPercent = Math.abs((c - pivot) / pivot);
+      const isNearPivot = priceDiffPercent <= 0.005;
 
-      // Check if price is near pivot (within 0.5%)
-      if (priceDiffPercent <= 0.005) {
-        customSignal = "Neutral";
+      // Check for Overbought (Strong Trend) - RSI >= 70, Vol >= 1.5, Close > MA20, Close > Pivot
+      if (rsi14 >= 70 && volRatio >= 1.5 && c > ma20 && c > pivot) {
+        customSignal = "Overbought (Strong Trend)";
       }
-      // Check for Overbought (RSI >= 70)
+      // Check for Overbought (High Risk) - RSI >= 70 (general)
       else if (rsi14 >= 70) {
         customSignal = "Overbought (High Risk)";
       }
-      // Check for Oversold (RSI <= 30)
+      // Check for Oversold (Watch Bounce) - RSI <= 30
       else if (rsi14 <= 30) {
         customSignal = "Oversold (Watch Bounce)";
       }
-      // Very Strong Buyer: Close > R1, Vol Ratio >= 2, Close > MA20, RSI >= 55
-      else if (c > r1 && volRatio >= 2 && c > ma20 && rsi14 >= 55) {
+      // Very Strong Buyer: Close > R1, Vol >= 2, Close > MA20, RSI 55-70
+      else if (c > r1 && volRatio >= 2 && c > ma20 && rsi14 >= 55 && rsi14 < 70) {
         customSignal = "Very Strong Buyer";
       }
-      // Strong Buyer: Close > Pivot, Vol Ratio >= 1.5, Close > MA20, RSI >= 50
-      else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50) {
+      // Strong Buyer (Near Pivot): Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70, Near Pivot
+      else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70 && isNearPivot) {
+        customSignal = "Strong Buyer (Near Pivot)";
+      }
+      // Strong Buyer: Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70
+      else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70) {
         customSignal = "Strong Buyer";
       }
-      // Weak Buyer: Close > Pivot, Vol Ratio >= 0.8, Close > MA20
-      else if (c > pivot && volRatio >= 0.8 && c > ma20) {
+      // Weak Buyer: Close > Pivot, Vol >= 0.8, Close > MA20, RSI < 70
+      else if (c > pivot && volRatio >= 0.8 && c > ma20 && rsi14 < 70) {
         customSignal = "Weak Buyer";
       }
-      // Very Strong Seller: Close < S1, Vol Ratio >= 2, Close < MA20, RSI <= 45
+      // Very Strong Seller: Close < S1, Vol >= 2, Close < MA20, RSI <= 45
       else if (c < s1 && volRatio >= 2 && c < ma20 && rsi14 <= 45) {
         customSignal = "Very Strong Seller";
       }
-      // Strong Seller: Close < Pivot, Vol Ratio >= 1.5, Close < MA20, RSI <= 50
+      // Strong Seller: Close < Pivot, Vol >= 1.5, Close < MA20, RSI <= 50
       else if (c < pivot && volRatio >= 1.5 && c < ma20 && rsi14 <= 50) {
         customSignal = "Strong Seller";
       }
@@ -181,20 +186,27 @@ const UpdatePrice = () => {
       }
     } else {
       // Fallback: If we don't have all required values, use simpler logic
-      if (c && pivot && r1 && s1 && volRatio) {
+      if (
+        c !== null &&
+        pivot !== null &&
+        r1 !== null &&
+        s1 !== null &&
+        volRatio !== null
+      ) {
         const priceDiffPercent = Math.abs((c - pivot) / pivot);
+        const isNearPivot = priceDiffPercent <= 0.005;
 
-        if (priceDiffPercent <= 0.005) {
+        if (isNearPivot) {
           customSignal = "Neutral";
-        } else if (c > r1 && volRatio > 2) {
+        } else if (c > r1 && volRatio >= 2) {
           customSignal = "Very Strong Buyer";
-        } else if (c > pivot && volRatio > 1.5) {
+        } else if (c > pivot && volRatio >= 1.5) {
           customSignal = "Strong Buyer";
         } else if (c > pivot) {
           customSignal = "Weak Buyer";
-        } else if (c < s1 && volRatio > 2) {
+        } else if (c < s1 && volRatio >= 2) {
           customSignal = "Very Strong Seller";
-        } else if (c < pivot && volRatio > 1.5) {
+        } else if (c < pivot && volRatio >= 1.5) {
           customSignal = "Strong Seller";
         } else if (c < pivot) {
           customSignal = "Weak Seller";
@@ -1349,7 +1361,7 @@ const UpdatePrice = () => {
                   fgColor: { argb: "FF006100" },
                 };
                 cell.font.color = { argb: "FFFFFFFF" };
-              } else if (signal === "STRONG BUYER") {
+              } else if (signal === "STRONG BUYER" || signal === "STRONG BUYER (NEAR PIVOT)") {
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
@@ -1384,6 +1396,27 @@ const UpdatePrice = () => {
                   fgColor: { argb: "FFFFC7CE" },
                 };
                 cell.font.color = { argb: "FF9C0006" };
+              } else if (signal === "OVERBOUGHT (STRONG TREND)") {
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FF5B2D8E" },
+                };
+                cell.font.color = { argb: "FFFFFFFF" };
+              } else if (signal === "OVERBOUGHT (HIGH RISK)") {
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FF9B59B6" },
+                };
+                cell.font.color = { argb: "FFFFFFFF" };
+              } else if (signal === "OVERSOLD (WATCH BOUNCE)") {
+                cell.fill = {
+                  type: "pattern",
+                  pattern: "solid",
+                  fgColor: { argb: "FF3498DB" },
+                };
+                cell.font.color = { argb: "FFFFFFFF" };
               } else {
                 cell.fill = {
                   type: "pattern",
@@ -1421,7 +1454,7 @@ const UpdatePrice = () => {
 
     if (signalUpper === "VERY STRONG BUYER") {
       return "bg-emerald-950/90 text-emerald-300 border border-emerald-600 font-bold";
-    } else if (signalUpper === "STRONG BUYER") {
+    } else if (signalUpper === "STRONG BUYER" || signalUpper === "STRONG BUYER (NEAR PIVOT)") {
       return "bg-emerald-900/80 text-emerald-300 border border-emerald-700";
     } else if (signalUpper === "WEAK BUYER") {
       return "bg-emerald-800/70 text-emerald-300 border border-emerald-800/50";
@@ -1431,6 +1464,12 @@ const UpdatePrice = () => {
       return "bg-rose-900/80 text-rose-300 border border-rose-700";
     } else if (signalUpper === "WEAK SELLER") {
       return "bg-rose-800/70 text-rose-300 border border-rose-800/50";
+    } else if (signalUpper === "OVERBOUGHT (STRONG TREND)") {
+      return "bg-purple-950/90 text-purple-300 border border-purple-600 font-bold";
+    } else if (signalUpper === "OVERBOUGHT (HIGH RISK)") {
+      return "bg-purple-900/80 text-purple-300 border border-purple-700";
+    } else if (signalUpper === "OVERSOLD (WATCH BOUNCE)") {
+      return "bg-blue-950/80 text-blue-300 border border-blue-700";
     }
 
     return "bg-gray-800/60 text-gray-400";
