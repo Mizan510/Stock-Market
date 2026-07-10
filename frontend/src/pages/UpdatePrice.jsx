@@ -1390,12 +1390,13 @@ const UpdatePrice = () => {
                 };
                 cell.font.color = { argb: "FF9C0006" };
               } else if (signal === "WEAK SELLER") {
+                // REMOVED COLOR - Neutral gray
                 cell.fill = {
                   type: "pattern",
                   pattern: "solid",
-                  fgColor: { argb: "FFFFC7CE" },
+                  fgColor: { argb: "FFD9D9D9" },
                 };
-                cell.font.color = { argb: "FF9C0006" };
+                cell.font.color = { argb: "FF333333" };
               } else if (signal === "OVERBOUGHT (ST)") {
                 cell.fill = {
                   type: "pattern",
@@ -1463,7 +1464,8 @@ const UpdatePrice = () => {
     } else if (signalUpper === "STRONG SELLER") {
       return "bg-rose-900/80 text-rose-300 border border-rose-700";
     } else if (signalUpper === "WEAK SELLER") {
-      return "bg-rose-800/70 text-rose-300 border border-rose-800/50";
+      // REMOVED COLOR - Neutral gray
+      return "bg-gray-800/60 text-gray-400";
     } else if (signalUpper === "OVERBOUGHT (ST)") {
       return "bg-purple-950/90 text-purple-300 border border-purple-600 font-bold";
     } else if (signalUpper === "OVERBOUGHT (HR)") {
