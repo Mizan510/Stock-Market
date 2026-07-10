@@ -397,6 +397,7 @@ const BuySalePopup = ({
   };
 
       const getVolumeSignalBadge = (signal) => {
+  const getVolumeSignalBadge = (signal) => {
     if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
 
     const signalUpper = String(signal || "").toUpperCase();
