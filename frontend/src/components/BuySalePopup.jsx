@@ -835,7 +835,7 @@ const BuySalePopup = ({
                           {showNearPivot ? "▼" : "▶"}
                         </span>
                       </div>
-                      <p className="text-[8px] sm:text-xs text-cyan-300 mb-2 ml-1">
+                      <p className="text-[7px] sm:text-xs text-cyan-300 mb-2 ml-1">
                         All criteria matched but Price Near Pivot Level
                       </p>
 
