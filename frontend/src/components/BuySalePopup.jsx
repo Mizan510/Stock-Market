@@ -297,8 +297,20 @@ const BuySalePopup = ({
     yearlyLowBuyList.map((row) => row.company),
   );
 
-  // Volume Signal Buy - includes: ST, Very Strong Buyer, Strong Buyer (NP)
-  // REMOVED: "STRONG BUYER" from this list
+  // READY FOR BUY - Now shows ONLY "STRONG BUYER"
+  const readyForBuyList = buyRows
+    .filter((row) => {
+      const volumeSignal = row.volumeSignal || volumeData[row.company];
+      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
+      // Only STRONG BUYER
+      return signalUpper === "STRONG BUYER";
+    })
+    .map((row) => ({
+      ...row,
+      isHighlighted: yearlyLowCompanySet.has(row.company),
+    }));
+
+  // VOLUME SIGNAL BUY - Shows: ST, Very Strong Buyer, Strong Buyer (NP)
   const volumeBuyListWithHighlight = buyRows
     .filter((row) => {
       const volumeSignal = row.volumeSignal || volumeData[row.company];
@@ -313,23 +325,6 @@ const BuySalePopup = ({
         console.log(`[DEBUG] Company: ${row.company}, Signal: "${signalUpper}", Included: ${included}`);
       }
       return included;
-    })
-    .map((row) => ({
-      ...row,
-      isHighlighted: yearlyLowCompanySet.has(row.company),
-    }));
-
-  // Ready for Buy - stronger signals (always visible)
-  // Includes: ST, Strong Buyer (NP), Strong Buyer
-  const readyForBuyList = buyRows
-    .filter((row) => {
-      const volumeSignal = row.volumeSignal || volumeData[row.company];
-      const signalUpper = String(volumeSignal || "").toUpperCase().trim();
-      return (
-        signalUpper === "OVERBOUGHT (ST)" ||
-        signalUpper === "STRONG BUYER (NP)" ||
-        signalUpper === "STRONG BUYER"
-      );
     })
     .map((row) => ({
       ...row,
