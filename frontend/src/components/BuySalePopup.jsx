@@ -396,7 +396,6 @@ const BuySalePopup = ({
     }
   };
 
-    const getVolumeSignalBadge = (signal) => {
       const getVolumeSignalBadge = (signal) => {
     if (!signal || signal === "N/A") return "bg-gray-800 text-gray-400";
 
@@ -414,8 +413,8 @@ const BuySalePopup = ({
     ) {
       return "bg-emerald-700 text-yellow-300 font-bold border-2 border-yellow-400";
     } else if (signalUpper === "STRONG BUYER (NP)") {
-      // ✅ MAX REDUCTION: text-[7px] mobile, text-[10px] desktop
-      return "bg-cyan-700 text-white font-bold border-2 border-cyan-300 text-[7px] sm:text-[10px] whitespace-nowrap leading-none";
+      // ✅ EXTREME REDUCTION: text-[6px] mobile, thin border, minimal padding
+      return "bg-cyan-700 text-white font-bold border border-cyan-300 text-[6px] sm:text-[10px] whitespace-nowrap leading-none px-0.5";
     } else if (signalUpper === "BULLISH" || signalUpper === "STRONG BUYER") {
       return "bg-emerald-950 text-white font-semibold border border-emerald-700";
     } else if (signalUpper === "MILD BULLISH" || signalUpper === "WEAK BUYER") {
