@@ -28,21 +28,21 @@ const normalizeSignal = (signal) => {
   
   // Map old signal names to new ones
   if (upper === "STRONG BUYER (NEAR PIVOT)" || upper === "STRONG BUYER NEAR PIVOT") {
-    return "STRONG BUYER (NP)";
+    return "Strong Buyer (NP)";
   }
   if (upper === "OVERBOUGHT (STRONG TREND)" || upper === "OVERBOUGHT STRONG TREND") {
-    return "OVERBOUGHT (ST)";
+    return "Overbought (ST)";
   }
   if (upper === "OVERBOUGHT (HIGH RISK)" || upper === "OVERBOUGHT HIGH RISK") {
-    return "OVERBOUGHT (HR)";
+    return "Overbought (HR)";
   }
   if (upper === "OVERSOLD (WATCH BOUNCE)" || upper === "OVERSOLD WATCH BOUNCE") {
-    return "OVERSOLD (WB)";
+    return "Oversold (WB)";
   }
   return normalized;
 };
 
-// Calculate all indicators
+// Calculate all indicators - FIXED VERSION
 const calculateIndicators = (data) => {
   const h = parseNumber(data.todaysHigh);
   const l = parseNumber(data.todaysLow);
@@ -56,16 +56,16 @@ const calculateIndicators = (data) => {
   let r1 = null;
   let s1 = null;
   let volRatio = null;
-  let originalSignal = "NEUTRAL";
-  let customSignal = "NEUTRAL";
+  let originalSignal = "Neutral";
+  let customSignal = "Neutral";
 
   if (h !== null && l !== null && c !== null) {
     pivot = parseFloat(((h + l + c) / 3).toFixed(2));
     r1 = parseFloat((2 * pivot - l).toFixed(2));
     s1 = parseFloat((2 * pivot - h).toFixed(2));
 
-    if (c > pivot) originalSignal = "BULLISH";
-    else if (c < pivot) originalSignal = "BEARISH";
+    if (c > pivot) originalSignal = "Bullish";
+    else if (c < pivot) originalSignal = "Bearish";
   }
 
   if (volume !== null && avgVolume !== null && avgVolume > 0) {
@@ -87,47 +87,47 @@ const calculateIndicators = (data) => {
 
     // Check for Overbought (Strong Trend) - RSI >= 70, Vol >= 1.5, Close > MA20, Close > Pivot
     if (rsi14 >= 70 && volRatio >= 1.5 && c > ma20 && c > pivot) {
-      customSignal = "OVERBOUGHT (ST)";
+      customSignal = "Overbought (ST)";
     }
     // Check for Overbought (High Risk) - RSI >= 70 (general)
     else if (rsi14 >= 70) {
-      customSignal = "OVERBOUGHT (HR)";
+      customSignal = "Overbought (HR)";
     }
     // Check for Oversold (Watch Bounce) - RSI <= 30
     else if (rsi14 <= 30) {
-      customSignal = "OVERSOLD (WB)";
+      customSignal = "Oversold (WB)";
     }
     // Very Strong Buyer: Close > R1, Vol >= 2, Close > MA20, RSI 55-70
     else if (c > r1 && volRatio >= 2 && c > ma20 && rsi14 >= 55 && rsi14 < 70) {
-      customSignal = "VERY STRONG BUYER";
+      customSignal = "Very Strong Buyer";
     }
     // Strong Buyer (Near Pivot): Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70, Near Pivot
     else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70 && isNearPivot) {
-      customSignal = "STRONG BUYER (NP)";
+      customSignal = "Strong Buyer (NP)";
     }
     // Strong Buyer: Close > Pivot, Vol >= 1.5, Close > MA20, RSI 50-70
     else if (c > pivot && volRatio >= 1.5 && c > ma20 && rsi14 >= 50 && rsi14 < 70) {
-      customSignal = "STRONG BUYER";
+      customSignal = "Strong Buyer";
     }
     // Weak Buyer: Close > Pivot, Vol >= 0.8, Close > MA20, RSI < 70
     else if (c > pivot && volRatio >= 0.8 && c > ma20 && rsi14 < 70) {
-      customSignal = "WEAK BUYER";
+      customSignal = "Weak Buyer";
     }
     // Very Strong Seller: Close < S1, Vol >= 2, Close < MA20, RSI <= 45
     else if (c < s1 && volRatio >= 2 && c < ma20 && rsi14 <= 45) {
-      customSignal = "VERY STRONG SELLER";
+      customSignal = "Very Strong Seller";
     }
     // Strong Seller: Close < Pivot, Vol >= 1.5, Close < MA20, RSI <= 50
     else if (c < pivot && volRatio >= 1.5 && c < ma20 && rsi14 <= 50) {
-      customSignal = "STRONG SELLER";
+      customSignal = "Strong Seller";
     }
     // Weak Seller: Close < Pivot
     else if (c < pivot) {
-      customSignal = "WEAK SELLER";
+      customSignal = "Weak Seller";
     }
     // Default
     else {
-      customSignal = "NEUTRAL";
+      customSignal = "Neutral";
     }
   } else {
     // Fallback: If we don't have all required values, use simpler logic
@@ -136,28 +136,29 @@ const calculateIndicators = (data) => {
       const isNearPivot = priceDiffPercent <= 0.005;
 
       if (isNearPivot) {
-        customSignal = "NEUTRAL";
+        customSignal = "Neutral";
       } else if (c > r1 && volRatio >= 2) {
-        customSignal = "VERY STRONG BUYER";
+        customSignal = "Very Strong Buyer";
       } else if (c > pivot && volRatio >= 1.5) {
-        customSignal = "STRONG BUYER";
+        customSignal = "Strong Buyer";
       } else if (c > pivot) {
-        customSignal = "WEAK BUYER";
+        customSignal = "Weak Buyer";
       } else if (c < s1 && volRatio >= 2) {
-        customSignal = "VERY STRONG SELLER";
+        customSignal = "Very Strong Seller";
       } else if (c < pivot && volRatio >= 1.5) {
-        customSignal = "STRONG SELLER";
+        customSignal = "Strong Seller";
       } else if (c < pivot) {
-        customSignal = "WEAK SELLER";
+        customSignal = "Weak Seller";
       } else {
-        customSignal = "NEUTRAL";
+        customSignal = "Neutral";
       }
     }
   }
 
-  // Debug log
-  console.log(`[CALCULATE] Data:`, data);
-  console.log(`[CALCULATE] Result: customSignal="${customSignal}", originalSignal="${originalSignal}"`);
+  // Debug logging - THIS WILL HELP YOU TROUBLESHOOT
+  console.log(`[CALCULATE] Company: ${data.company || 'Unknown'}`);
+  console.log(`[CALCULATE]  - RSI: ${rsi14}, VolRatio: ${volRatio}, MA20: ${ma20}, Close: ${c}, Pivot: ${pivot}`);
+  console.log(`[CALCULATE]  - customSignal: "${customSignal}"`);
 
   return { 
     pivotPoint: pivot, 
@@ -208,6 +209,7 @@ const buildZoneData = (data) => {
 
   // Calculate indicators with all available data
   const indicators = calculateIndicators({
+    company: data.company,
     todaysHigh: zoneData.todaysHigh,
     todaysLow: zoneData.todaysLow,
     closingPrice: zoneData.closingPrice,
@@ -270,6 +272,7 @@ router.post("/", async (req, res) => {
 
     const zone = new Zone(zoneData);
     await zone.save();
+    console.log(`[SAVED] ${zoneData.company} → ${zoneData.customSignal}`);
     res.status(201).json(zone);
   } catch (err) {
     console.error("Error creating zone:", err);
@@ -306,6 +309,7 @@ router.put("/:id", async (req, res) => {
       });
     }
 
+    console.log(`[UPDATED] ${zoneData.company} → ${zoneData.customSignal}`);
     res.json(zone);
   } catch (err) {
     console.error("Error updating zone:", err);
@@ -335,4 +339,4 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;
