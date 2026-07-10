@@ -599,7 +599,7 @@ const BuySalePopup = ({
 
                   {/* READY FOR BUY - Always visible, no toggle */}
                   <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-0">
                       <div className="w-1 h-4 bg-green-500 rounded-full"></div>
                       <h3 className="font-semibold text-green-400 text-[10px] sm:text-sm">
                         🚀 Confirmed Buy
@@ -769,7 +769,7 @@ const BuySalePopup = ({
                     {/* BUY (HIGH RSI) - New Section */}
                     <div>
                       <div
-                        className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                        className="flex items-center gap-2 mb-0 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
                         onClick={toggleHighRSI}
                       >
                         <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
@@ -819,7 +819,7 @@ const BuySalePopup = ({
                     {/* BUY (NEAR PIVOT) - New Section */}
                     <div>
                       <div
-                        className="flex items-center gap-2 mb-2 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
+                        className="flex items-center gap-2 mb-0 cursor-pointer hover:bg-gray-800/30 p-1 rounded-lg transition-colors"
                         onClick={toggleNearPivot}
                       >
                         <div className="w-1 h-4 bg-cyan-500 rounded-full"></div>
@@ -835,8 +835,8 @@ const BuySalePopup = ({
                           {showNearPivot ? "▼" : "▶"}
                         </span>
                       </div>
-                      <p className="text-[10px] sm:text-xs text-cyan-300 mb-2 ml-1">
-                        Price Near Pivot Level
+                      <p className="text-[8px] sm:text-xs text-cyan-300 mb-2 ml-1">
+                        All criteria matched but Price Near Pivot Level
                       </p>
 
                       {showNearPivot && (
