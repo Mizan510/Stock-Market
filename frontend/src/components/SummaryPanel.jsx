@@ -19,6 +19,9 @@ const SummaryPanel = ({
   tillNowProfitLoss = 0,
   tillNowCurrentAssets = 0,
   monthlyExpense = 0,
+  selectedProfitMonth = "all",
+  profitMonthOptions = [],
+  onProfitMonthChange = () => {},
   cardPadding = "p-5",
   cardValueSize = "text-xl md:text-2xl",
   cardTitleSize = "text-sm md:text-base font-semibold",
@@ -76,6 +79,7 @@ const SummaryPanel = ({
     title,
     value,
     subtitle,
+    extra,
     bgColor = "bg-slate-900",
     borderColor = "border-slate-800/80",
     accent = "text-white",
@@ -86,14 +90,21 @@ const SummaryPanel = ({
       className={`${cardPadding} ${cardRadius} border ${borderColor} ${bgColor} hover:scale-[1.01] transition-all duration-200 shadow-md flex flex-col justify-between overflow-hidden`}
     >
       <div>
-        <h3 className={`${cardTitleSize} ${textColor} mb-1 leading-snug`}>
-          {title}
-        </h3>
-        {subtitle && (
-          <p className={`${cardSubtitleSize} ${subtitleColor} leading-normal`}>
-            {subtitle}
-          </p>
-        )}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className={`${cardTitleSize} ${textColor} mb-1 leading-snug`}>
+              {title}
+            </h3>
+            {extra}
+          </div>
+          {subtitle && (
+            <p
+              className={`${cardSubtitleSize} ${subtitleColor} leading-normal`}
+            >
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
       <p className={`${cardValueSize} font-bold mt-4 leading-none ${accent}`}>
         {value}
@@ -185,9 +196,28 @@ const SummaryPanel = ({
         >
           <Card
             title="Profit/Loss"
-            subtitle="Sum of individual company net profit/losses"
+            subtitle={`Selected Month: ${selectedProfitMonth === "all" ? "All Time" : new Date(selectedProfitMonth + "-01").toLocaleString("en-US", { month: "short", year: "numeric" })}`}
             value={formatMoney(netProfitLoss)}
             accent={getFinancialAccent(netProfitLoss)}
+            extra={
+              <div className="rounded-xl border border-slate-700 bg-slate-950/90 px-2 py-1">
+                <select
+                  className="bg-slate-950 text-xs text-white outline-none appearance-none"
+                  value={selectedProfitMonth}
+                  onChange={(e) => onProfitMonthChange(e.target.value)}
+                >
+                  {profitMonthOptions.map((option) => (
+                    <option
+                      key={option.key}
+                      value={option.key}
+                      className="bg-slate-950 text-white"
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            }
           />
           <Card
             title="Dividend after Purification"

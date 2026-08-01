@@ -63,70 +63,138 @@ const Dashboard = () => {
     currentAssetsPP: null,
   });
   const [monthlyExpense, setMonthlyExpense] = useState(0);
+  const [selectedProfitMonth, setSelectedProfitMonth] = useState("all");
 
-  // =========================
-  // HIGH ACCURACY PROFIT CALCULATION ENGINE
-  // =========================
-  const accurateReportProfit = useMemo(() => {
-    const groups = {};
+  const parseTransactionDate = (item) => {
+    const rawDate =
+      item.date ||
+      item.buyDate ||
+      item.saleDate ||
+      item.createdAt ||
+      item.updatedAt ||
+      item.transactionDate ||
+      item.transactionAt;
+    if (!rawDate) return null;
 
-    // 1. Group Buy Transactions
-    rawBuyList.forEach((item) => {
-      const stockName = item.stockName || "Unknown";
-      if (!groups[stockName]) {
-        groups[stockName] = { buyQty: 0, buyNet: 0, saleQty: 0, saleNet: 0 };
-      }
-      const qty = Number(item.buyQuantity ?? item.quantity ?? 0);
-      const price = Number(item.perShareValue ?? item.price ?? 0);
-      const totalValue = Number(
-        item.buyingTotalShareValue ?? item.total ?? qty * price,
-      );
-      const commission = Number(
-        item.commission !== undefined ? item.commission : totalValue * 0.004,
-      );
+    const parsed = new Date(rawDate);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
 
-      groups[stockName].buyQty += qty;
-      groups[stockName].buyNet += totalValue + commission;
+  const getMonthKey = (date) => {
+    if (!date) return null;
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${date.getFullYear()}-${month}`;
+  };
+
+  const getMonthLabel = (monthKey) => {
+    if (!monthKey) return "";
+    if (monthKey === "all") return "All Time";
+    const [year, month] = monthKey.split("-");
+    const date = new Date(Number(year), Number(month) - 1, 1);
+    return date.toLocaleString("en-US", {
+      month: "short",
+      year: "numeric",
     });
+  };
 
-    // 2. Group Sale Transactions
-    rawSaleList.forEach((item) => {
-      const stockName = item.stockName || "Unknown";
-      if (!groups[stockName]) {
-        groups[stockName] = { buyQty: 0, buyNet: 0, saleQty: 0, saleNet: 0 };
-      }
-      const qty = Number(item.saleQuantity ?? item.quantity ?? 0);
-      const price = Number(item.perShareValue ?? item.price ?? 0);
-      const totalValue = Number(
-        item.sallingTotalShareValue ?? item.total ?? qty * price,
-      );
-      const commission = Number(
-        item.commission !== undefined ? item.commission : totalValue * 0.004,
-      );
+  const profitMonthOptions = useMemo(() => {
+    const monthSet = new Set(["all"]);
 
-      groups[stockName].saleQty += qty;
-      groups[stockName].saleNet += totalValue - commission;
-    });
+    const addDate = (item) => {
+      const date = parseTransactionDate(item);
+      const monthKey = getMonthKey(date);
+      if (monthKey) monthSet.add(monthKey);
+    };
 
-    // 3. Aggregate precise Corporate Net spreads
-    let grandTotalProfit = 0;
-    Object.values(groups).forEach((company) => {
-      if (company.saleQty > 0) {
+    rawSaleList.forEach(addDate);
+    rawBuyList.forEach(addDate);
+
+    return Array.from(monthSet)
+      .sort((a, b) => {
+        if (a === "all") return -1;
+        if (b === "all") return 1;
+        return b.localeCompare(a);
+      })
+      .map((key) => ({ key, label: getMonthLabel(key) }));
+  }, [rawBuyList, rawSaleList]);
+
+  const calculateProfitLossByMonth = useCallback(
+    (monthKey) => {
+      const groups = {};
+
+      rawBuyList.forEach((item) => {
+        const stockName = item.stockName || "Unknown";
+        if (!groups[stockName]) {
+          groups[stockName] = { buyQty: 0, buyNet: 0, saleQty: 0, saleNet: 0 };
+        }
+        const qty = Number(item.buyQuantity ?? item.quantity ?? 0);
+        const totalValue = Number(
+          item.buyingTotalShareValue ??
+            item.total ??
+            qty * Number(item.perShareValue ?? item.price ?? 0),
+        );
+        const commission = Number(
+          item.commission !== undefined ? item.commission : totalValue * 0.004,
+        );
+
+        groups[stockName].buyQty += qty;
+        groups[stockName].buyNet += totalValue + commission;
+      });
+
+      rawSaleList
+        .filter((item) => {
+          if (monthKey === "all") return true;
+          const date = parseTransactionDate(item);
+          return getMonthKey(date) === monthKey;
+        })
+        .forEach((item) => {
+          const stockName = item.stockName || "Unknown";
+          if (!groups[stockName]) {
+            groups[stockName] = {
+              buyQty: 0,
+              buyNet: 0,
+              saleQty: 0,
+              saleNet: 0,
+            };
+          }
+          const qty = Number(item.saleQuantity ?? item.quantity ?? 0);
+          const totalValue = Number(
+            item.sallingTotalShareValue ??
+              item.total ??
+              qty * Number(item.perShareValue ?? item.price ?? 0),
+          );
+          const commission = Number(
+            item.commission !== undefined
+              ? item.commission
+              : totalValue * 0.004,
+          );
+
+          groups[stockName].saleQty += qty;
+          groups[stockName].saleNet += totalValue - commission;
+        });
+
+      return Object.values(groups).reduce((sum, company) => {
+        if (company.saleQty <= 0) return sum;
         const buyEffective = company.buyQty
           ? company.buyNet / company.buyQty
           : 0;
         const sellEffective = company.saleNet / company.saleQty;
-        const exactRowProfit = company.saleQty * (sellEffective - buyEffective);
-        grandTotalProfit += exactRowProfit;
-      }
-    });
+        return sum + company.saleQty * (sellEffective - buyEffective);
+      }, 0);
+    },
+    [rawBuyList, rawSaleList],
+  );
 
-    return grandTotalProfit;
-  }, [rawBuyList, rawSaleList]);
+  const selectedProfitLoss = useMemo(
+    () => calculateProfitLossByMonth(selectedProfitMonth),
+    [selectedProfitMonth, calculateProfitLossByMonth],
+  );
 
-  // =========================
-  // FETCH MARKET POPUP DATA
-  // =========================
+  const accurateReportProfit = useMemo(
+    () => calculateProfitLossByMonth("all"),
+    [calculateProfitLossByMonth],
+  );
+
   const fetchMarketPopupData = useCallback(async () => {
     try {
       setMarketDataLoading(true);
@@ -363,7 +431,7 @@ const Dashboard = () => {
               withdraw={portfolioMetrics.totalWithdraw}
               dividend={portfolioMetrics.totalDividend}
               balance={portfolioMetrics.cashBalance}
-              profit={accurateReportProfit}
+              profit={selectedProfitLoss}
               remainingShareValue={portfolioMetrics.totalRemainingShareValue}
               totalBuyCost={portfolioMetrics.totalBuyCost}
               totalAssets={
@@ -378,6 +446,9 @@ const Dashboard = () => {
               totalRemainQty={portfolioMetrics.totalRemainQty}
               tillNowProfitLoss={accurateReportProfit}
               tillNowCurrentAssets={portfolioMetrics.totalAssets}
+              selectedProfitMonth={selectedProfitMonth}
+              profitMonthOptions={profitMonthOptions}
+              onProfitMonthChange={setSelectedProfitMonth}
               lbslCostAmount={lbslReport.costAmount}
               lbslCurrentAssetsPP={lbslReport.currentAssetsPP}
               realizedProfit={portfolioMetrics.realizedProfit}
