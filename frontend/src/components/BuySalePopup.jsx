@@ -224,17 +224,74 @@ const BuySalePopup = ({
 
         const normalizedSaleData = Object.keys(buyAggregation)
           .map((company) => {
-            const buyData = buyAggregation[company];
-            const saleData = saleAggregation[company] || { totalQty: 0 };
+            const relevantBuys = rawBuys.filter((item) => {
+              const buyCompany = (
+                item.stockName ||
+                item.company ||
+                item.companyName ||
+                ""
+              ).trim();
+              return buyCompany === company;
+            });
 
-            const totalBuyQty = buyData.totalQty;
-            const totalSaleQty = saleData.totalQty;
-            const remainQty = totalBuyQty - totalSaleQty;
+            const buyLots = relevantBuys
+              .map((item) => {
+                const qty = Number(item.buyQuantity ?? item.quantity ?? 0);
+                if (qty <= 0) return null;
+                const price = Number(
+                  item.perShareValue ?? item.sharePrice ?? item.price ?? 0,
+                );
+                const totalValue = Number(
+                  item.buyingTotalShareValue ?? item.total ?? price * qty,
+                );
+                const commission = Number(
+                  item.commission ?? price * qty * 0.004,
+                );
+                const buyDate =
+                  item.date ||
+                  item.buyDate ||
+                  item.createdAt ||
+                  item.updatedAt ||
+                  "";
 
+                return {
+                  originalQty: qty,
+                  qty,
+                  totalValue,
+                  commission,
+                  buyDate,
+                };
+              })
+              .filter(Boolean)
+              .sort((a, b) => {
+                const aDate = new Date(a.buyDate || 0).getTime() || 0;
+                const bDate = new Date(b.buyDate || 0).getTime() || 0;
+                return aDate - bDate;
+              });
+
+            let remainingSaleQty = saleAggregation[company]?.totalQty || 0;
+
+            buyLots.forEach((lot) => {
+              if (remainingSaleQty <= 0) return;
+              const soldQty = Math.min(lot.qty, remainingSaleQty);
+              lot.qty -= soldQty;
+              remainingSaleQty -= soldQty;
+            });
+
+            const remainQty = buyLots.reduce((sum, lot) => sum + lot.qty, 0);
+            const remainingTotalValue = buyLots.reduce(
+              (sum, lot) =>
+                sum + lot.totalValue * (lot.qty / lot.originalQty || 0) || 0,
+              0,
+            );
+            const remainingCommission = buyLots.reduce(
+              (sum, lot) =>
+                sum + lot.commission * (lot.qty / lot.originalQty || 0) || 0,
+              0,
+            );
             const avgBuyPriceWithCommission =
-              buyData.totalQty > 0
-                ? (buyData.totalValue + buyData.totalCommission) /
-                  buyData.totalQty
+              remainQty > 0
+                ? (remainingTotalValue + remainingCommission) / remainQty
                 : 0;
 
             const companyClean = cleanString(company);
@@ -958,13 +1015,13 @@ const BuySalePopup = ({
                                   </div>
                                   <div className="space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs">
                                     <div className="flex justify-between">
-                                      <span className="text-gray-400">
+                                      <span className="text-blue-600 font-medium text-[10px] sm:text-sm">
                                         Buy Price:
                                       </span>
-                                      <span className="text-gray-300 font-medium">
+                                      <span className="text-blue-600 font-semibold text-[15px] sm:text-base">
                                         {row.avgBuyPriceWithCommission.toFixed(
                                           2,
-                                        )}
+                                        )}  
                                       </span>
                                     </div>
                                     <div className="flex justify-between">
@@ -1229,10 +1286,10 @@ const BuySalePopup = ({
                                     </div>
                                     <div className="space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs">
                                       <div className="flex justify-between">
-                                        <span className="text-gray-400">
+                                        <span className="text-blue-600 font-medium text-[10px] sm:text-sm   ">
                                           Buy Price:
                                         </span>
-                                        <span className="text-gray-300 font-medium">
+                                        <span className="text-blue-600 font-semibold text-[15px] sm:text-base">
                                           {row.avgBuyPriceWithCommission.toFixed(
                                             2,
                                           )}

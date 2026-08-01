@@ -81,11 +81,27 @@ const SaleZone = () => {
             );
 
             const price = Number(
-              item.sharePrice ?? item.buyPerShareValue ?? item.price ?? 0,
+              item.sharePrice ??
+                item.buyPerShareValue ??
+                item.perShareValue ??
+                item.price ??
+                0,
             );
+
+            const totalValue = Number(
+              item.buyingTotalShareValue ?? item.total ?? price * qty,
+            );
+            const commission = Number(item.commission ?? price * qty * 0.004);
 
             const zoneData = zoneMap.get(company);
             const closingPrice = zoneData?.sessionClose ?? null;
+
+            const buyDate =
+              item.date ||
+              item.buyDate ||
+              item.createdAt ||
+              item.updatedAt ||
+              "";
 
             const slPercent = Number(item.stopLossPercent ?? 3);
             const tpPercent = Number(item.targetProfitPercent ?? 10);
@@ -94,7 +110,10 @@ const SaleZone = () => {
               company,
               qty,
               price,
+              totalValue,
+              commission,
               closingPrice,
+              buyDate,
               slPercent,
               tpPercent,
               type: "buy",
@@ -126,92 +145,128 @@ const SaleZone = () => {
             };
           });
 
-          const allNormalized = [...normalized, ...normalizedSales];
+          const companyMap = new Map();
 
-          // 2. Aggregate raw items
-          const aggregatedMap = new Map();
-
-          allNormalized.forEach((trade) => {
+          normalized.forEach((trade) => {
             if (!trade.company) return;
             const key = trade.company;
 
-            if (!aggregatedMap.has(key)) {
-              aggregatedMap.set(key, {
+            if (!companyMap.has(key)) {
+              companyMap.set(key, {
                 company: trade.company,
-                totalBuyQty: trade.type === "buy" ? trade.qty : 0,
-                totalSaleQty: trade.type === "sale" ? trade.qty : 0,
-                totalValue: trade.type === "buy" ? trade.price * trade.qty : 0,
-                totalCommission:
-                  trade.type === "buy" ? trade.price * trade.qty * 0.004 : 0,
-                weightedSlPercentSum:
-                  trade.type === "buy" && trade.slPercent !== undefined
-                    ? trade.slPercent * trade.qty
-                    : 0,
-                weightedTpPercentSum:
-                  trade.type === "buy" && trade.tpPercent !== undefined
-                    ? trade.tpPercent * trade.qty
-                    : 0,
-                closingPrice: trade.type === "buy" ? trade.closingPrice : null,
+                buyLots: [],
+                totalSaleQty: 0,
               });
-            } else {
-              const existing = aggregatedMap.get(key);
-              if (trade.type === "buy") {
-                existing.totalBuyQty += trade.qty;
-                existing.totalValue += trade.price * trade.qty;
-                existing.totalCommission += trade.price * trade.qty * 0.004;
-                existing.weightedSlPercentSum += trade.slPercent * trade.qty;
-                existing.weightedTpPercentSum += trade.tpPercent * trade.qty;
-                if (
-                  existing.closingPrice === null &&
-                  trade.closingPrice !== null
-                ) {
-                  existing.closingPrice = trade.closingPrice;
-                }
-              } else {
-                existing.totalSaleQty += trade.qty;
-              }
             }
+
+            companyMap.get(key).buyLots.push({
+              originalQty: trade.qty,
+              qty: trade.qty,
+              price: trade.price,
+              totalValue: trade.totalValue,
+              commission: trade.commission,
+              slPercent: trade.slPercent,
+              tpPercent: trade.tpPercent,
+              closingPrice: trade.closingPrice,
+              buyDate: trade.buyDate,
+            });
+          });
+
+          normalizedSales.forEach((trade) => {
+            if (!trade.company) return;
+            const key = trade.company;
+
+            if (!companyMap.has(key)) {
+              companyMap.set(key, {
+                company: trade.company,
+                buyLots: [],
+                totalSaleQty: 0,
+              });
+            }
+
+            companyMap.get(key).totalSaleQty += trade.qty;
+          });
+
+          // Sort buy lots by date for FIFO sale application
+          Array.from(companyMap.values()).forEach((companyInfo) => {
+            companyInfo.buyLots.sort((a, b) => {
+              const aDate = new Date(a.buyDate || 0).getTime() || 0;
+              const bDate = new Date(b.buyDate || 0).getTime() || 0;
+              return aDate - bDate;
+            });
           });
 
           // 3. Calculate final trades
-          const finalMergedTrades = Array.from(aggregatedMap.values()).map(
-            (agg) => {
-              const totalBuyQty = agg.totalBuyQty;
-              const totalSaleQty = agg.totalSaleQty;
-              const remainQty = totalBuyQty - totalSaleQty;
+          const finalMergedTrades = Array.from(companyMap.values()).map(
+            (companyInfo) => {
+              const totalBuyQty = companyInfo.buyLots.reduce(
+                (sum, lot) => sum + lot.originalQty,
+                0,
+              );
+              let remainingSaleQty = companyInfo.totalSaleQty;
 
-              const totalValue = agg.totalValue;
-              const totalCommission = Number(agg.totalCommission.toFixed(2));
-              const buyNetValue = Number(
-                (totalValue + totalCommission).toFixed(2),
+              companyInfo.buyLots.forEach((lot) => {
+                if (remainingSaleQty <= 0) return;
+                const sellQty = Math.min(lot.qty, remainingSaleQty);
+                lot.qty -= sellQty;
+                remainingSaleQty -= sellQty;
+              });
+
+              const remainQty = Math.max(
+                0,
+                companyInfo.buyLots.reduce((sum, lot) => sum + lot.qty, 0),
               );
 
-              const avgBasePrice =
-                totalBuyQty > 0 ? totalValue / totalBuyQty : 0;
+              const totalValue = companyInfo.buyLots.reduce(
+                (sum, lot) =>
+                  sum + lot.totalValue * (lot.qty / lot.originalQty || 0) || 0,
+                0,
+              );
+              const totalCommission = companyInfo.buyLots.reduce(
+                (sum, lot) =>
+                  sum + lot.commission * (lot.qty / lot.originalQty || 0) || 0,
+                0,
+              );
+              const buyNetValue = totalValue + totalCommission;
+
               const priceWithCommission =
-                totalBuyQty > 0 ? buyNetValue / totalBuyQty : 0;
+                remainQty > 0 ? buyNetValue / remainQty : 0;
 
               const avgSlPercent =
-                totalBuyQty > 0 ? agg.weightedSlPercentSum / totalBuyQty : 3;
+                remainQty > 0
+                  ? companyInfo.buyLots.reduce(
+                      (sum, lot) => sum + lot.slPercent * lot.qty,
+                      0,
+                    ) / remainQty
+                  : 3;
               const avgTpPercent =
-                totalBuyQty > 0 ? agg.weightedTpPercentSum / totalBuyQty : 10;
+                remainQty > 0
+                  ? companyInfo.buyLots.reduce(
+                      (sum, lot) => sum + lot.tpPercent * lot.qty,
+                      0,
+                    ) / remainQty
+                  : 10;
+
+              const closingPrice =
+                companyInfo.buyLots.find((lot) => lot.closingPrice != null)
+                  ?.closingPrice ?? null;
 
               const slPrice = priceWithCommission * (1 - avgSlPercent / 100);
               const tpPrice = priceWithCommission * (1 + avgTpPercent / 100);
               const totalLoss = (priceWithCommission - slPrice) * remainQty;
 
               return {
-                company: agg.company,
+                company: companyInfo.company,
                 qty: totalBuyQty,
-                remainQty: remainQty,
-                price: avgBasePrice,
-                closingPrice: agg.closingPrice,
+                remainQty,
+                price: remainQty > 0 ? totalValue / remainQty : 0,
+                closingPrice,
                 slPercent: avgSlPercent,
                 slPrice,
                 totalLoss,
                 tpPercent: avgTpPercent,
                 tpPrice,
-                priceWithCommission: priceWithCommission,
+                priceWithCommission: Number(priceWithCommission.toFixed(2)),
               };
             },
           );
